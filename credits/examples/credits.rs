@@ -43,7 +43,7 @@ fn smallest_img(img: TextureQuery)->Rect{ //Simple Scaling Function. Small -> Me
 
 
 fn run(wincan: &mut WindowCanvas) -> Result<(),String>{
-    let images = vec!["images/cheese.jpg","images/Jacob_big.png","images/100.jpg"]; //Images
+    let images = vec!["../assets/gabe.png","../assets/jacob.png","../assets/louisa.png","../assets/max.png"]; //Images
     //let names = vec!["Cheesey Cheesington","Jacob Bonhomme","Timmy Turner"]; //Corresponding Names
 
     for image in images.iter(){ //For every image
