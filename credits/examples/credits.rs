@@ -44,20 +44,20 @@ fn smallest_img(img: TextureQuery)->Rect{ //Simple Scaling Function. Small -> Me
 
 fn run(wincan: &mut WindowCanvas) -> Result<(),String>{
     let images = vec!["images/cheese.jpg","images/Jacob_big.png","images/100.jpg"]; //Images
-    let names = vec!["Cheesey Cheesington","Jacob Bonhomme","Timmy Turner"]; //Corresponding Names
+    //let names = vec!["Cheesey Cheesington","Jacob Bonhomme","Timmy Turner"]; //Corresponding Names
 
-    for i in 0..images.len(){ //For every image
+    for image in images.iter(){ //For every image
 
         let texture_creator = wincan.texture_creator();
-        let portrait = texture_creator.load_texture(images[i])?;
+        let portrait = texture_creator.load_texture(image)?;
         let info = portrait.query(); //Get size information about image
         let img = Rect::new(0,0,info.width,info.height); //Create rectangle the size of the image
 
 
         wincan.set_draw_color(Color::RGBA(0,0,0,255)); //Set color black
-        wincan.copy(&portrait,img,smallest_img(info))?; //Place entire image (img) within medium sized rectangle (smallest_img)
+        wincan.copy(&portrait,img,Rect::new(0,0,720,720))?; //Place entire image (img) within medium sized rectangle (smallest_img)
         wincan.present();
-        println!("Current Image: {}",names[i]);
+        //println!("Current Image: {}",names[i]);
 
         thread::sleep(Duration::from_millis(TIMEOUT));
         wincan.clear();
