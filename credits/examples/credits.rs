@@ -9,7 +9,8 @@ use sdl2::rect::Rect;
 use sdl2::render::WindowCanvas;
 
 const TITLE: &str = "Credits Sequence";
-const CAM_WANDH: u32 = 720; //720x720
+const CAM_W: u32 = 960;
+const CAM_H: u32 = 720
 const TIMEOUT: u64 = 3000;
 
 fn smallest_img(img: TextureQuery)->Rect{ //Simple Scaling Function. Small -> Medium and Large -> Small conversion
@@ -80,7 +81,7 @@ fn main(){
         Ok(_) => ()
     };
 
-    let window = video_subsys.unwrap().window(TITLE,CAM_WANDH,CAM_WANDH).build(); //SDL Window, if failure, panic
+    let window = video_subsys.unwrap().window(TITLE,CAM_W,CAM_H).build(); //SDL Window, if failure, panic
     match window{
         Err(e) => panic!("Window Failed: {}",e),
         Ok(_) => ()
