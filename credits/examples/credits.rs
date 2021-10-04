@@ -10,7 +10,7 @@ use sdl2::render::WindowCanvas;
 
 const TITLE: &str = "Credits Sequence";
 const CAM_W: u32 = 960;
-const CAM_H: u32 = 720
+const CAM_H: u32 = 720;
 const TIMEOUT: u64 = 3000;
 
 fn smallest_img(img: TextureQuery)->Rect{ //Simple Scaling Function. Small -> Medium and Large -> Small conversion
