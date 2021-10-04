@@ -5,20 +5,14 @@ use std::thread;
 use sdl2::pixels::Color;
 use sdl2::image::LoadTexture;
 use sdl2::render::TextureQuery;
-use sdl_rust::SDLCore;
-use sdl_rust::Game;
 use sdl2::rect::Rect;
-use sdl2::rect::Point;
+use sdl2::render::WindowCanvas;
 
 const TITLE: &str = "Credits Sequence";
-const CAM_WANDH: u32 = 720;
+const CAM_WANDH: u32 = 720; //720x720
 const TIMEOUT: u64 = 3000;
 
-pub struct Credit{
-    core: SDLCore
-}
-
-fn smallest_img(img: TextureQuery)->Rect{
+fn smallest_img(img: TextureQuery)->Rect{ //Simple Scaling Function. Small -> Medium and Large -> Small conversion
     let mut x = img.width as f64;
     let mut y = img.height as f64;
     if x<y{
@@ -47,40 +41,57 @@ fn smallest_img(img: TextureQuery)->Rect{
     return Rect::new(720/2-(x as i32)/2,720/2-(y as i32)/2,x as u32,y as u32);
 }
 
-impl Game for Credit{
-    fn init() -> Result<Self, String>{
-        let core = SDLCore::init(TITLE,true,CAM_WANDH,CAM_WANDH)?;
-        Ok(Credit{core})
+
+fn run(wincan: &mut WindowCanvas) -> Result<(),String>{
+    let images = vec!["images/cheese.jpg","images/Jacob_big.png","images/100.jpg"]; //Images
+    let names = vec!["Cheesey Cheesington","Jacob Bonhomme","Timmy Turner"]; //Corresponding Names
+
+    for i in 0..images.len(){ //For every image
+
+        let texture_creator = wincan.texture_creator();
+        let portrait = texture_creator.load_texture(images[i])?;
+        let info = portrait.query(); //Get size information about image
+        let img = Rect::new(0,0,info.width,info.height); //Create rectangle the size of the image
+
+
+        wincan.set_draw_color(Color::RGBA(0,0,0,255)); //Set color black
+        wincan.copy(&portrait,img,smallest_img(info))?; //Place entire image (img) within medium sized rectangle (smallest_img)
+        wincan.present();
+        println!("Current Image: {}",names[i]);
+
+        thread::sleep(Duration::from_millis(TIMEOUT));
+        wincan.clear();
     }
 
-
-
-    fn run(&mut self) -> Result<(),String>{
-        let images = vec!["images/cheese.jpg","images/Jacob_big.png","images/100.jpg"];
-        let names = vec!["Cheesey Cheesington","Jacob Bonhomme","Timmy Turner"];
-
-        for i in 0..images.len(){
-
-            let texture_creator = self.core.wincan.texture_creator();
-            let portrait = texture_creator.load_texture(images[i])?;
-            let info = portrait.query();
-            let img = Rect::new(0,0,info.width,info.height);
-
-
-            self.core.wincan.set_draw_color(Color::RGBA(0,0,0,255));
-            self.core.wincan.copy(&portrait,img,smallest_img(info))?;
-            self.core.wincan.present();
-            println!("Current Image: {}",names[i]);
-
-            thread::sleep(Duration::from_millis(TIMEOUT));
-            self.core.wincan.clear();
-        }
-
-        self.core.wincan.clear();
-        Ok(())
-    }
+    wincan.clear();
+    Ok(())
 }
 
 fn main(){
-    sdl_rust::runner(TITLE,Credit::init);
+    let sdl_cxt = sdl2::init(); //SDL Context, if failure, panic
+    match sdl_cxt{
+        Err(e) => panic!("Context Failed: {}",e),
+        Ok(_) => ()
+    };
+
+    let video_subsys = sdl_cxt.unwrap().video(); //SDL Video, if failure, panic
+    match video_subsys{
+        Err(e) => panic!("Video Failed: {}",e),
+        Ok(_) => ()
+    };
+
+    let window = video_subsys.unwrap().window(TITLE,CAM_WANDH,CAM_WANDH).build(); //SDL Window, if failure, panic
+    match window{
+        Err(e) => panic!("Window Failed: {}",e),
+        Ok(_) => ()
+    };
+    let mut wincan = window.unwrap().into_canvas().accelerated(); //wincan must be mutable, no longer have lib self
+    wincan = wincan.present_vsync();
+
+    let mut wincan = wincan.build(); //SDL Context, if failure, panic
+    match wincan{
+        Err(e) => panic!("Canvas Failed: {}",e),
+        Ok(_) => ()
+    };
+    run(&mut wincan.unwrap());
 }
