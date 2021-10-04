@@ -56,7 +56,7 @@ fn run(wincan: &mut WindowCanvas) -> Result<(),String>{
 
 
         wincan.set_draw_color(Color::RGBA(0,0,0,255)); //Set color black
-        wincan.copy(&portrait,img,Rect::new(0,0,720,720))?; //Place entire image (img) within medium sized rectangle (smallest_img)
+        wincan.copy(&portrait,img,Rect::new(0,0,CAM_W,CAM_H))?; //Place entire image (img) within medium sized rectangle (smallest_img)
         wincan.present();
         //println!("Current Image: {}",names[i]);
 
