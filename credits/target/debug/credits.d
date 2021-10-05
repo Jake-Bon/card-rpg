@@ -1,1 +1,1 @@
-/home/jb/Documents/cs1666/card-rpg/credits/target/debug/credits: /home/jb/Documents/cs1666/card-rpg/credits/src/main.rs
+C:\Users\Gabe\Documents\GitHub\card-rpg\credits\target\debug\credits.exe: C:\Users\Gabe\Documents\GitHub\card-rpg\credits\src\main.rs
