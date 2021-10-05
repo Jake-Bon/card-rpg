@@ -1,7 +1,5 @@
 extern crate sdl_rust;
 
-use std::time::Duration;
-use std::thread;
 use sdl2::pixels::Color;
 use sdl2::image::LoadTexture;
 use sdl2::render::TextureQuery;
@@ -24,11 +22,25 @@ pub fn fill_screen(wincan: &mut WindowCanvas, fill_color: Color) -> Result<(), S
 pub fn draw_sprite_to_fit(wincan: &mut WindowCanvas, sprite_path: &str) -> Result<(), String> {
     
     let texture_creator = wincan.texture_creator();
-    let portrait = texture_creator.load_texture(sprite_path)?; // will panic if sprite_path is invalid
-    let sprite_info = portrait.query();
+    let sprite_texture = texture_creator.load_texture(sprite_path)?; // will panic if sprite_path is invalid
+    let sprite_info = sprite_texture.query();
     let img = Rect::new(0, 0, sprite_info.width, sprite_info.height); // create a rectangle at the given position to copy the image onto.
     
-    wincan.copy(&portrait, img, Rect::new(0, 0, CAM_W, CAM_H))?;
+    wincan.copy(&sprite_texture, img, Rect::new(0, 0, CAM_W, CAM_H))?;
+    
+    Ok(())
+}
+
+// Draws sprite stretched to fit a defined set of dimensions.
+// Specifically, draws the given sprite stretched to fit a new_width by new_height area.
+pub fn draw_sprite_to_dims(wincan: &mut WindowCanvas, sprite_path: &str, new_width: u32, new_height: u32) -> Result<(), String> {
+    
+    let texture_creator = wincan.texture_creator();
+    let sprite_texture = texture_creator.load_texture(sprite_path)?; // will panic if sprite_path is invalid
+    let sprite_info = sprite_texture.query();
+    let img = Rect::new(0, 0, sprite_info.width, sprite_info.height); // create a rectangle at the given position to copy the image onto.
+    
+    wincan.copy(&sprite_texture, img, Rect::new(0, 0, new_width, new_height))?;
     
     Ok(())
 }

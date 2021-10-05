@@ -5,10 +5,10 @@ extern crate sdl_rust;
 use std::time::Duration;
 use std::thread;
 use sdl2::pixels::Color;
-use sdl2::image::LoadTexture;
-use sdl2::render::TextureQuery;
-use sdl2::rect::Rect;
-use sdl2::render::WindowCanvas;
+//use sdl2::image::LoadTexture;
+//use sdl2::render::TextureQuery;
+//use sdl2::rect::Rect;
+//use sdl2::render::WindowCanvas;
 
 const TITLE: &str = "Credits Sequence";
 const CAM_W: u32 = 720;
@@ -58,12 +58,8 @@ fn main(){
         // draw frame to window
         wincan.present();
         
-        println!("ok time to sleep zzz");
-        
         // display frame for 3 seconds
-        thread::sleep(Duration::from_millis(3000 as u64));
-        
-        println!("no more sleep");
+        thread::sleep(Duration::from_millis(TIMEOUT));
     
     }
     
