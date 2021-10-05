@@ -1,0 +1,1 @@
+/home/dcavederps/programs/rust/card-rpg/credits/target/debug/sdl_rust: /home/dcavederps/programs/rust/card-rpg/credits/src/gfx.rs /home/dcavederps/programs/rust/card-rpg/credits/src/lib.rs /home/dcavederps/programs/rust/card-rpg/credits/src/main.rs
