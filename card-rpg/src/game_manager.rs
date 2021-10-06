@@ -1,7 +1,8 @@
 use crate::video::sdl_core::SDLCore;
 use crate::events::event_subsystem::EventSubsystem;
+use crate::video::video_subsystem::VideoSubsystem;
 
-enum GameState {
+pub enum GameState {
 	Running,
 	Quit,
 }
@@ -9,31 +10,29 @@ enum GameState {
 pub struct GameManager {
 	game_state: GameState,
 	event_subsystem: EventSubsystem,
+	video_subsystem: VideoSubsystem,
 }
 
 impl GameManager {
 
-	fn change_state(&mut self, game_state: GameState) {
-		self.game_state = game_state;
-	}
-
 	pub fn init() -> Result<Self, String> {
-
 		let sdl_core = SDLCore::init()?;
 		let event_subsystem = EventSubsystem::init(&sdl_core.sdl_context)?;
+		let video_subsystem = VideoSubsystem::init(sdl_core.wincan);
 
 		Ok(GameManager {
 			game_state: GameState::Running,
 			event_subsystem,
+			video_subsystem,
 		})
 	}
 
-	pub fn start_state_machine(&self) {
+	pub fn start_state_machine(&mut self) {
 
 		'running: loop {
 			match self.game_state {
 				GameState::Quit => break 'running,
-				GameState::Running => {},
+				GameState::Running => { self.event_subsystem.pump_events(&mut self.game_state); self.video_subsystem.update(); },
 			}
 		}
 	}

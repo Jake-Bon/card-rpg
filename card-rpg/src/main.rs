@@ -5,8 +5,7 @@ mod video;
 mod events;
 
 fn main() -> Result<(), String>{
-    
-    let game_manager = GameManager::init()?;
+    let mut game_manager = GameManager::init()?;
     game_manager.start_state_machine();
 
     Ok(())
