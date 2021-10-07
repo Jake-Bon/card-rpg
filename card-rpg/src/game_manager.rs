@@ -32,7 +32,7 @@ impl GameManager {
 		'running: loop {
 			match self.game_state {
 				GameState::Quit => break 'running,
-				GameState::Running => { self.event_subsystem.pump_events(&mut self.game_state); self.video_subsystem.update(); },
+				GameState::Running => { self.event_subsystem.update(); self.video_subsystem.update(); },
 			}
 		}
 	}

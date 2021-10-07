@@ -8,6 +8,15 @@ pub struct EventSubsystem {
 }
 
 impl EventSubsystem {
+	
+	pub fn update(&mut self) {
+		for event in self.event_pump.poll_iter() {
+			match event {
+				SDL_Event::Quit{..} => {},
+				_ => {},
+			}
+		}
+	}
 
 	pub fn init(sdl_context: &Sdl) -> Result<Self, String> {
 		let event_pump = sdl_context.event_pump()?;
@@ -15,15 +24,6 @@ impl EventSubsystem {
 		Ok(EventSubsystem {
 			event_pump,
 		})
-	}
-
-	pub fn pump_events(&mut self, game_state: &mut GameState) {
-		for event in self.event_pump.poll_iter() {
-			match event {
-				SDL_Event::Quit{..} => *game_state = GameState::Quit,
-				_ => {},
-			}
-		}
 	}
 }
 
