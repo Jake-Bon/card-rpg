@@ -24,7 +24,6 @@ pub struct GameManager<'a> {
 	battle: Box<dyn Scene + 'a>,
 	game_state: GameState,
 	event_subsystem: EventSystem,
-	//video_subsystem: VideoSystem<'a>,
 }
 
 impl<'a> GameManager<'a> {
@@ -53,9 +52,9 @@ impl<'a> GameManager<'a> {
 		}
 	}
 
-	pub fn init(sdl_context: &Sdl, wincan: &'a mut WindowCanvas, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
+	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
 
-		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), wincan)?);
+		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan))?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager))?);
 
 		let event_subsystem = EventSystem::init(sdl_context)?;
@@ -65,7 +64,6 @@ impl<'a> GameManager<'a> {
 			battle,
 			game_state: GameState::Running,
 			event_subsystem,
-			//video_subsystem,
 		})
 	}
 }
