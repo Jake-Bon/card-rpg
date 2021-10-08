@@ -1,17 +1,18 @@
-use sdl2::render::WindowCanvas;
-use sdl2::Sdl;
-use sdl2::video::WindowContext;
-use sdl2::render::{Texture, TextureCreator};
-use sdl2::image::LoadTexture;
-use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
+use std::collections::HashMap;
+
+use sdl2::Sdl;
+use sdl2::image::LoadTexture;
+use sdl2::video::WindowContext;
+use sdl2::render::{Texture, TextureCreator, WindowCanvas};
 
 use crate::scenes::Scene;
 use crate::scenes::battle::Battle;
 use crate::scenes::overworld::Overworld;
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
-use crate::video::video_subsystem::VideoSystem;
+
 
 pub enum GameState {
 	Running,
@@ -23,22 +24,23 @@ pub struct GameManager<'a> {
 	battle: Box<dyn Scene + 'a>,
 	game_state: GameState,
 	event_subsystem: EventSystem,
-	video_subsystem: VideoSystem,
+	//video_subsystem: VideoSystem<'a>,
 }
 
 impl<'a> GameManager<'a> {
 
-	fn update(&mut self) {
+	fn update(&mut self) -> Result<(), String>{
 		let game_event = self.event_subsystem.update();
 
 		match game_event {
 			Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
-			Some(GameEvent::MouseClick(x, y)) => println!("X: {}, Y: {}", x, y),
-			Some(GameEvent::KeyPress(k)) => println!("Key {}", k),
+			Some(e) => self.overworld.handle_input(e),
 			None => {},
 		}
 
-		self.video_subsystem.update();
+		self.overworld.render()?;
+
+		Ok(())
 	}
 
 	pub fn start_state_machine(&mut self) {
@@ -46,25 +48,24 @@ impl<'a> GameManager<'a> {
 		'running: loop {
 			match self.game_state {
 				GameState::Quit => break 'running,
-				GameState::Running => self.update(),
-			}
+				GameState::Running => self.update().unwrap(),
+			};
 		}
 	}
 
-	pub fn init(sdl_context: &Sdl, wincan: WindowCanvas, texture_manager: &'a mut TextureManager) -> Result<Self, String> {
+	pub fn init(sdl_context: &Sdl, wincan: &'a mut WindowCanvas, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
 
-		let overworld = Box::new(Overworld::init(texture_manager)?);
-		let battle = Box::new(Battle::init(texture_manager)?);
+		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), wincan)?);
+		let battle = Box::new(Battle::init(Rc::clone(&texture_manager))?);
 
 		let event_subsystem = EventSystem::init(sdl_context)?;
-		let video_subsystem = VideoSystem::init(wincan);
 
 		Ok(GameManager {
 			overworld,
 			battle,
 			game_state: GameState::Running,
 			event_subsystem,
-			video_subsystem,
+			//video_subsystem,
 		})
 	}
 }

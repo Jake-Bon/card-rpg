@@ -6,5 +6,5 @@ pub mod overworld;
 pub trait Scene {
 	fn handle_input(&mut self, event: GameEvent);
 
-	fn render(&self);
+	fn render(&mut self) -> Result<(), String>;
 }

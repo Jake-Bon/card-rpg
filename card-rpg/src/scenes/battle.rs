@@ -1,8 +1,9 @@
 use std::rc::Rc;
+use std::cell::RefCell;
 use sdl2::render::Texture;
 use crate::TextureManager;
-use sdl2::video::WindowContext;
-use sdl2::render::TextureCreator;
+
+
 
 use crate::scenes::Scene;
 use crate::scenes::GameEvent;
@@ -13,9 +14,9 @@ pub struct Battle<'a> {
 }
 
 impl<'a> Battle<'a> {
-	pub fn init(texture_manager: &'a mut TextureManager)  -> Result<Self, String> {
+	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>)  -> Result<Self, String> {
 		Ok(Battle {
-			texture: texture_manager.load("placeholder")?,
+			texture: texture_manager.borrow_mut().load("assets/Attack_Card.png")?,
 			test: 10,
 		})
 	}
@@ -26,7 +27,7 @@ impl Scene for Battle<'_> {
 
 	}
 
-	fn render(&self) {
-		
+	fn render(&mut self) -> Result<(), String> {
+		Ok(())
 	}
 }
