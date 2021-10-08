@@ -1,11 +1,11 @@
 use sdl2::pixels::Color;
 use sdl2::render::WindowCanvas;
 
-pub struct VideoSubsystem {
+pub struct VideoSystem {
 	wincan: WindowCanvas,
 }
 
-impl VideoSubsystem {
+impl VideoSystem {
 
 	pub fn update(&mut self) {
 		self.wincan.set_draw_color(Color::RGB(0, 255, 0));
@@ -15,7 +15,7 @@ impl VideoSubsystem {
 	
 	pub fn init(wincan: WindowCanvas) -> Self {
 
-		VideoSubsystem {
+		VideoSystem {
 			wincan,
 		}
 	}

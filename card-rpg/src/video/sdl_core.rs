@@ -1,13 +1,15 @@
 use sdl2::Sdl;
-use sdl2::render::WindowCanvas;
+use sdl2::video::WindowContext;
+use sdl2::render::{TextureCreator, WindowCanvas};
 
 const TITLE: &str = "Card RPG";
 const WINDOW_HEIGHT: u32 = 720;
-const WINDOW_WIDTH: u32 = 1080;
+const WINDOW_WIDTH: u32 = 720;
 
 pub struct SDLCore {
 	pub sdl_context: Sdl,
 	pub wincan: WindowCanvas,
+	pub texture_creator: TextureCreator<WindowContext>,
 }
 
 impl SDLCore {
@@ -26,9 +28,12 @@ impl SDLCore {
 			.build()
 			.map_err(|e| e.to_string())?;
 
+		let texture_creator = wincan.texture_creator();
+
 		Ok(SDLCore {
 			sdl_context,
 			wincan,
+			texture_creator,
 		})
 	}
 }
