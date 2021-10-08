@@ -1,0 +1,1 @@
+/home/jb/Documents/cs1666/card-rpg/card-experiments/target/debug/card_experiments: /home/jb/Documents/cs1666/card-rpg/card-experiments/src/card.rs /home/jb/Documents/cs1666/card-rpg/card-experiments/src/main.rs
