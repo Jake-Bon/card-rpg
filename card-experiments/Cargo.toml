@@ -1,5 +1,5 @@
 [package]
-name = "card_experiments"
+name = "game_structs"
 version = "0.1.0"
 edition = "2018"
 
