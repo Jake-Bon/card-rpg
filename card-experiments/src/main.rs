@@ -7,7 +7,7 @@ use game_structs::Card;
 use game_structs::Player;
 //For card testing
 fn main(){
-    let mut aCard = Card::new("Test","This a test",3,CardType::Heal,3);
+    let aCard = Card::new("Test","This a test",3,CardType::Heal,3);
     print!("{}\n",aCard.toString());
 
     let mut aPlayer = Player::new(20,20,10,10,7);

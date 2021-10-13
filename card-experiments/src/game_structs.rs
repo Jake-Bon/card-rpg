@@ -1,11 +1,13 @@
 //extern crate card_experiments;
 use std::collections::VecDeque;
 
+#[derive(Clone)]
 pub enum CardType{
     Null, Heal, Defend, Attack,
 }
 
-pub struct Card<'a>{
+#[derive(Clone)]
+pub struct Card <'a>{
     name: &'a str,
     desc: &'a str,
     cost: u32,
@@ -13,8 +15,8 @@ pub struct Card<'a>{
     value: u32,
 }
 
-impl Card<'_>{
-    pub fn new<'a>(name: &'a str, desc: &'a str, cost: u32, action: CardType, value: u32)->Card<'a>{
+impl <'a> Card <'a>{
+    pub fn new(name: &'a str, desc: &'a str, cost: u32, action: CardType, value: u32)->Card<'a>{
         Card{
             name,desc,cost,action,value,
         }
@@ -54,7 +56,7 @@ impl Card<'_>{
     }
 }
 
-pub struct Player<'a>{
+pub struct Player <'a>{
     full_health: u32, //may be redundant
     curr_health: u32,
     full_energy: u32,
@@ -64,8 +66,8 @@ pub struct Player<'a>{
     deck: VecDeque<Card<'a>>,
 }
 
-impl Player<'_>{ //HAND and DECK created as INTRINSIC VALUES
-    pub fn new<'a>(full_health: u32, curr_health: u32, full_energy: u32, curr_energy: u32, hand_size: u32)-> Player<'a>{
+impl <'a> Player <'a>{ //HAND and DECK created as INTRINSIC VALUES
+    pub fn new(full_health: u32, curr_health: u32, full_energy: u32, curr_energy: u32, hand_size: u32)-> Player<'a>{
         let hand = Vec::new();
         let deck = VecDeque::new();
         Player{full_health,curr_health,full_energy,curr_energy,hand_size,hand,deck}
@@ -119,11 +121,11 @@ impl Player<'_>{ //HAND and DECK created as INTRINSIC VALUES
         self.hand_size = s;
     }
 
-    pub fn addCardToHand(&mut self,c: Card<'static>){
+    pub fn addCardToHand(&mut self,c: Card<'a>){
         self.hand.push(c);
     }
 
-    pub fn addCardToDeck(&mut self,c: Card<'static>){
+    pub fn addCardToDeck(&mut self,c: Card<'a>){
         self.deck.push_back(c);
     }
 
@@ -135,16 +137,16 @@ impl Player<'_>{ //HAND and DECK created as INTRINSIC VALUES
         self.hand.len()
     }
 
-    pub fn drawCard(&mut self)->Result<Card,&'static str>{
-        let tmp = self.deck.pop_front();
+    pub fn drawCard(&mut self)->Result<Card, &str>{
+        let tmp = self.deck.pop_front().clone();
         match tmp{
             Some(_) => Ok(tmp.unwrap()),
             None => Err("No card was able to be drawn.")
         }
     }
 
-    pub fn selectHand(&mut self,index:usize)->&Card{
-            &self.hand[index]
+    pub fn selectHand(&mut self,index:usize)->Card{
+            self.hand[index].clone()
     }
 
     pub fn toString(&self)->String{
