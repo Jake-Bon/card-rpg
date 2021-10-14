@@ -1,5 +1,4 @@
 //extern crate card_experiments;
-use std::collections::VecDeque;
 
 #[derive(Clone)]
 pub enum CardType{
@@ -63,13 +62,13 @@ pub struct Player <'a>{
     curr_energy: u32,
     hand_size: u32, //num of cards in player hand, may be removed
     hand: Vec<Card<'a>>,
-    deck: VecDeque<Card<'a>>,
+    deck: Vec<Card<'a>>, //treat as queue
 }
 
 impl <'a> Player <'a>{ //HAND and DECK created as INTRINSIC VALUES
     pub fn new(full_health: u32, curr_health: u32, full_energy: u32, curr_energy: u32, hand_size: u32)-> Player<'a>{
         let hand = Vec::new();
-        let deck = VecDeque::new();
+        let deck = Vec::new();
         Player{full_health,curr_health,full_energy,curr_energy,hand_size,hand,deck}
     }
 
@@ -126,7 +125,7 @@ impl <'a> Player <'a>{ //HAND and DECK created as INTRINSIC VALUES
     }
 
     pub fn addCardToDeck(&mut self,c: Card<'a>){
-        self.deck.push_back(c);
+        self.deck.push(c);
     }
 
     pub fn deckSize(&self)->usize{
@@ -137,15 +136,19 @@ impl <'a> Player <'a>{ //HAND and DECK created as INTRINSIC VALUES
         self.hand.len()
     }
 
-    pub fn drawCard(&mut self)->Result<Card, &str>{
-        let tmp = self.deck.pop_front().clone();
-        match tmp{
-            Some(_) => Ok(tmp.unwrap()),
-            None => Err("No card was able to be drawn.")
-        }
+    pub fn deckDelCard(&mut self){
+        self.deck.remove(0);
     }
 
-    pub fn selectHand(&mut self,index:usize)->Card{
+    pub fn handDelCard(&mut self,index:usize){
+        self.hand.remove(index);
+    }
+
+    pub fn drawCard(&self)->Card<'a>{
+        self.deck[0].clone()
+    }
+
+    pub fn selectHand(&self,index:usize)->Card<'a>{
             self.hand[index].clone()
     }
 
