@@ -13,7 +13,6 @@ use crate::scenes::overworld::Overworld;
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
 
-
 pub enum GameState {
 	Running,
 	Quit,
