@@ -70,4 +70,64 @@ pub fn draw_sprite_from_sheet(wincan: &mut WindowCanvas, sprite_texture: &'_ Tex
     
 }
 
+// Draws sprite repeatedly starting from a given position
+// Uses the dimensions of the texture itself, doesn't do any resizing
+//      cols is the number of times to repeat the texture horizontally (towards the right of the window)
+//      rows is the number of times to repeat the texture vertically (towards the bottom of the window)
+//      To draw a 2x2 cube, (cols, rows) should be (2, 2)
+pub fn tile_sprite(wincan: &mut WindowCanvas, sprite_texture: &'_ Texture, (start_x, start_y): (i32, i32), (cols, rows): (u32, u32)) -> Result<(), String> {
+    
+    let sprite_info = sprite_texture.query();
+    
+    for row in 0..rows{
+        for col in 0..cols{
+            wincan.copy(&sprite_texture, None, Rect::new(
+                                                        start_x + ((col * sprite_info.width) as i32),
+                                                        start_y + ((row * sprite_info.height) as i32),
+                                                        sprite_info.width,
+                                                        sprite_info.height
+                                                        ));
+        };
+    };
+    
+    Ok(())
+    
+}
+
+// Draws a sprite from a sprite sheet repeatedly starting from a given position
+// Uses the dimensions provided by frame_width and frame_height, doesn't do any resizing
+
+// The four tuples are as follows:
+//      (sheet_x, sheet_y) = The position in the sprite sheet. Should be the top left corner of the sprite in the sprite sheet you want to draw.
+//      (frame_width, frame_height) = The width and height of the sprite (or frame) you want to draw. Allows for rectangular sprites.
+//      (start_x, start_y) =  The X and Y coordinates to draw the sprite at. Either can be negative.
+//      (cols, rows) =  cols is the number of times to repeat the texture horizontally (towards the right of the window)
+//                      rows is the number of times to repeat the texture vertically (towards the bottom of the window)
+pub fn tile_sprite_from_sheet(wincan: &mut WindowCanvas, sprite_texture: &'_ Texture, (sheet_x, sheet_y): (i32, i32), (frame_width, frame_height): (u32, u32), (start_x, start_y): (i32, i32), (cols, rows): (u32, u32)) -> Result<(), String> {
+
+    for row in 0..rows{
+        for col in 0..cols{
+            wincan.copy(
+                &sprite_texture,
+                Rect::new(
+                    sheet_x,
+                    sheet_y,
+                    frame_width,
+                    frame_height
+                ),
+                Rect::new(
+                    start_x + ((col * frame_width) as i32),
+                    start_y + ((row * frame_height) as i32),
+                    frame_width,
+                    frame_height
+                )
+            );
+        };
+    };
+    
+    Ok(())
+
+}
+
+
 

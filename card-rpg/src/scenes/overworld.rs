@@ -48,6 +48,7 @@ impl Scene for Overworld<'_> {
 		// below line of code is equivalent to the two above
 		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 128, 128));
 		
+		crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 10), (10, 10), (0, 20), (20, 20));
 		
 		//self.wincan.copy(&self.player.sprite, None, None)?;
 		
@@ -62,6 +63,8 @@ impl Scene for Overworld<'_> {
 		
 		// draws a sprite/frame from a sprite sheet at a given position.
 		crate::video::gfx::draw_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 10), (10, 10), (0, 0));
+		
+		crate::video::gfx::tile_sprite(&mut self.wincan, &self.player.sprite, (0, 600), (2, 1));
 		
 		self.wincan.present();
 
