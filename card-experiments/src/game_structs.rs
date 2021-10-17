@@ -7,12 +7,13 @@ pub struct Card <'a>{
     cost: u32,
     action_list: Vec<u32>, //Actions represented by ID, ex: 0:Attack, 1:Defend, etc...
     value_list: Vec<u32>, //Value of Actions, ie 1 could be 1 attack, 1 defend, etc...
+    img_file: &'a str,
 }
 
 impl <'a> Card <'a>{
-    pub fn new(name: &'a str, desc: &'a str, cost: u32,action_list: Vec<u32>,value_list: Vec<u32>)->Card<'a>{
+    pub fn new(name: &'a str, desc: &'a str, cost: u32,action_list: Vec<u32>,value_list: Vec<u32>, img_file: &'a str)->Card<'a>{
         Card{
-            name,desc,cost,action_list,value_list,
+            name,desc,cost,action_list,value_list,img_file,
         }
     }
 
@@ -35,8 +36,12 @@ impl <'a> Card <'a>{
         self.cost
     }
 
+    pub fn get_sprite_name(&self)->&str{
+        self.img_file
+    }
+
     pub fn to_string(&self)->String{
-        format!("{}: {} | {} energy.",self.name,self.desc,self.cost)
+        format!("{}: {} | {} energy. | Card Located @ {}",self.name,self.desc,self.cost,self.img_file)
     }
 }
 

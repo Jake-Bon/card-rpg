@@ -26,7 +26,7 @@ pub fn populate_card_maprary<'a>(fileData: &'a str)->HashMap<u32,Card<'a>>{
 
         let line_data: Vec<&str> = line.split("::").collect();
         //Collect and parse data into new card
-        cards.insert(line_data[0].parse::<u32>().unwrap(),Card::new(line_data[1],line_data[2],line_data[3].parse::<u32>().unwrap(),line_data[4].split(',').map(|v| v.parse::<u32>().unwrap()).collect(),line_data[5].split(',').map(|v| v.parse::<u32>().unwrap()).collect()));
+        cards.insert(line_data[0].parse::<u32>().unwrap(),Card::new(line_data[1],line_data[2],line_data[3].parse::<u32>().unwrap(),line_data[4].split(',').map(|v| v.parse::<u32>().unwrap()).collect(),line_data[5].split(',').map(|v| v.parse::<u32>().unwrap()).collect(),line_data[6]));
     }
     cards
 }
