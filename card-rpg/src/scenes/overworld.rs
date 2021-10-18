@@ -20,7 +20,7 @@ const ACCEL_RATE: i32 = 1;
 
 pub struct Overworld<'a> {
 	wincan: &'a mut WindowCanvas,
-	tile_map: [u8; 144],
+	tile_map: [u8; 144], // <- Need to implement
 	tile_set: Rc<Texture<'a>>,
 	player: Player<'a>,
 }
@@ -57,30 +57,23 @@ impl Scene for Overworld<'_> {
 				if k.eq(&Keycode::A) {delta_x -= ACCEL_RATE}
 				if k.eq(&Keycode::S) {delta_y += ACCEL_RATE}
 				if k.eq(&Keycode::D) {delta_x += ACCEL_RATE}
-				self.player.x_vel = (self.player.x_vel + delta_x).clamp(-SPEED_LIMIT, SPEED_LIMIT);
-				self.player.y_vel = (self.player.y_vel + delta_y).clamp(-SPEED_LIMIT, SPEED_LIMIT);
+				self.player.x_vel = (self.player.x_vel + delta_x)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+				self.player.y_vel = (self.player.y_vel + delta_y)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 			},
 			_ => {},
 		}
 	}
 
-	fn render(&mut self) -> Result<(), String>{
-		// Check if player is about to collide with borders of the cam. If so, set their velocity to 0
-		if self.player.x_pos + self.player.x_vel > CAM_W as i32 - TILE_SIZE as i32 * 4 || self.player.x_pos + self.player.x_vel < 0 {
-			self.player.x_vel = 0;
-		}
-		if self.player.y_pos + self.player.y_vel > CAM_H as i32 - TILE_SIZE as i32 * 4 || self.player.y_pos + self.player.y_vel < 0 {
-			self.player.y_vel = 0;
-		}
-		// Update player position. Will move this operation and one above to a player_update() func 
-		self.player.x_pos = (self.player.x_pos + self.player.x_vel).clamp(0, CAM_W as i32 - (TILE_SIZE as i32 * 4));
-		self.player.y_pos = (self.player.y_pos + self.player.y_vel).clamp(0, CAM_H as i32 - (TILE_SIZE as i32 * 4));
+	fn render(&mut self) -> Result<(), String> {
+		self.player.update_movement();
 		// Draw background
-		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 128, 128));
+		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 128, 128))?;
 		// Draw sea tiles
-		crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18));
+		crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18))?;
 		// Draw player
-		crate::video::gfx::draw_sprite(&mut self.wincan, &self.player.sprite, (self.player.x_pos, self.player.y_pos));
+		crate::video::gfx::draw_sprite(&mut self.wincan, &self.player.sprite, (self.player.x_pos, self.player.y_pos))?;
 		
 		self.wincan.present();
 
@@ -94,4 +87,21 @@ struct Player<'a> {
 	x_vel: i32,
 	y_vel: i32,
 	sprite: Rc<Texture<'a>>,
+}
+
+impl<'a> Player<'a> {
+	fn update_movement(&mut self) {
+		// Check if player will go beyond the bounds of the camera
+		// - If yes, set their velocity to 0
+		if self.x_pos + self.x_vel > CAM_W as i32 - TILE_SIZE as i32 * 4 || self.x_pos + self.x_vel < 0 {
+			self.x_vel = 0;
+		}
+		if self.y_pos + self.y_vel > CAM_H as i32 - TILE_SIZE as i32 * 4 || self.y_pos + self.y_vel < 0 {
+			self.y_vel = 0;
+		} 
+		// Add velocity to position, clamp to ensure bounds are never exceeded.
+		// TILE_SIZE * 4 because the tiles are scaled x4
+		self.x_pos = (self.x_pos + self.x_vel).clamp(0, CAM_W as i32 - (TILE_SIZE as i32 * 4));
+		self.y_pos = (self.y_pos + self.y_vel).clamp(0, CAM_H as i32 - (TILE_SIZE as i32 * 4));
+	}
 }
