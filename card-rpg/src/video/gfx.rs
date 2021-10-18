@@ -9,8 +9,9 @@ use sdl2::render::WindowCanvas;
 
 use crate::game_manager::TextureManager;
 
-const CAM_W: u32 = 720;
-const CAM_H: u32 = 720;
+pub const CAM_W: u32 = 720;
+pub const CAM_H: u32 = 720;
+pub const TILE_SIZE: u32 = 10;
 
 // Fills the given WindowCanvas wincan with the given Color fill_color
 pub fn fill_screen(wincan: &mut WindowCanvas, fill_color: Color) -> Result<(), String> {
