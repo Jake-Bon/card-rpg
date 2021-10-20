@@ -10,6 +10,7 @@ use sdl2::render::{Texture, TextureCreator, WindowCanvas};
 use crate::scenes::Scene;
 use crate::scenes::battle::Battle;
 use crate::scenes::overworld::Overworld;
+//use crate::scenes::menu::Menu; // <-- implement with scene change
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
 
@@ -21,6 +22,7 @@ pub enum GameState {
 pub struct GameManager<'a> {
 	overworld: Box<dyn Scene + 'a>,
 	battle: Box<dyn Scene + 'a>,
+	//menu: Box<dyn Scene + 'a>,  // <-- implement with scene change
 	game_state: GameState,
 	event_subsystem: EventSystem,
 	//video_subsystem: VideoSystem<'a>,
@@ -33,7 +35,7 @@ impl<'a> GameManager<'a> {
 
 		match game_event {
 			Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
-			Some(e) => self.overworld.handle_input(e),
+			Some(e) => self.overworld.handle_input(e), // <-- implement with scene change... somehow...
 			None => {},
 		}
 
@@ -55,6 +57,7 @@ impl<'a> GameManager<'a> {
 	pub fn init(sdl_context: &Sdl, wincan: &'a mut WindowCanvas, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
 
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), wincan)?);
+		//let menu = Box::new(Menu::init(Rc::clone(&texture_manager), wincan)?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager))?);
 
 		let event_subsystem = EventSystem::init(sdl_context)?;
@@ -62,6 +65,7 @@ impl<'a> GameManager<'a> {
 		Ok(GameManager {
 			overworld,
 			battle,
+			//menu,  // <-- implement with scene change
 			game_state: GameState::Running,
 			event_subsystem,
 			//video_subsystem,
