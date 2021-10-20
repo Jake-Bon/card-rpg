@@ -53,7 +53,7 @@ impl Scene for Overworld<'_> {
 		// Matching events, most importantly KeyPress(k)'s
 		match event {
 			GameEvent::KeyPress(k) => {
-				println!("{}", k);
+				//println!("{}", k);
 				if k.eq(&Keycode::W) {delta_y -= ACCEL_RATE}
 				if k.eq(&Keycode::A) {delta_x -= ACCEL_RATE}
 				if k.eq(&Keycode::S) {delta_y += ACCEL_RATE}
