@@ -2,13 +2,13 @@
 ###All cards must have ALL VALUES SHOWN.
 ###[ID]::[Name]::[Description]::[Energy Cost]::[List of IDS using “,”]::[List of values using “,”]::[Sprite filepath]
 0::Powerful::Does many things...::5::0,1,2,3::4,5,6,7::../assets/Attack_Card.png
-1::Ralsei::The Power of Fluffy Boys Shines Within You::3::2::5::../assets/Heal_Card.png
-2::Cat::What he doin?::1::1::1::../assets/Attack_Card.png
-3::Dog::What he doin?::1::1::1::../assets/Attack_Card.png
-4::Hamster::What he doin?::1::1::1::../assets/Attack_Card.png
-5::Lobster::What he doin?::1::1::1::../assets/Attack_Card.png
-6::Orange::What he doin?::1::1::1::../assets/Attack_Card.png
-7::Tomato::What he doin?::1::1::1::../assets/Attack_Card.png
-8::Chicken Dinner::What he doin?::1::1::1::../assets/Attack_Card.png
-9::The Sun::What he doin?::1::1::1::../assets/Attack_Card.png
-10::A nice beverage::What he doin?::1::1::1::../assets/Attack_Card.png
+1::Lisrae::The Power of Fluffy Boys Shines Within You::3::2::5::../assets/Heal_Card.png
+2::Card1::Does something.::1::1::1::../assets/Attack_Card.png
+3::Card2::Does something.?::1::1::1::../assets/Attack_Card.png
+4::Card3::?::1::1::1::../assets/Attack_Card.png
+5::Card4::?::1::1::1::../assets/Attack_Card.png
+6::Card5::?::1::1::1::../assets/Attack_Card.png
+7::Card6::?::1::1::1::../assets/Attack_Card.png
+8::Card7::?::1::1::1::../assets/Attack_Card.png
+9::Card8::?::1::1::1::../assets/Attack_Card.png
+10::Card9::?::1::1::1::../assets/Attack_Card.png
