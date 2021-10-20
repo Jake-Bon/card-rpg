@@ -1,1 +1,0 @@
-/home/jb/Documents/cs1666/card-rpg/card-experiments/target/debug/game_structs: /home/jb/Documents/cs1666/card-rpg/card-experiments/src/game_structs.rs /home/jb/Documents/cs1666/card-rpg/card-experiments/src/main.rs
