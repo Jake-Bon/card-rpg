@@ -14,7 +14,7 @@ use crate::video::gfx::CAM_H;
 use crate::video::gfx::TILE_SIZE;
 
 const SPEED_LIMIT: f32 = 2.0;
-const ACCEL_RATE: f32 = 0.2;
+const ACCEL_RATE: f32 = 1.0;
 
 //mod crate::video;
 
