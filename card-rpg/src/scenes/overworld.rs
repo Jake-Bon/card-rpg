@@ -3,16 +3,24 @@ use std::cell::RefCell;
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
+use sdl2::keyboard::Keycode;
+
 
 use crate::scenes::Scene;
 use crate::scenes::GameEvent;
 use crate::game_manager::TextureManager;
+use crate::video::gfx::CAM_W;
+use crate::video::gfx::CAM_H;
+use crate::video::gfx::TILE_SIZE;
+
+const SPEED_LIMIT: f32 = 2.0;
+const ACCEL_RATE: f32 = 1.0;
 
 //mod crate::video;
 
 pub struct Overworld<'a> {
 	wincan: &'a mut WindowCanvas,
-	tile_map: [u8; 144],
+	tile_map: [u8; 144], // <- Need to implement
 	tile_set: Rc<Texture<'a>>,
 	player: Player<'a>,
 }
@@ -20,11 +28,13 @@ pub struct Overworld<'a> {
 impl<'a> Overworld<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: &'a mut WindowCanvas)  -> Result<Self, String> {
 		let tile_map = [0; 144];
-		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet.png")?;
+		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 		let player = Player {
-			x_pos: 350,
-			y_pos: 350,
-			sprite: texture_manager.borrow_mut().load("assets/Attack_Card.png")?,
+			x_pos: 0.0,
+			y_pos: 0.0,
+			x_vel: 0.0,
+			y_vel: 0.0,
+			sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
 		};
 
 		Ok(Overworld{
@@ -38,33 +48,34 @@ impl<'a> Overworld<'a> {
 
 impl Scene for Overworld<'_> {
 	fn handle_input(&mut self, event: GameEvent) {
-		println!("Hi");
+		let mut delta_x = 0.0;
+		let mut delta_y = 0.0;
+		// Matching events, most importantly KeyPress(k)'s
+		match event {
+			GameEvent::KeyPress(k) => {
+				//println!("{}", k);
+				if k.eq(&Keycode::W) {delta_y -= ACCEL_RATE}
+				if k.eq(&Keycode::A) {delta_x -= ACCEL_RATE}
+				if k.eq(&Keycode::S) {delta_y += ACCEL_RATE}
+				if k.eq(&Keycode::D) {delta_x += ACCEL_RATE}
+				if k.eq(&Keycode::Escape) {panic!()}
+				self.player.x_vel = (self.player.x_vel + delta_x)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+				self.player.y_vel = (self.player.y_vel + delta_y)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+			},
+			_ => {println!("No event")},
+		}
 	}
 
-	fn render(&mut self) -> Result<(), String>{
-		//self.wincan.clear();
-		//self.wincan.set_draw_color(Color::RGB(0, 128, 128));
-		
-		// below line of code is equivalent to the two above
-		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 128, 128));
-		
-		crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 10), (10, 10), (0, 20), (20, 20));
-		
-		//self.wincan.copy(&self.player.sprite, None, None)?;
-		
-		// below line of code is equivalent to above.
-		crate::video::gfx::draw_sprite_to_fit(&mut self.wincan, &self.player.sprite);
-		
-		// draws a sprite to fit the given dimenstions (in this case, 100x150) at the given pos (in this case, x=200, y=200
-		crate::video::gfx::draw_sprite_to_dims(&mut self.wincan, &self.player.sprite, (100, 150), (200, 200));
-		
-		// draws a sprite at the give pos (in this case, x=400, y=300). Uses the dimensions of the file/texture, does no resizing.
-		crate::video::gfx::draw_sprite(&mut self.wincan, &self.player.sprite, (400, 300));
-		
-		// draws a sprite/frame from a sprite sheet at a given position.
-		crate::video::gfx::draw_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 10), (10, 10), (0, 0));
-		
-		crate::video::gfx::tile_sprite(&mut self.wincan, &self.player.sprite, (0, 600), (2, 1));
+	fn render(&mut self) -> Result<(), String> {
+		self.player.update_movement();
+		// Draw background
+		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 128, 128))?;
+		// Draw sea tiles
+		crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18))?;
+		// Draw player
+		crate::video::gfx::draw_sprite(&mut self.wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
 		
 		self.wincan.present();
 
@@ -73,7 +84,26 @@ impl Scene for Overworld<'_> {
 }
 
 struct Player<'a> {
-	x_pos: i32,
-	y_pos: i32,
+	x_pos: f32,
+	y_pos: f32,
+	x_vel: f32,
+	y_vel: f32,
 	sprite: Rc<Texture<'a>>,
+}
+
+impl<'a> Player<'a> {
+	fn update_movement(&mut self) {
+		// Check if player will go beyond the bounds of the camera
+		// - If yes, set their velocity to 0
+		if self.x_pos + self.x_vel > CAM_W as f32 - TILE_SIZE as f32 * 4.0 || self.x_pos + self.x_vel < 0.0 {
+			self.x_vel = 0.0;
+		}
+		if self.y_pos + self.y_vel > CAM_H as f32 - TILE_SIZE as f32 * 4.0 || self.y_pos + self.y_vel < 0.0 {
+			self.y_vel = 0.0;
+		} 
+		// Add velocity to position, clamp to ensure bounds are never exceeded.
+		// TILE_SIZE * 4 because the tiles are scaled x4
+		self.x_pos = (self.x_pos + self.x_vel).clamp(0.0, CAM_W as f32 - (TILE_SIZE as f32 * 4.0));
+		self.y_pos = (self.y_pos + self.y_vel).clamp(0.0, CAM_H as f32 - (TILE_SIZE as f32 * 4.0));
+	}
 }
