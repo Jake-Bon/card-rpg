@@ -18,6 +18,7 @@ pub struct Menu<'a> {
 	wincan: &'a mut WindowCanvas,
 	play_button: Rc<Texture<'a>>,
 	quit_button: Rc<Texture<'a>>,
+	logo: Rc<Texture<'a>>,
 	tile_set: Rc<Texture<'a>>,
 }
 
@@ -25,12 +26,14 @@ impl<'a> Menu<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: &'a mut WindowCanvas)  -> Result<Self, String> {
 		let play_button = texture_manager.borrow_mut().load("assets/play.png")?;
 		let quit_button = texture_manager.borrow_mut().load("assets/quit.png")?;
+		let logo = texture_manager.borrow_mut().load("assets/logo.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 
-		Ok(Overworld{
+		Ok(Menu{
 			wincan,
 			play_button,
 			quit_button,
+			logo,
 			tile_set,
 		})
 	}
@@ -79,6 +82,8 @@ impl Scene for Menu<'_> {
 
 		crate::video::gfx::draw_sprite(&mut self.wincan, &self.play_button, (50, 450))?;
 		crate::video::gfx::draw_sprite(&mut self.wincan, &self.quit_button, (50, 550))?;
+
+		crate::video::gfx::draw_sprite(&mut self.wincan, &self.logo, (65, 100))?;
 		
 
 		self.wincan.present();
