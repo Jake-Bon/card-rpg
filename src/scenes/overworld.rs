@@ -12,6 +12,7 @@ use crate::game_manager::TextureManager;
 use crate::video::gfx::CAM_W;
 use crate::video::gfx::CAM_H;
 use crate::video::gfx::TILE_SIZE;
+use crate::video::gfx::FRAME_DELAY;
 
 const SPEED_LIMIT: f32 = 2.0;
 const ACCEL_RATE: f32 = 1.0;
@@ -19,14 +20,15 @@ const ACCEL_RATE: f32 = 1.0;
 //mod crate::video;
 
 pub struct Overworld<'a> {
-	wincan: &'a mut WindowCanvas,
+	wincan: Rc<RefCell<WindowCanvas>>,
 	tile_map: [u8; 144], // <- Need to implement
 	tile_set: Rc<Texture<'a>>,
 	player: Player<'a>,
+	frame_counter: u32,
 }
 
 impl<'a> Overworld<'a> {
-	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: &'a mut WindowCanvas)  -> Result<Self, String> {
+	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>)  -> Result<Self, String> {
 		let tile_map = [0; 144];
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 		let player = Player {
@@ -36,12 +38,14 @@ impl<'a> Overworld<'a> {
 			y_vel: 0.0,
 			sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
 		};
+		let frame_counter = 0;
 
 		Ok(Overworld{
 			wincan,
 			tile_map,
 			tile_set,
 			player,
+			frame_counter,
 		})
 	}
 }
@@ -69,15 +73,20 @@ impl Scene for Overworld<'_> {
 	}
 
 	fn render(&mut self) -> Result<(), String> {
+		
+		self.frame_counter = if ((self.frame_counter + 1) / FRAME_DELAY) < 5 { self.frame_counter + 1 } else { 0 }; 
+		
 		self.player.update_movement();
 		// Draw background
-		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 128, 128))?;
+		crate::video::gfx::fill_screen(Rc::clone(&self.wincan), Color::RGB(0, 128, 128))?;
 		// Draw sea tiles
-		crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18))?;
+		crate::video::gfx::tile_sprite_from_sheet(Rc::clone(&self.wincan), &self.tile_set, ((0 + (self.frame_counter / FRAME_DELAY) * 40) as i32, 0), (40, 40), (0, 0), (18, 18))?;
 		// Draw player
-		crate::video::gfx::draw_sprite(&mut self.wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
+		crate::video::gfx::draw_sprite(Rc::clone(&self.wincan), &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
 		
-		self.wincan.present();
+		self.wincan.borrow_mut().present();
+
+        self.frame_counter = self.frame_counter + 1;
 
 		Ok(())
 	}

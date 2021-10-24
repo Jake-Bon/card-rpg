@@ -15,7 +15,7 @@ use crate::events::event_subsystem::EventSystem;
 //mod crate::video;
 
 pub struct Menu<'a> {
-	wincan: &'a mut WindowCanvas,
+	wincan: Rc<RefCell<WindowCanvas>>,
 	play_button: Rc<Texture<'a>>,
 	quit_button: Rc<Texture<'a>>,
 	logo: Rc<Texture<'a>>,
@@ -23,7 +23,7 @@ pub struct Menu<'a> {
 }
 
 impl<'a> Menu<'a> {
-	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: &'a mut WindowCanvas)  -> Result<Self, String> {
+	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>)  -> Result<Self, String> {
 		let play_button = texture_manager.borrow_mut().load("assets/play.png")?;
 		let quit_button = texture_manager.borrow_mut().load("assets/quit.png")?;
 		let logo = texture_manager.borrow_mut().load("assets/logo.png")?;
@@ -73,20 +73,20 @@ impl Scene for Menu<'_> {
 	}
 
 	fn render(&mut self) -> Result<(), String>{
-		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 120, 150));
+		crate::video::gfx::fill_screen(Rc::clone(&self.wincan), Color::RGB(0, 120, 150));
 
 
 		// Draw sea tiles
 		//crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18))?;
 
 
-		crate::video::gfx::draw_sprite(&mut self.wincan, &self.play_button, (50, 450))?;
-		crate::video::gfx::draw_sprite(&mut self.wincan, &self.quit_button, (50, 550))?;
+		crate::video::gfx::draw_sprite(Rc::clone(&self.wincan), &self.play_button, (50, 450))?;
+		crate::video::gfx::draw_sprite(Rc::clone(&self.wincan), &self.quit_button, (50, 550))?;
 
-		crate::video::gfx::draw_sprite(&mut self.wincan, &self.logo, (65, 100))?;
+		crate::video::gfx::draw_sprite(Rc::clone(&self.wincan), &self.logo, (65, 100))?;
 		
 
-		self.wincan.present();
+		self.wincan.borrow_mut().present();
 		Ok(())
 	}
 }
