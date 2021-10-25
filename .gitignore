@@ -1,2 +1,2 @@
-/debug/
-/target/
+target/debug/
+target/
