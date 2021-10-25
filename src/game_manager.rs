@@ -27,7 +27,7 @@ pub struct GameManager<'a> {
 	//menu: Box<dyn Scene + 'a>,  // <-- implement with scene change
 	game_state: GameState,
 	event_system: Rc<RefCell<EventSystem>>,
-	curr_scene: i32,
+	curr_scene: u32,
 }
 
 impl<'a> GameManager<'a> {
@@ -37,7 +37,7 @@ impl<'a> GameManager<'a> {
 
 		match game_event {
 			Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
-			Some(GameEvent::SceneChange) => self.curr_scene = 1,
+			Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
 			Some(e) => self.overworld.handle_input(e),
 			None => {},
 		}
