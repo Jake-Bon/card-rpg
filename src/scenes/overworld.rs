@@ -8,6 +8,7 @@ use sdl2::keyboard::Keycode;
 
 use crate::scenes::Scene;
 use crate::scenes::GameEvent;
+use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
 use crate::video::gfx::CAM_W;
 use crate::video::gfx::CAM_H;
@@ -20,13 +21,14 @@ const ACCEL_RATE: f32 = 1.0;
 
 pub struct Overworld<'a> {
 	wincan: &'a mut WindowCanvas,
+	event_system: Rc<RefCell<EventSystem>>,
 	tile_map: [u8; 144], // <- Need to implement
 	tile_set: Rc<Texture<'a>>,
 	player: Player<'a>,
 }
 
 impl<'a> Overworld<'a> {
-	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: &'a mut WindowCanvas)  -> Result<Self, String> {
+	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: &'a mut WindowCanvas, event_system: Rc<RefCell<EventSystem>>)  -> Result<Self, String> {
 		let tile_map = [0; 144];
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 		let player = Player {
@@ -39,6 +41,7 @@ impl<'a> Overworld<'a> {
 
 		Ok(Overworld{
 			wincan,
+			event_system,
 			tile_map,
 			tile_set,
 			player,
@@ -58,7 +61,7 @@ impl Scene for Overworld<'_> {
 				if k.eq(&Keycode::A) {delta_x -= ACCEL_RATE}
 				if k.eq(&Keycode::S) {delta_y += ACCEL_RATE}
 				if k.eq(&Keycode::D) {delta_x += ACCEL_RATE}
-				if k.eq(&Keycode::Escape) {panic!()}
+				if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene().unwrap();}
 				self.player.x_vel = (self.player.x_vel + delta_x)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 				self.player.y_vel = (self.player.y_vel + delta_y)

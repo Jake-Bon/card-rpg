@@ -25,22 +25,28 @@ pub struct GameManager<'a> {
 	battle: Box<dyn Scene + 'a>,
 	//menu: Box<dyn Scene + 'a>,  // <-- implement with scene change
 	game_state: GameState,
-	event_subsystem: EventSystem,
-	//video_subsystem: VideoSystem<'a>,
+	event_system: Rc<RefCell<EventSystem>>,
+	curr_scene: i32,
 }
 
 impl<'a> GameManager<'a> {
 
 	fn update(&mut self) -> Result<(), String>{
-		let game_event = self.event_subsystem.update();
+		let game_event = self.event_system.borrow_mut().update();
 
 		match game_event {
 			Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
+			Some(GameEvent::SceneChange) => self.curr_scene = 1,
 			Some(e) => self.overworld.handle_input(e), // <-- implement with scene change... somehow...
 			None => {},
 		}
 
-		self.overworld.render()?;
+		if self.curr_scene == 0 {
+			self.overworld.render()?;
+		}
+		else {
+			self.battle.render()?;
+		}
 
 		Ok(())
 	}
@@ -57,19 +63,21 @@ impl<'a> GameManager<'a> {
 
 	pub fn init(sdl_context: &Sdl, wincan: &'a mut WindowCanvas, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
 
-		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), wincan)?);
+		let event_system = Rc::new(RefCell::new(EventSystem::init(&sdl_context)?));
+
 		//let menu = Box::new(Menu::init(Rc::clone(&texture_manager), wincan)?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager))?);
 
-		let event_subsystem = EventSystem::init(sdl_context)?;
+		// let event_subsystem = EventSystem::init(sdl_context)?;
+		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), wincan, Rc::clone(&event_system))?);
 
 		Ok(GameManager {
 			overworld,
 			battle,
 			//menu,  // <-- implement with scene change
 			game_state: GameState::Running,
-			event_subsystem,
-			//video_subsystem,
+			event_system,
+			curr_scene: 0,
 		})
 	}
 }
