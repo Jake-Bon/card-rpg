@@ -61,7 +61,7 @@ impl Scene for Overworld<'_> {
 				if k.eq(&Keycode::A) {delta_x -= ACCEL_RATE}
 				if k.eq(&Keycode::S) {delta_y += ACCEL_RATE}
 				if k.eq(&Keycode::D) {delta_x += ACCEL_RATE}
-				if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene().unwrap();}
+				if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene(1).unwrap();}
 				self.player.x_vel = (self.player.x_vel + delta_x)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 				self.player.y_vel = (self.player.y_vel + delta_y)

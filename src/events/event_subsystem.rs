@@ -17,7 +17,7 @@ impl EventSystem {
 				SDL_Event::Quit{..} => Some(GameEvent::WindowClose),
 				SDL_Event::MouseButtonDown{x: x_pos, y: y_pos, ..} => Some(GameEvent::MouseClick(x_pos, y_pos)),
 				SDL_Event::KeyDown{keycode: Some(k), ..} => Some(GameEvent::KeyPress(k)),
-				SDL_Event::User{code: scene_change_event_id, ..} => Some(GameEvent::SceneChange),
+				SDL_Event::User{code: scene_change_event_id, data1: scene_id, ..} => Some(GameEvent::SceneChange(scene_id as u32)),
 				_ => None,
 			}
 		}
@@ -38,13 +38,13 @@ impl EventSystem {
 		})
 	}
 
-	pub fn change_scene(&self) -> Result<(), String>{
+	pub fn change_scene(&self, scene_id: u32) -> Result<(), String>{
 		let event = sdl2::event::Event::User {
 			timestamp: 0,
 			window_id: 0,
 			type_: self.scene_change_event_id,
 			code: 200,
-			data1: 0x1234 as *mut c_void,
+			data1: scene_id as *mut c_void,
 			data2: 0x5678 as *mut c_void,
 		};
 
@@ -55,7 +55,7 @@ impl EventSystem {
 
 pub enum GameEvent {
 	WindowClose,
-	SceneChange,
+	SceneChange(u32),
 	MouseClick(i32, i32),
 	KeyPress(Keycode),
 }
