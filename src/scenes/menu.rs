@@ -60,6 +60,7 @@ impl Scene for Menu<'_> {
 				}
 
 				if (x_pos > 50 && x_pos < 300) && (y_pos > 550 && y_pos < 650) {
+					self.event_system.borrow().change_scene(3).unwrap();
 					println!("QUIT");
 
 					//GameEvent::WindowClose;

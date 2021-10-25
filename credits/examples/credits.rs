@@ -8,6 +8,9 @@ use sdl2::render::TextureQuery;
 use sdl2::rect::Rect;
 use sdl2::render::WindowCanvas;
 
+use crate::scenes::Scene;
+use crate::scenes::GameEvent;
+
 const TITLE: &str = "Credits Sequence";
 const CAM_W: u32 = 960;
 const CAM_H: u32 = 720;
