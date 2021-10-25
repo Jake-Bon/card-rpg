@@ -20,7 +20,7 @@ const ACCEL_RATE: f32 = 1.0;
 //mod crate::video;
 
 pub struct Overworld<'a> {
-	wincan: &'a mut WindowCanvas,
+	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	tile_map: [u8; 144], // <- Need to implement
 	tile_set: Rc<Texture<'a>>,
@@ -28,7 +28,7 @@ pub struct Overworld<'a> {
 }
 
 impl<'a> Overworld<'a> {
-	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: &'a mut WindowCanvas, event_system: Rc<RefCell<EventSystem>>)  -> Result<Self, String> {
+	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>)  -> Result<Self, String> {
 		let tile_map = [0; 144];
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 		let player = Player {
@@ -72,15 +72,16 @@ impl Scene for Overworld<'_> {
 	}
 
 	fn render(&mut self) -> Result<(), String> {
+		let mut wincan = self.wincan.borrow_mut();
 		self.player.update_movement();
 		// Draw background
-		crate::video::gfx::fill_screen(&mut self.wincan, Color::RGB(0, 128, 128))?;
+		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 128, 128))?;
 		// Draw sea tiles
-		crate::video::gfx::tile_sprite_from_sheet(&mut self.wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18))?;
+		crate::video::gfx::tile_sprite_from_sheet(&mut wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18))?;
 		// Draw player
-		crate::video::gfx::draw_sprite(&mut self.wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
 		
-		self.wincan.present();
+		wincan.present();
 
 		Ok(())
 	}

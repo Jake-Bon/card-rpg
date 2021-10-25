@@ -11,7 +11,7 @@ use sdl2::render::{Texture, TextureCreator, WindowCanvas};
 use crate::scenes::Scene;
 use crate::scenes::battle::Battle;
 use crate::scenes::overworld::Overworld;
-//use crate::scenes::menu::Menu; // <-- implement with scene change
+use crate::scenes::menu::Menu; // <-- implement with scene change
 use crate::cards::card_system;
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
@@ -24,13 +24,23 @@ pub enum GameState {
 pub struct GameManager<'a> {
 	overworld: Box<dyn Scene + 'a>,
 	battle: Box<dyn Scene + 'a>,
-	//menu: Box<dyn Scene + 'a>,  // <-- implement with scene change
+	menu: Box<dyn Scene + 'a>,
 	game_state: GameState,
+	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	curr_scene: u32,
 }
 
 impl<'a> GameManager<'a> {
+
+	fn handle_input(&mut self, e: GameEvent) {
+		match self.curr_scene {
+			0 => self.menu.handle_input(e),
+			1 => self.overworld.handle_input(e),
+			2 => self.battle.handle_input(e),
+			_ => {},
+		}
+	}
 
 	fn update(&mut self) -> Result<(), String>{
 		let game_event = self.event_system.borrow_mut().update();
@@ -38,23 +48,22 @@ impl<'a> GameManager<'a> {
 		match game_event {
 			Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
 			Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
-			Some(e) => self.overworld.handle_input(e),
+			Some(e) => self.handle_input(e),
 			None => {},
 		}
 
-		if self.curr_scene == 0 {
-			self.overworld.render()?;
-		}
-		else {
-			self.battle.render()?;
-		}
+		match self.curr_scene {
+			0 => self.menu.render()?,
+			1 => self.overworld.render()?,
+			2 => self.battle.render()?,
+			_ => {},
+		};
 
 		Ok(())
 	}
 
 	pub fn start_state_machine(&mut self) {
 
-		let mut t = Duration::new(0, 0);
 		let mut current_time = Instant::now();
 		let mut accumulator = Duration::new(0, 0);
 
@@ -76,21 +85,20 @@ impl<'a> GameManager<'a> {
 		}
 	}
 
-	pub fn init(sdl_context: &Sdl, wincan: &'a mut WindowCanvas, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
+	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
 
 		let event_system = Rc::new(RefCell::new(EventSystem::init(&sdl_context)?));
 
-		//let menu = Box::new(Menu::init(Rc::clone(&texture_manager), wincan)?);
+		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager))?);
-
-		// let event_subsystem = EventSystem::init(sdl_context)?;
-		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), wincan, Rc::clone(&event_system))?);
+		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 
 		Ok(GameManager {
 			overworld,
 			battle,
-			//menu,  // <-- implement with scene change
+			menu,
 			game_state: GameState::Running,
+			wincan,
 			event_system,
 			curr_scene: 0,
 		})
