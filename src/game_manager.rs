@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::time::{Instant, Duration};
 
 use sdl2::Sdl;
 use sdl2::image::LoadTexture;
@@ -37,7 +38,7 @@ impl<'a> GameManager<'a> {
 		match game_event {
 			Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
 			Some(GameEvent::SceneChange) => self.curr_scene = 1,
-			Some(e) => self.overworld.handle_input(e), // <-- implement with scene change... somehow...
+			Some(e) => self.overworld.handle_input(e),
 			None => {},
 		}
 
@@ -53,11 +54,25 @@ impl<'a> GameManager<'a> {
 
 	pub fn start_state_machine(&mut self) {
 
+		let mut t = Duration::new(0, 0);
+		let mut current_time = Instant::now();
+		let mut accumulator = Duration::new(0, 0);
+
 		'running: loop {
-			match self.game_state {
-				GameState::Quit => break 'running,
-				GameState::Running => self.update().unwrap(),
-			};
+
+			let new_time = Instant::now();
+			let frame_time = new_time - current_time;
+			current_time = new_time;
+
+			accumulator += frame_time;
+			// Timestep lock 60fps
+
+			while accumulator > Duration::from_millis(16) {
+				match self.game_state {
+					GameState::Quit => break 'running,
+					GameState::Running => self.update().unwrap(),
+				};
+			}
 		}
 	}
 

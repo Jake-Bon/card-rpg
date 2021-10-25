@@ -28,7 +28,7 @@ impl Scene for Battle<'_> {
 	}
 
 	fn render(&mut self) -> Result<(), String> {
-		print!("battle");
+		// print!("battle");
 		Ok(())
 	}
 }
