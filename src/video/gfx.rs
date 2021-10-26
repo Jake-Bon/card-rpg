@@ -9,7 +9,7 @@ use sdl2::render::WindowCanvas;
 
 use crate::game_manager::TextureManager;
 
-pub const CAM_W: u32 = 720;
+pub const CAM_W: u32 = 1280;
 pub const CAM_H: u32 = 720;
 pub const TILE_SIZE: u32 = 10;
 
