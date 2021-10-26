@@ -68,6 +68,12 @@ impl Scene for Menu<'_> {
 					//event = GameEvent::WindowClose;
 				
 				}
+				
+				//if (x_pos > 50 && x_pos < 300) && (y_pos > 0 && y_pos < 200){
+				//println!("Battle Time");
+				//self.event_system.borrow().change_scene(2).unwrap();
+				
+				//}
 
 				println!("mouse: {}, {}", x_pos, y_pos);
 			},
