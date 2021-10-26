@@ -2,9 +2,12 @@ use sdl2::Sdl;
 use sdl2::video::WindowContext;
 use sdl2::render::{TextureCreator, WindowCanvas};
 
-const TITLE: &str = "Card RPG";
-const WINDOW_HEIGHT: u32 = 720;
-const WINDOW_WIDTH: u32 = 720;
+use crate::video::gfx::CAM_W;
+use crate::video::gfx::CAM_H;
+
+const TITLE: &str = "CarrrrrrrrrrrrdRPG!";
+//const WINDOW_HEIGHT: u32 = 720;
+//const WINDOW_WIDTH: u32 = 720;
 
 pub struct SDLCore {
 	pub sdl_context: Sdl,
@@ -18,7 +21,7 @@ impl SDLCore {
 		let sdl_context = sdl2::init()?;
 		let video_subsystem = sdl_context.video()?;
 
-		let window = video_subsystem.window(TITLE, WINDOW_WIDTH, WINDOW_HEIGHT)
+		let window = video_subsystem.window(TITLE, CAM_W, CAM_H)
 			.build()
 			.map_err(|e| e.to_string())?;
 
