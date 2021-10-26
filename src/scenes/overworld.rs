@@ -77,7 +77,7 @@ impl Scene for Overworld<'_> {
 		// Draw background
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 128, 128))?;
 		// Draw sea tiles
-		crate::video::gfx::tile_sprite_from_sheet(&mut wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (4, 18))?;
+		crate::video::gfx::tile_sprite_from_sheet(&mut wincan, &self.tile_set, (0, 0), (40*5, 40), (0, 0), (8, 18))?;
 		// Draw player
 		crate::video::gfx::draw_sprite(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
 		
