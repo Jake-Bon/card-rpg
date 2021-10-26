@@ -67,7 +67,7 @@ impl Scene for Overworld<'_> {
 				self.player.y_vel = (self.player.y_vel + delta_y)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 			},
-			_ => {println!("No event")},
+			_ => {/*println!("No event")*/},
 		}
 	}
 
