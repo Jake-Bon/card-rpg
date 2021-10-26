@@ -13,7 +13,7 @@ use crate::scenes::battle::Battle;
 use crate::scenes::overworld::Overworld;
 use crate::scenes::menu::Menu; // <-- implement with scene change
 use crate::scenes::credits::Credits;
-use crate::cards::card_system;
+use crate::cards::battle_system;
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
 
