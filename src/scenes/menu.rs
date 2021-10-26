@@ -88,7 +88,7 @@ impl Scene for Menu<'_> {
 		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (50, 450))?;
 		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (50, 550))?;
 
-		crate::video::gfx::draw_sprite(&mut wincan, &self.logo, (65, 100))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.logo, (340, 100))?;
 		
 
 		wincan.present();
