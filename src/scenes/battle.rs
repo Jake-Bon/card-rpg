@@ -3,6 +3,7 @@ use std::cell::RefCell;
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
+use sdl2::keyboard::Keycode;
 
 use crate::scenes::Scene;
 use crate::scenes::GameEvent;
@@ -34,6 +35,7 @@ pub struct Battle<'a> {
 	health: Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
+	tmp_button: Rc<Texture<'a>>,
 }
 
 impl<'a> Battle<'a> {
@@ -45,6 +47,7 @@ impl<'a> Battle<'a> {
 		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
+		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
 		Ok(Battle {
 			wincan,
 			event_system,
@@ -55,22 +58,29 @@ impl<'a> Battle<'a> {
 			health,
 			deck,
 			drop,
+			tmp_button,
 		})
 	}
 }
 
 impl Scene for Battle<'_> {
 	fn handle_input(&mut self, event: GameEvent) {
-
+		match event {
+			GameEvent::KeyPress(k) => {
+				//println!("{}", k);
+				if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene(1).unwrap();}
+			},
+			_ => {println!("No event")},
+		}
 
 	}
 
 	fn render(&mut self) -> Result<(), String> {
 		let mut wincan = self.wincan.borrow_mut();
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(154, 195, 225));
-		
+
 		//hardcoded for now too test to make sure the cards and other items appear in the correct places
-		
+
 		//backroop for cards
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop,(1280,300), (0,550))?; //wood for the back
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop,(1280,180), (0,0))?; //wood for the back
@@ -99,6 +109,7 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.tmp_button,(300,100), (0,300))?;
 		wincan.present();
 		Ok(())
 	}
@@ -115,6 +126,6 @@ struct card<'a>{
 
 impl<'a>card<'a>{
 	fn update_size(&mut self){
-		
+
 	}
 }

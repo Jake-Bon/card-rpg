@@ -29,12 +29,14 @@ pub struct Overworld<'a> {
 	event_system: Rc<RefCell<EventSystem>>,
 	tile_set: Rc<Texture<'a>>,
 	player: Player<'a>,
+	tmp_button: Rc<Texture<'a>>,
 }
 
 impl<'a> Overworld<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>)  -> Result<Self, String> {
 		//let tile_map = [0; 144];
 		let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
+		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
 		let player = Player {
 			x_pos: (CAM_W/2 - TILE_SIZE*modSize as u32 ) as f32,
 			y_pos: (CAM_H/2 - TILE_SIZE*modSize as u32) as f32,
@@ -52,6 +54,7 @@ impl<'a> Overworld<'a> {
 			event_system,
 			tile_set,
 			player,
+			tmp_button,
 		})
 	}
 }
@@ -68,7 +71,12 @@ impl Scene for Overworld<'_> {
 				if k.eq(&Keycode::A) {delta_x -= ACCEL_RATE}
 				if k.eq(&Keycode::S) {delta_y += ACCEL_RATE}
 				if k.eq(&Keycode::D) {delta_x += ACCEL_RATE}
-				if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene(1).unwrap();}
+				if k.eq(&Keycode::Escape) {
+					delta_x=0.0;
+					delta_y=0.0;
+					self.player.x_vel=0.0;
+					self.player.y_vel=0.0;
+					self.event_system.borrow().change_scene(2).unwrap();}
 				self.player.x_vel = (self.player.x_vel + delta_x)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 				self.player.y_vel = (self.player.y_vel + delta_y)
@@ -88,6 +96,7 @@ impl Scene for Overworld<'_> {
 		crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.tile_set,(self.player.Box_x_pos as i32,self.player.Box_y_pos as i32),(CAM_W,CAM_H),(0,0))?;
 		// Draw player
 		crate::video::gfx::draw_sprite(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.tmp_button,(300,100), (0,300))?;
 
 		wincan.present();
 
