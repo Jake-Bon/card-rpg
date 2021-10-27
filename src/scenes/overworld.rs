@@ -120,11 +120,11 @@ impl<'a> Player<'a> {
 		}
 		// Add velocity to position, clamp to ensure bounds are never exceeded.
 		// TILE_SIZE * 4 because the tiles are scaled x4
-		if(self.ABSx_pos-self.Box_x_pos==(CAM_W/2) as f32)
+		if((self.ABSx_pos-self.Box_x_pos <= (CAM_W/2+5) as f32) && (self.ABSx_pos-self.Box_x_pos >= (CAM_W/2-5) as f32))
 		{
 			self.Box_x_pos = (self.Box_x_pos + self.x_vel).clamp(0.0, (FullW-CAM_W) as f32);
 		}
-		if(self.ABSy_pos-self.Box_y_pos == (CAM_H/2) as f32)
+		if((self.ABSy_pos-self.Box_y_pos <= (CAM_H/2+5) as f32) && (self.ABSy_pos-self.Box_y_pos >= (CAM_H/2-5) as f32))
 		{
 			self.Box_y_pos = (self.Box_y_pos + self.y_vel).clamp(0.0, (FullH-CAM_H) as f32);
 		}
