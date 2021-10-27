@@ -5,10 +5,10 @@
 1::Lisrae::The Power of Fluffy Boys Shines Within You::3::2::5::../assets/cards/Heal_Lisrae.png
 2::Card1::Does something.::1::1::1::../assets/Attack_Card.png
 3::Card2::Does something.?::1::1::1::../assets/Attack_Card.png
-4::Card3::?::1::1::1::../assets/Attack_Card.png
-5::Card4::?::1::1::1::../assets/Attack_Card.png
-6::Card5::?::1::1::1::../assets/Attack_Card.png
-7::Card6::?::1::1::1::../assets/Attack_Card.png
-8::Card7::?::1::1::1::../assets/Attack_Card.png
-9::Card8::?::1::1::1::../assets/Attack_Card.png
-10::Card9::?::1::1::1::../assets/Attack_Card.png
+4::Card3::?::1::1::1::../assets/templates/Attack_Card.png
+5::Card4::?::1::1::1::../assets/templates/Attack_Card.png
+6::Card5::?::1::1::1::../assets/templates/Attack_Card.png
+7::Card6::?::1::1::1::../assets/templates/Attack_Card.png
+8::Card7::?::1::1::1::../assets/templates/Attack_Card.png
+9::Card8::?::1::1::1::../assets/templates/Attack_Card.png
+10::Card9::?::1::1::1::../assets/templates/Attack_Card.png
