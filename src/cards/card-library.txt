@@ -3,8 +3,10 @@
 ###[ID]::[Name]::[Description]::[Energy Cost]::[List of IDS using “,”]::[List of values using “,”]::[Sprite filepath]
 0::Shroud::Envelops the World in Fog::2::1 2::../assets/cards/Defend_Shroud.png
 1::Lisrae::The Power of Fluffy Boys Shines Within You::3::2::5::../assets/cards/Heal_Lisrae.png
-2::Card1::Does something.::1::1::1::../assets/Attack_Card.png
-3::Card2::Does something.?::1::1::1::../assets/Attack_Card.png
+###Could turn this into a status explicitly called "Stormy Waters" or something similar
+2::The Perfect Storm::Until your next turn, all attacks do 2 more damage.::3::4::2::../assets/thePerfectStorm_Card.png
+###Intended to synergize with the Perfect Storm, to have a 2 card combo do 9 damage (for now)
+3::Whirlpool::Attack for 1 damage. Repeat 3 times.::2::0, 0, 0::1, 1, 1::../assets/whirlpool_Card.png
 4::Card3::?::1::1::1::../assets/templates/Attack_Card.png
 5::Card4::?::1::1::1::../assets/templates/Attack_Card.png
 6::Card5::?::1::1::1::../assets/templates/Attack_Card.png
