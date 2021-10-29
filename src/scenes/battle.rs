@@ -82,6 +82,10 @@ impl<'a> Battle<'a> {
 		})
 	}
 	
+	// Step should be called via the GameManager
+	
+	// Because the program is single threaded, we can't use extra loops to wait on conditions
+	//      Instead, we should use the main game loop and check specific conditions at specific times. I've broken a turn/round into phases to do this
 	pub fn step(&'a mut self) -> Result<u8, String> {
 	    
 	    // initialize things at the start of battle
