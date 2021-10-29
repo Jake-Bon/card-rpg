@@ -55,87 +55,10 @@ pub fn deal_cards(player: &mut Battler){
     //      May use another .txt for different classes.
 }
 
-pub fn battle_start(){
-    
-    print!("Reading in card library data...\n");
-    let fileData = &fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.");
-    print!("File read successfully!\nBuilding card map...\n\n\n");
-    let card_map = populate_card_map(fileData);
-    print!("Card map successfully built! Cards ready to be used!\n\n\n");
-    
-    let mut turn = 1; // a_player is turn == 1, b_player is turn == -1
-    
-    let mut a_player = Battler::new("Billy",20,20,10,10,7);
-    print!("Player Battler object created.\n\n");
-
-    let mut b_player = Battler::new("Bobby",25,25,7,7,7);
-    print!("Opponent Battler object created.\n\n");
-    
-    while (a_player.get_curr_health() > 0 && b_player.get_curr_health() > 0) {
-    
-    }
-    
-    // result logic
-    if a_player.get_curr_health() > 0 {
-        println!("Player wins!");
-        // return statement here later
-    }
-    else if b_player.get_curr_health() > 0 {
-        println!("Enemy wins!");
-        // return statement here later
-    }
-    else {
-        // tie
-        println!("Tie!");
-        // return statement here later
-    }
-    
-}
-
 pub struct BattleManager<'a> {
     file_data: String,
     pub card_map: HashMap<u32, Card<'a>>,
     pub turn: u32,
-}
-
-impl<'a> BattleManager <'a> {
-    
-    pub fn init() -> Result<Self, String> {
-        
-        Ok(BattleManager 
-            {
-                file_data: fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.").to_owned(),
-                card_map: HashMap::new(),
-                turn: 1,
-            }
-        ) 
-    }
-    
-    pub fn init_card_map(&'a mut self) {
-        //print!("Reading in card library data...\n");
-        //self.file_data = fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.").to_owned();
-        print!("File read successfully!\nBuilding card map...\n\n\n");
-        self.card_map = populate_card_map(&self.file_data).to_owned();
-        print!("Card map successfully built! Cards ready to be used!\n\n\n");
-    }
-    
-    pub fn get_turn(&self) -> u32 {
-        self.turn
-    }
-    
-    pub fn set_turn(&mut self, new_val: u32) {
-        self.turn = new_val;
-    }
-    
-    pub fn step(&'a mut self) {
-        
-        //if self.turn == 0 {
-            //self.init_card_map();
-            //self.turn = 1;
-        //}
-        
-    }
-    
 }
 
 pub fn simulate_game(){
