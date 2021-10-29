@@ -60,6 +60,10 @@ impl Scene for Menu<'_> {
 				}
 
 				if (x_pos > 50 && x_pos < 300) && (y_pos > 550 && y_pos < 650) {
+					println!("ONLINE");
+				}
+
+				if (x_pos > 50 && x_pos < 300) && (y_pos > 650 && y_pos < 750) {
 					println!("QUIT");
 
 					//GameEvent::WindowClose;
@@ -78,7 +82,7 @@ impl Scene for Menu<'_> {
 
 	fn render(&mut self) -> Result<(), String>{
 		let mut wincan = self.wincan.borrow_mut();
-		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 120, 150));
+		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 120, 150))?;
 
 
 		// Draw sea tiles
@@ -86,7 +90,8 @@ impl Scene for Menu<'_> {
 
 
 		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (50, 450))?;
-		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (50, 550))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (50, 550))?; // Replace with online button
+		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (50, 650))?;
 
 		crate::video::gfx::draw_sprite(&mut wincan, &self.logo, (65, 100))?;
 		
