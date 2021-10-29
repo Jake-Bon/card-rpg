@@ -111,12 +111,6 @@ impl<'a> GameManager<'a> {
 		})
 	}
 	
-	pub fn switch_scene(&mut self, dest_scene_id: u8) {
-	    
-	    self.scene_id = dest_scene_id;
-	    
-	}
-	
 }
 
 

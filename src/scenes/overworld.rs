@@ -13,7 +13,6 @@ use crate::game_manager::TextureManager;
 use crate::video::gfx::CAM_W;
 use crate::video::gfx::CAM_H;
 use crate::video::gfx::TILE_SIZE;
-use crate::video::gfx::FRAME_DELAY;
 
 const modSize: f32 = 4.0;
 
