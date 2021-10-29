@@ -45,23 +45,26 @@ impl <'a> Card <'a>{
     }
 }
 
-pub struct Player{
+pub struct Battler <'a>{
+    name: &'a str,
     full_health: u32,
     curr_health: u32,
+    def: u32,
     full_energy: u32,
     curr_energy: u32,
-    hand_size: usize, //num of cards in player hand, may be removed
+    hand_size: usize, //num of cards in Battler hand, may be removed
     hand: Vec<u32>, //Current held cards
     deck: Vec<u32>, //Deck to draw from - treat as queue
     discard: Vec<u32>, //Discarded deck
 }
 
-impl Player{ //HAND and DECK created as INTRINSIC VALUES
-    pub fn new(full_health: u32, curr_health: u32, full_energy: u32, curr_energy: u32, hand_size: usize)-> Player{
+impl <'a> Battler <'a>{ //HAND and DECK created as INTRINSIC VALUES
+    pub fn new(name: &'a str, full_health: u32, curr_health: u32, full_energy: u32, curr_energy: u32, hand_size: usize)-> Battler<'a>{
         let hand = Vec::new();
         let deck = Vec::new();
         let discard = Vec::new();
-        Player{full_health,curr_health,full_energy,curr_energy,hand_size,hand,deck,discard}
+        let def = 0;
+        Battler{name, full_health,curr_health,def,full_energy,curr_energy,hand_size,hand,deck,discard}
     }
 
     pub fn get_full_health(&self)->u32{
@@ -84,12 +87,38 @@ impl Player{ //HAND and DECK created as INTRINSIC VALUES
         self.hand_size
     }
 
+    pub fn get_defense(&self)->u32{
+        self.def
+    }
+
+    pub fn get_name(&self) -> &str{
+        self.name
+    }
+
+    pub fn set_defense(&mut self,d:u32){
+        self.def = d;
+    }
+
     pub fn set_full_health(&mut self,h: u32){
         self.full_health = h;
     }
 
     pub fn set_curr_health(&mut self,h:u32){
         self.curr_health = h;
+    }
+
+    pub fn adjust_curr_health(&mut self,h:i32){
+        self.curr_health = ((self.curr_health as i32)+(h as i32)) as u32;
+        if self.curr_health>self.full_health{
+            self.curr_health = self.full_health;
+        }
+    }
+
+    pub fn adjust_curr_energy(&mut self,h:i32){
+        self.curr_energy = ((self.curr_energy as i32)+(h as i32)) as u32;
+        if self.curr_energy>self.curr_energy{
+            self.curr_energy = self.curr_energy;
+        }
     }
 
     pub fn set_full_energy(&mut self,h:u32){
@@ -168,6 +197,6 @@ impl Player{ //HAND and DECK created as INTRINSIC VALUES
     }
 
     pub fn to_string(&self)->String{
-        format!("{} {} {} {} {}",self.full_health,self.curr_health,self.full_energy,self.curr_energy,self.hand_size)
+        format!("Name: {}\nHealth: {}/{}\nEnergy: {}/{}\nHand Size: {}/{}",self.name,self.curr_health,self.full_health,self.curr_energy,self.full_energy,self.hand.len(),self.hand_size)
     }
 }
