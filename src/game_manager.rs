@@ -7,6 +7,7 @@ use sdl2::Sdl;
 use sdl2::image::LoadTexture;
 use sdl2::video::WindowContext;
 use sdl2::render::{Texture, TextureCreator, WindowCanvas};
+use crate::video::text::FontManager;
 
 use crate::scenes::Scene;
 use crate::scenes::battle::Battle;
@@ -30,6 +31,7 @@ pub struct GameManager<'a> {
 	game_state: GameState,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
+	font_manager: Rc<RefCell<FontManager<'a>>>,
 	curr_scene: u32,
 }
 
@@ -89,12 +91,12 @@ impl<'a> GameManager<'a> {
 		}
 	}
 
-	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
+	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>, font_manager: Rc<RefCell<FontManager<'a>>>) -> Result<Self, String> {
 
 		let event_system = Rc::new(RefCell::new(EventSystem::init(&sdl_context)?));
 
-		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
-		let battle = Box::new(Battle::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
+		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
+		let battle = Box::new(Battle::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 		let credits = Box::new(Credits::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 
@@ -106,6 +108,7 @@ impl<'a> GameManager<'a> {
 			game_state: GameState::Running,
 			wincan,
 			event_system,
+			font_manager,
 			curr_scene: 0,
 		})
 	}

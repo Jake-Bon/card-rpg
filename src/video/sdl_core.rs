@@ -1,6 +1,7 @@
 use sdl2::Sdl;
 use sdl2::video::WindowContext;
 use sdl2::render::{TextureCreator, WindowCanvas};
+use sdl2::ttf::Sdl2TtfContext;
 
 use crate::video::gfx::CAM_W;
 use crate::video::gfx::CAM_H;
@@ -13,6 +14,7 @@ pub struct SDLCore {
 	pub sdl_context: Sdl,
 	pub wincan: WindowCanvas,
 	pub texture_creator: TextureCreator<WindowContext>,
+	pub font_context: Sdl2TtfContext,
 }
 
 impl SDLCore {
@@ -32,11 +34,14 @@ impl SDLCore {
 			.map_err(|e| e.to_string())?;
 
 		let texture_creator = wincan.texture_creator();
+		
+		let font_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
 		Ok(SDLCore {
 			sdl_context,
 			wincan,
 			texture_creator,
+			font_context,
 		})
 	}
 }
