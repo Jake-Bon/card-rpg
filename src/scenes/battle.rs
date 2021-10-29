@@ -9,6 +9,7 @@ use crate::scenes::Scene;
 use crate::scenes::GameEvent;
 use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
+use crate::video::text::FontManager;
 
 use crate::cards::game_structs::Card;
 use crate::cards::game_structs::Battler;
@@ -30,6 +31,7 @@ use crate::cards::battle_enums::TurnPhase;
 pub struct Battle<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
+	font_manager: Rc<RefCell<FontManager<'a>>>,
 	test_1: Rc<Texture<'a>>,
 	test_2: Rc<Texture<'a>>,
 	test_3: Rc<Texture<'a>>,
@@ -49,7 +51,7 @@ pub struct Battle<'a> {
 }
 
 impl<'a> Battle<'a> {
-	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>)  -> Result<Self, String> {
+	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
 		let test_1 = texture_manager.borrow_mut().load("assets/templates/Attack_Card.png")?;
 		let test_2 = texture_manager.borrow_mut().load("assets/templates/Defend_Card.png")?;
 		let test_3 = texture_manager.borrow_mut().load("assets/templates/Heal_Card.png")?;
@@ -66,6 +68,7 @@ impl<'a> Battle<'a> {
 		Ok(Battle {
 			wincan,
 			event_system,
+			font_manager,
 			test_1,
 			test_2,
 			test_3,
