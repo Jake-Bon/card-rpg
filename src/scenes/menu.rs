@@ -124,6 +124,7 @@ impl Scene for Menu<'_> {
 		
 		font_m.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 24, Color::RGBA(0, 0, 0, 0), "transparent doesn't work", (300, 350));  
 		*/
+
 		
 
 		wincan.present();

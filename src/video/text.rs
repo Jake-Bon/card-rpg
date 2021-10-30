@@ -8,6 +8,7 @@ use sdl2::video::WindowContext;
 use sdl2::render::{Texture, TextureCreator, TextureQuery, WindowCanvas};
 use sdl2::rect::Rect;
 
+
 use crate::game_manager::TextureManager;
 
 use sdl2::ttf::Sdl2TtfContext;
@@ -79,6 +80,7 @@ impl <'l> FontManager <'l> {
                 let font_texture = Rc::new(temp_surface.as_texture(&self.texture_creator).unwrap());
 				
 				self.text_cache.insert(format!("{}{}{}{}{}{}{}", font_path, text, font_size.to_string(), text_color.r.to_string(), text_color.g.to_string(), text_color.b.to_string(), text_color.a.to_string()), font_texture.clone());
+
 				Ok(font_texture)
 			},
 			Ok,

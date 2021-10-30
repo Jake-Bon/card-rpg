@@ -34,6 +34,8 @@ impl SDLCore {
 			.map_err(|e| e.to_string())?;
 
 		let texture_creator = wincan.texture_creator();
+		
+		let font_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
         let font_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 

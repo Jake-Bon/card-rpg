@@ -7,7 +7,6 @@ use sdl2::Sdl;
 use sdl2::image::LoadTexture;
 use sdl2::video::WindowContext;
 use sdl2::render::{Texture, TextureCreator, WindowCanvas};
-use sdl2::ttf::Sdl2TtfContext;
 use crate::video::text::FontManager;
 
 use crate::scenes::Scene;
@@ -93,7 +92,6 @@ impl<'a> GameManager<'a> {
 	}
 
 	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>, font_manager: Rc<RefCell<FontManager<'a>>>) -> Result<Self, String> {
-
 
 		let event_system = Rc::new(RefCell::new(EventSystem::init(&sdl_context)?));
 
