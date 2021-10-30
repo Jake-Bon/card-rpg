@@ -7,5 +7,6 @@ pub enum TurnPhase {
     PreTurnP2,
     TurnP2,
     PostTurnP2,
-    EndTurn,
+    RoundOver,
+    BattleOver,
 }
