@@ -60,12 +60,7 @@ impl<'a> Battle<'a> {
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
 		let accepting_input = true;
-<<<<<<< HEAD
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
-=======
-
-		let dummy = Rc::new(RefCell::new(Battler::new("",0,0,0,0,0)));  //REQUIRED TO AVOID USE
->>>>>>> 4633ee9af6969a293cb26effccffe72ff50e0e9b
 																		//of Option<T>. DO NOT REMOVE
 		let card_map = crate::cards::battle_system::populate_card_map();
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&dummy),Rc::clone(&dummy))));
