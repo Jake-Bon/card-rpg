@@ -8,7 +8,7 @@ pub fn populate_card_map()->HashMap<u32,Card>{
     let mut cards = HashMap::new();
     let file_data = fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.");
     for line in (file_data[4..]).split('\n'){ //Remove first character, \u was messing with things
-        println!("Currently trying to parse: {}", line);
+        //println!("Currently trying to parse: {}", line);
         if line.len()==0{ //If empty line, skip
             continue;
         }else if line.starts_with("##"){ //If commented line, skip
