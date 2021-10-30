@@ -37,6 +37,8 @@ impl SDLCore {
 		
 		let font_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
+        let font_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
+
 		Ok(SDLCore {
 			sdl_context,
 			wincan,

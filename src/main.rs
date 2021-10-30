@@ -22,6 +22,7 @@ fn main() -> Result<(), String>{
     let font_context = Rc::new(RefCell::new(sdl_core.font_context));
     let font_manager = Rc::new(RefCell::new(FontManager::init(wincan.clone(), font_context.clone(), &sdl_core.texture_creator)?));
     let mut game_manager = GameManager::init(&sdl_core.sdl_context, wincan, texture_manager, font_manager)?;
+
     /*println!("DEMO OF CARD SYSTEM");
     println!("-------------------");
     //battle_system::demo_card_system();
