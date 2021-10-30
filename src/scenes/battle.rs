@@ -132,6 +132,7 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the end of the turn
 
 	            self.active_player = -1;
+	            self.turn = TurnPhase::PreTurnP2;
 	        }
 
 
@@ -143,7 +144,8 @@ impl<'a> Battle<'a> {
 
 	            // Enemy AI should be called from here
 
-	            //
+	            
+	            self.turn == TurnPhase::PostTurnP2;
 
 	        }
 	        else if self.turn == TurnPhase::PreTurnP2 {
@@ -160,6 +162,7 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the end of the turn
 
 	            self.active_player = 1;
+	            self.turn = TurnPhase::PreTurnP1;
 	        }
 	    }
 
