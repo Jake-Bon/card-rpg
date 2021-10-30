@@ -17,7 +17,7 @@ pub fn populate_card_map()->HashMap<u32,Card>{
 
         let line_data: Vec<&str> = line.split("::").collect();
         //Collect and parse data into new card
-        cards.insert(line_data[0].parse::<u32>().unwrap(),Card::new(line_data[1].to_string(),line_data[2].to_string(),line_data[3].parse::<u32>().unwrap(),line_data[4].split(',').map(|v| v.parse::<u32>().unwrap()).collect(),line_data[5].split(',').map(|v| v.parse::<i32>().unwrap()).collect(),line_data[6].to_string()));
+        cards.insert(line_data[0].parse::<u32>().unwrap(),Card::new(line_data[1].to_string(),line_data[2].to_string(),line_data[3].parse::<u32>().unwrap(),line_data[4].split(',').map(|v| v.parse::<i32>().unwrap()).collect(),line_data[5].split(',').map(|v| v.parse::<i32>().unwrap()).collect(),line_data[6].to_string()));
     }
     cards
 }
@@ -53,12 +53,13 @@ pub fn parse_card (id: u32, val: i32, stat: Rc<RefCell<BattleStatus>>){
 
     let mut p1 = stat.get_p1();
     let mut p2 = stat.get_p2();
-    let mut chosen = if stat.get_turn()==0 {p2}else{p1};
+
 
     match id{ //p1 = first-person player
-        0 => attack(val,chosen),
-        1 => defend(val,chosen),
-        2 => heal(val,chosen),
+        0 => attack(val, if stat.get_turn()==0 {p2}else{p1}),
+        1 => defend(val, if stat.get_turn()==0 {p1}else{p2}),
+        2 => heal(val, if stat.get_turn()==0 {p1}else{p2}),
+        3 => mult_next_dmg(val, if stat.get_turn()==0 {p1}else{p2}),
         _ => unreachable_action(),
     }
 }
@@ -92,6 +93,14 @@ fn heal (val: i32, target: Rc<RefCell<Battler>>){
     print!("{}\n",target.to_string());
 }
 
+fn mult_next_dmg(val:i32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+
+    //print!("{} healed {} hp!\n",target.get_name(),val);
+    target.set_mult(val);
+    print!("{}\n",target.to_string());
+}
+
 fn unreachable_action(){
     print!("Hope you're happy.\n");
 }
@@ -106,10 +115,20 @@ pub fn test_libraries(){
     let card_map = populate_card_map();
     let battler_map = populate_battler_map();
 
-    let p1 = battler_map.get(&0).unwrap();
-    let cardID = p1.get_deck_card().unwrap();
-    let card1 = card_map.get(&cardID).unwrap();
+    let _p1 = battler_map.get(&0).unwrap().clone(); //Must UNWRAP AND CLONE players from map for battle use
+    let _p2 = battler_map.get(&1).unwrap().clone();
+    let cardID = _p1.get_deck_card().unwrap(); //Must UNWRAP given card ID when drawing from deck
+    let card1 = card_map.get(&cardID).unwrap(); //MUST UNWRAP cards from map
     print!("{}\n",card1.to_string());
+
+    let p1 = Rc::new(RefCell::new(_p1)); //Must WRAP players in refcell for battle actions
+    let p2 = Rc::new(RefCell::new(_p2));
+
+    let battle = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&p1),Rc::clone(&p2)))); //MUST use REFCELLS
+    parse_card(0,10,Rc::clone(&battle)); //Test of 10 attack on p2
+    print!("{}\n",battle.borrow_mut().get_turn());
+    print!("{}\n",p1.borrow_mut().to_string());
+    print!("{}\n",p2.borrow_mut().to_string());
 }
 
 /*

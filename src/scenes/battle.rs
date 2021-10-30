@@ -102,7 +102,7 @@ impl<'a> Battle<'a> {
 
 
 	        // player structs and decks will be initialized here
-            
+
             println!("Start of Battle...");
             self.active_player = 1;
 	        self.turn = TurnPhase::PreTurnP1;
@@ -126,7 +126,7 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the beginning of the turn
 
 	            // Can add drawing a card in here and checking handsize/remaining cards
-            
+
 	            // Move to the next phase of the turn
 	            println!("End of PreTurnP1");
 	            self.turn = TurnPhase::TurnP1;
@@ -149,7 +149,7 @@ impl<'a> Battle<'a> {
 
 	            // Enemy AI should be called from here
 
-	            
+
 	            self.turn = TurnPhase::PostTurnP2;
 
 	        }
@@ -169,26 +169,26 @@ impl<'a> Battle<'a> {
 
                 println!("End of PostTurnP2");
                 self.turn = TurnPhase::RoundOver;
-	            
+
 	        }
 	    }
 
         if self.turn == TurnPhase::RoundOver {
-            
+
             println!("Round is now fully over (both players had a turn)\n-");
             self.turn = TurnPhase:: PreTurnP1;
             self.active_player = 1;
         }
-        
+
         //  Because I'm calling step() through the render method, step() fires AFTER input is handled
         //  This means that if self.turn was reset to NotInitialized, via handle_input() the final call to step() would
         //  cause it to run the setup as if it was being called for the first time for the battle.
         //  Now, handle_input() sets self.turn to BattleOver, and the final call to step() will run the code below.
-        
+
         //  However, overloading the event pump with other inputs (like moving the mouse) will cause the game to lag,
         //  and render() will run a few more times before the scene change in handle_input() can resolve itself, making
         //  this useless.
-        
+
         //  This isn't urgent to fix since we're only doing one battle for the midterm, but this may become
         //  more of an issue in the future.
         else if self.turn == TurnPhase::BattleOver {
@@ -221,7 +221,7 @@ impl Scene for Battle<'_> {
 			        if (x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
 					    self.turn = TurnPhase::PostTurnP1;
-					    
+
 				    }
 			    }
 
@@ -270,13 +270,13 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.tmp_button,(300,100), (0,300))?;
-		
+
 		// End Turn button "sprite"
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
 		// End Turn button text
 		let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
-		
+
 		wincan.present();
 		Ok(())
 	}

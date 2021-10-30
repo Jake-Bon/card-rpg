@@ -7,13 +7,13 @@ pub struct Card{
     name: String,
     desc: String,
     cost: u32,
-    action_list: Vec<u32>, //Actions represented by ID, ex: 0:Attack, 1:Defend, etc...
+    action_list: Vec<i32>, //Actions represented by ID, ex: 0:Attack, 1:Defend, etc...
     value_list: Vec<i32>, //Value of Actions, ie 1 could be 1 attack, 1 defend, etc...
     img_file: String,
 }
 
 impl Card{
-    pub fn new(name: String, desc: String, cost: u32,action_list: Vec<u32>,value_list: Vec<i32>, img_file: String)->Card{
+    pub fn new(name: String, desc: String, cost: u32,action_list: Vec<i32>,value_list: Vec<i32>, img_file: String)->Card{
         Card{
             name,desc,cost,action_list,value_list,img_file,
         }
@@ -47,11 +47,13 @@ impl Card{
     }
 }
 
+#[derive(Clone)]
 pub struct Battler{
     name: String,
     full_health: i32,
     curr_health: i32,
-    def: i32,
+    mult: i32, //damage multiplier (- integers considered fractions, ex -2 = 1/2 mult)
+    def: i32,//defense
     mana_delta: i32,
     full_energy: i32,
     curr_energy: i32,
@@ -59,6 +61,7 @@ pub struct Battler{
     hand: Vec<u32>, //Current held cards
     deck: Vec<u32>, //Deck to draw from - treat as queue
     discard: Vec<u32>, //Discarded deck
+    effects: Rc<RefCell<Vec<Vec<i32>>>>, //[[effect1 type,effect1 value,effect1 duration],etc]
 }
 
 impl Battler{ //HAND and DECK created as INTRINSIC VALUES
@@ -67,9 +70,14 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let hand_size = 7 as usize;
         let deck = Vec::new();
         let discard = Vec::new();
+        let mult=1;
         let def = 0;
         let mana_delta = 3;
-        Battler{name, full_health,curr_health,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard}
+        let effects_type = Vec::new();
+        let effects_val = Vec::new();
+        let effects_duration = Vec::new();
+        let effects = Rc::new(RefCell::new(vec![effects_type,effects_val,effects_duration]));
+        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,effects}
     }
 
     pub fn get_full_health(&self)->i32{
@@ -98,6 +106,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn get_name(&self) -> &str{
         &self.name
+    }
+
+    pub fn set_mult(&mut self, m: i32){
+        self.mult = m;
     }
 
     pub fn set_deck(&mut self, new_deck: Vec<u32>){
@@ -155,6 +167,18 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn add_card_to_discard(&mut self,c:u32){ //add card to DISCARD PILE
         self.discard.push(c);
+    }
+
+    pub fn add_effect(&mut self, etype:i32,eval:i32,edur:i32){
+        self.effects.borrow_mut().push(vec![etype,eval,edur]);
+    }
+
+    pub fn remove_effect(&mut self, pos:usize){
+        self.effects.borrow_mut().remove(pos);
+    }
+
+    pub fn get_effects(&mut self) -> Rc<RefCell<Vec<Vec<i32>>>>{
+        Rc::clone(&self.effects)
     }
 
     pub fn get_deck_size(&self)->usize{
@@ -236,6 +260,6 @@ impl BattleStatus{
     }
 
     pub fn get_p2(&mut self)->Rc<RefCell<Battler>>{
-        Rc::clone(&self.p1)
+        Rc::clone(&self.p2)
     }
 }
