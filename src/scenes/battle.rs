@@ -11,10 +11,11 @@ use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
 
-use crate::cards::game_structs::Card;
-use crate::cards::game_structs::Battler;
+use crate::cards::game_structs::*;
 use std::fs;
 use std::collections::HashMap;
+
+use crate::cards::battle_enums::TurnPhase;
 
 //orig_posx = u32;
 //orig_posy = u32;
@@ -38,6 +39,14 @@ pub struct Battle<'a> {
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
 	tmp_button: Rc<Texture<'a>>,
+	accepting_input: bool,
+
+	// BATTLE DATA
+	card_map: HashMap<u32, Card>,
+	active_player: i8,
+	turn: TurnPhase,
+	battle_handler: Rc<RefCell<BattleStatus<'a>>>,
+
 }
 
 impl<'a> Battle<'a> {
@@ -50,6 +59,11 @@ impl<'a> Battle<'a> {
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
+		let accepting_input = true;
+		let dummy = Rc::new(RefCell::new(Battler::new("",0,0,0,0,0)));  //REQUIRED TO AVOID USE
+																		//of Option<T>. DO NOT REMOVE
+		let card_map = crate::cards::battle_system::populate_card_map();
+		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&dummy),Rc::clone(&dummy))));
 		Ok(Battle {
 			wincan,
 			event_system,
@@ -62,29 +76,124 @@ impl<'a> Battle<'a> {
 			deck,
 			drop,
 			tmp_button,
+			accepting_input,
+			card_map,
+			active_player: 1,
+			turn: TurnPhase::NotInitialized,
+			battle_handler,
 		})
 	}
+
+	pub fn start_battle(&'a mut self, p1: Rc<RefCell<Battler<'a>>>, p2: Rc<RefCell<Battler<'a>>>){
+		self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&p1),Rc::clone(&p2))));
+	}
+
+	// Step should be called via the GameManager
+
+	// Because the program is single threaded, we can't use extra loops to wait on conditions
+	//      Instead, we should use the main game loop and check specific conditions at specific times. I've broken a turn/round into phases to do this
+	pub fn step(&'a mut self) -> Result<u8, String> {
+
+	    // initialize things at the start of battle
+	    if self.turn == TurnPhase::NotInitialized {
+
+
+	        // player structs and decks will be initialized here
+
+	        self.turn = TurnPhase::PreTurnP1;
+
+	    }
+
+	    if self.active_player == 1 {
+
+	        if self.turn == TurnPhase::TurnP1 {
+
+	            // Essentially just waits until the end turn button is pressed
+	            // All of the card playing logic should be in the handle input function
+
+	            // Could also check in here if the player loses all of their health or runs out of cards, to enable designing cards around that
+
+	            // self.turn should be changed to TurnPhase::PostTurnP1 when clicking the end turn button
+
+	        }
+	        else if self.turn == TurnPhase::PreTurnP1 {
+	            // Resolve things that need to be resolved prior to the Player's turn in here
+	            // Intended to check for Statuses that need to be removed at the beginning of the turn
+
+	            // Can add drawing a card in here and checking handsize/remaining cards
+
+	            // Move to the next phase of the turn
+	            self.turn == TurnPhase::TurnP1;
+	        }
+	        else if self.turn == TurnPhase::PostTurnP1 {
+	            // Resolve things that need to be resolved after the Player's turn in here
+	            // Intended to check for Statuses that need to be removed at the end of the turn
+
+	            self.active_player = -1;
+	        }
+
+
+	    }
+
+	    // Enemy logic in the else
+	    else{
+	        if self.turn == TurnPhase::TurnP2 {
+
+	            // Enemy AI should be called from here
+
+	            //
+
+	        }
+	        else if self.turn == TurnPhase::PreTurnP2 {
+	            // Resolve things that need to be resolved prior to the Opponent's turn in here
+	            // Intended to check for Statuses that need to be removed at the beginning of the turn
+
+	            // Can add drawing a card in here and checking handsize/remaining cards
+
+	            // Move to the next phase of the turn
+	            self.turn == TurnPhase::TurnP2;
+	        }
+	        else if self.turn == TurnPhase::PostTurnP2 {
+	            // Resolve things that need to be resolved after the Opponent's turn in here
+	            // Intended to check for Statuses that need to be removed at the end of the turn
+
+	            self.active_player = 1;
+	        }
+	    }
+
+	    return Ok(0);
+
+	}
+
+
+
 }
 
 impl Scene for Battle<'_> {
+
 	fn handle_input(&mut self, event: GameEvent) {
-		match event {
-			GameEvent::KeyPress(k) => {
-				//println!("{}", k);
-				if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene(1).unwrap();}
-			},
-			_ => {println!("No event")},
-		}
+
+		// Some input should be restricted if it isn't the player's turn
+
+		    match event {
+			    GameEvent::KeyPress(k) => {
+				    //println!("{}", k);
+				    if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene(1).unwrap();}
+			    },
+			    _ => {},
+		    }
+
 
 	}
 
 	fn render(&mut self) -> Result<(), String> {
+
 		let mut wincan = self.wincan.borrow_mut();
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(154, 195, 225));
 
 		//hardcoded for now too test to make sure the cards and other items appear in the correct places
 
-		//backroop for cards
+		//backdrop for cards
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop,(1280,300), (0,550))?; //wood for the back
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop,(1280,180), (0,0))?; //wood for the back
 
