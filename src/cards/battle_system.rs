@@ -22,11 +22,33 @@ pub fn populate_card_map()->HashMap<u32,Card>{
     cards
 }
 
+pub fn populate_battler_map ()->HashMap<u32,Battler>{
+    let mut battlers = HashMap::new();
+    let file_data = fs::read_to_string("src/cards/battler-library.txt").expect("An error occurred whilst attempting to open the library.");
+    for line in (file_data).split('\n'){ //Remove first character, \u was messing with things
+        //println!("Currently trying to parse: {}", line);
+        if line.len()==0{ //If empty line, skip
+            continue;
+        }else if line.starts_with("##"){ //If commented line, skip
+            continue;
+        }
+
+        let line_data: Vec<&str> = line.split("::").collect();
+        //Collect and parse data into new card
+        let mut health = line_data[2].parse::<i32>().unwrap();
+        let mut energy = line_data[3].parse::<i32>().unwrap();
+        let mut new_battler = Battler::new(line_data[1].to_string(),health,health,energy,energy);
+        new_battler.set_deck(line_data[4].split(',').map(|v| v.parse::<u32>().unwrap()).collect());
+        battlers.insert(line_data[0].parse::<u32>().unwrap(),new_battler);
+    }
+    battlers
+}
+
 pub fn play_card(curr_status: Rc<RefCell<BattleStatus>>){
     //TODO: Play any card player gives. For loop for multiple effects on card.
 }
 
-pub fn parse_card <'a>(id: u32, val: i32, stat: Rc<RefCell<BattleStatus>>){
+pub fn parse_card (id: u32, val: i32, stat: Rc<RefCell<BattleStatus>>){
     let mut stat = stat.borrow_mut();
 
     let mut p1 = stat.get_p1();
@@ -44,7 +66,7 @@ pub fn parse_card <'a>(id: u32, val: i32, stat: Rc<RefCell<BattleStatus>>){
 //TODO - According to turn apply attack, defend, and heal to correct player. Check if these work properly.
 //TODO - Get CARD from player deck and get card TYPE and VALUE
 
-fn attack <'a>(val: i32, target: Rc<RefCell<Battler>>){
+fn attack (val: i32, target: Rc<RefCell<Battler>>){
     //print!("ATTACKER\n");
     let mut target = target.borrow_mut();
 
@@ -55,14 +77,14 @@ fn attack <'a>(val: i32, target: Rc<RefCell<Battler>>){
     print!("{}\n",target.to_string());
 }
 
-fn defend <'a>(val: i32, target: Rc<RefCell<Battler>>){
+fn defend (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
 
     print!("{} defense value set to {}!\n",target.get_name(),val);
     target.set_defense(val);
 }
 
-fn heal <'a>(val: i32, target: Rc<RefCell<Battler>>){
+fn heal (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
 
     //print!("{} healed {} hp!\n",target.get_name(),val);
@@ -80,8 +102,18 @@ pub fn deal_cards(player: &mut Battler){
     //      May use another .txt for different classes.
 }
 
+pub fn test_libraries(){
+    let card_map = populate_card_map();
+    let battler_map = populate_battler_map();
+
+    let p1 = battler_map.get(&0).unwrap();
+    let cardID = p1.get_deck_card().unwrap();
+    let card1 = card_map.get(&cardID).unwrap();
+    print!("{}\n",card1.to_string());
+}
+
 /*
-pub fn simulate_game<'a>(mut p1: Battler<'a>, mut p2: Battler<'a>){
+pub fn simulate_game<'a>(mut p1: Battler, mut p2: Battler){
     print!("Reading in card library data...\n");
     let fileData = &fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.");
     print!("File read successfully!\nBuilding card map...\n\n\n");

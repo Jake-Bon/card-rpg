@@ -45,7 +45,7 @@ pub struct Battle<'a> {
 	card_map: HashMap<u32, Card>,
 	active_player: i8,
 	turn: TurnPhase,
-	battle_handler: Rc<RefCell<BattleStatus<'a>>>,
+	battle_handler: Rc<RefCell<BattleStatus>>,
 
 }
 
@@ -60,7 +60,7 @@ impl<'a> Battle<'a> {
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
 		let accepting_input = true;
-		let dummy = Rc::new(RefCell::new(Battler::new("",0,0,0,0,0)));  //REQUIRED TO AVOID USE
+		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
 																		//of Option<T>. DO NOT REMOVE
 		let card_map = crate::cards::battle_system::populate_card_map();
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&dummy),Rc::clone(&dummy))));
@@ -84,9 +84,11 @@ impl<'a> Battle<'a> {
 		})
 	}
 
-	pub fn start_battle(&'a mut self, p1: Rc<RefCell<Battler<'a>>>, p2: Rc<RefCell<Battler<'a>>>){
+	pub fn start_battle(&'a mut self, p1: Rc<RefCell<Battler>>, p2: Rc<RefCell<Battler>>){
 		self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&p1),Rc::clone(&p2))));
+
 	}
+
 
 	// Step should be called via the GameManager
 

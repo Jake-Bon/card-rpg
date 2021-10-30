@@ -47,8 +47,8 @@ impl Card{
     }
 }
 
-pub struct Battler <'a>{
-    name: &'a str,
+pub struct Battler{
+    name: String,
     full_health: i32,
     curr_health: i32,
     def: i32,
@@ -61,9 +61,10 @@ pub struct Battler <'a>{
     discard: Vec<u32>, //Discarded deck
 }
 
-impl <'a> Battler <'a>{ //HAND and DECK created as INTRINSIC VALUES
-    pub fn new(name: &'a str, full_health: i32, curr_health: i32, full_energy: i32, curr_energy: i32, hand_size: usize)-> Battler<'a>{
+impl Battler{ //HAND and DECK created as INTRINSIC VALUES
+    pub fn new(name: String, full_health: i32, curr_health: i32, full_energy: i32, curr_energy: i32)-> Battler{
         let hand = Vec::new();
+        let hand_size = 7 as usize;
         let deck = Vec::new();
         let discard = Vec::new();
         let def = 0;
@@ -96,7 +97,11 @@ impl <'a> Battler <'a>{ //HAND and DECK created as INTRINSIC VALUES
     }
 
     pub fn get_name(&self) -> &str{
-        self.name
+        &self.name
+    }
+
+    pub fn set_deck(&mut self, new_deck: Vec<u32>){
+        self.deck = new_deck;
     }
 
     pub fn set_defense(&mut self,d:i32){
@@ -208,14 +213,14 @@ impl <'a> Battler <'a>{ //HAND and DECK created as INTRINSIC VALUES
     }
 }
 
-pub struct BattleStatus<'a>{
-    p1: Rc<RefCell<Battler<'a>>>,
-    p2: Rc<RefCell<Battler<'a>>>,
+pub struct BattleStatus{
+    p1: Rc<RefCell<Battler>>,
+    p2: Rc<RefCell<Battler>>,
     turn: u32,
 }
 
-impl <'a> BattleStatus<'a>{
-    pub fn new(p1: Rc<RefCell<Battler<'a>>>, p2: Rc<RefCell<Battler<'a>>>)->BattleStatus<'a>{
+impl BattleStatus{
+    pub fn new(p1: Rc<RefCell<Battler>>, p2: Rc<RefCell<Battler>>)->BattleStatus{
         let turn =0;
         BattleStatus{p1,p2,turn}
     }
@@ -226,11 +231,11 @@ impl <'a> BattleStatus<'a>{
         self.turn
     }
 
-    pub fn get_p1(&mut self)->Rc<RefCell<Battler<'a>>>{
+    pub fn get_p1(&mut self)->Rc<RefCell<Battler>>{
         Rc::clone(&self.p1)
     }
 
-    pub fn get_p2(&mut self)->Rc<RefCell<Battler<'a>>>{
+    pub fn get_p2(&mut self)->Rc<RefCell<Battler>>{
         Rc::clone(&self.p1)
     }
 }
