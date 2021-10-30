@@ -107,13 +107,24 @@ impl Scene for Menu<'_> {
 
 		crate::video::gfx::draw_sprite(&mut wincan, &self.logo, (340, 100))?;
 		
-		//let mut font_m = self.font_manager.borrow_mut();
-
-		//font_m.draw_text(&mut wincan, "some text", (30, 30));
+		/*
 		
-		//font_m.draw_text(&mut wincan, "some more text somewhere else", (20, 140));
+		// text examples
 		
-		//font_m.draw_text(&mut wincan, "some text", (400, 400));
+		let mut font_m = self.font_manager.borrow_mut();
+		//println!("calling font_m.draw_text()");
+		
+		font_m.draw_text(&mut wincan, "some text", (30, 30));
+		
+		font_m.draw_text(&mut wincan, "some more text somewhere else", (20, 140));
+		
+		font_m.draw_text(&mut wincan, "some text", (400, 400));
+		
+		font_m.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 255), "text but this time it has a\n line break", (200, 200));
+		
+		font_m.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 24, Color::RGBA(0, 0, 0, 0), "transparent doesn't work", (300, 350));  
+		
+        */
 		
 
 		wincan.present();

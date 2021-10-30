@@ -112,6 +112,7 @@ impl<'a> GameManager<'a> {
 			curr_scene: 0,
 		})
 	}
+	
 }
 
 

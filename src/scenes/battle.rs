@@ -60,10 +60,16 @@ impl<'a> Battle<'a> {
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
 		let accepting_input = true;
+<<<<<<< HEAD
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
+=======
+
+		let dummy = Rc::new(RefCell::new(Battler::new("",0,0,0,0,0)));  //REQUIRED TO AVOID USE
+>>>>>>> 4633ee9af6969a293cb26effccffe72ff50e0e9b
 																		//of Option<T>. DO NOT REMOVE
 		let card_map = crate::cards::battle_system::populate_card_map();
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&dummy),Rc::clone(&dummy))));
+
 		Ok(Battle {
 			wincan,
 			event_system,
@@ -123,7 +129,7 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the beginning of the turn
 
 	            // Can add drawing a card in here and checking handsize/remaining cards
-
+            
 	            // Move to the next phase of the turn
 	            self.turn == TurnPhase::TurnP1;
 	        }
@@ -132,6 +138,7 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the end of the turn
 
 	            self.active_player = -1;
+	            self.turn = TurnPhase::PreTurnP2;
 	        }
 
 
@@ -143,7 +150,8 @@ impl<'a> Battle<'a> {
 
 	            // Enemy AI should be called from here
 
-	            //
+	            
+	            self.turn == TurnPhase::PostTurnP2;
 
 	        }
 	        else if self.turn == TurnPhase::PreTurnP2 {
@@ -160,6 +168,7 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the end of the turn
 
 	            self.active_player = 1;
+	            self.turn = TurnPhase::PreTurnP1;
 	        }
 	    }
 
@@ -182,6 +191,7 @@ impl Scene for Battle<'_> {
 				    //println!("{}", k);
 				    if k.eq(&Keycode::Escape) {self.event_system.borrow().change_scene(1).unwrap();}
 			    },
+
 			    _ => {},
 		    }
 

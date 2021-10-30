@@ -48,6 +48,7 @@ impl<'a> Overworld<'a> {
 			y_vel: 0.0,
 			sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
 		};
+		let frame_counter = 0;
 
 		Ok(Overworld{
 			wincan,
