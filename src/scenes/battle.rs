@@ -42,7 +42,6 @@ pub struct Battle<'a> {
 	accepting_input: bool,
 
 	// BATTLE DATA
-	card_map: HashMap<u32, Card>,
 	battler_map: HashMap<u32, Battler>,
 	active_player: i8,
 	turn: TurnPhase,
@@ -63,12 +62,11 @@ impl<'a> Battle<'a> {
 		let accepting_input = true;
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
 																		//of Option<T>. DO NOT REMOVE
-		let card_map = crate::cards::battle_system::populate_card_map();
 		let battler_map = crate::cards::battle_system::populate_battler_map();
-		
+
 		let _p1 = Rc::new(RefCell::new(battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
         let _p2 = Rc::new(RefCell::new(battler_map.get(&1).unwrap().clone()));
-		
+
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
 
 		Ok(Battle {
@@ -84,7 +82,6 @@ impl<'a> Battle<'a> {
 			drop,
 			tmp_button,
 			accepting_input,
-			card_map,
 			battler_map,
 			active_player: 1,
 			turn: TurnPhase::NotInitialized,
@@ -114,16 +111,16 @@ impl<'a> Battle<'a> {
 
             println!("Start of Battle...");
             self.active_player = 1;
-            
+
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
             let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
             let _p2 = Rc::new(RefCell::new(self.battler_map.get(&1).unwrap().clone()));
-		
+
 		    self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
-            
+
             // free up the borrow_mut slot by using a local variable
             let mut battle_stat = self.battle_handler.borrow_mut();
-            
+
             println!("The player has {} cards in the deck", battle_stat.get_p1().borrow_mut().get_deck_size());
             println!("The opponent has {} cards in the deck\n", battle_stat.get_p2().borrow_mut().get_deck_size());
             
@@ -132,16 +129,16 @@ impl<'a> Battle<'a> {
                 battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
                 battle_stat.get_p2().borrow_mut().draw_card();  // p2 is opponent
             }
-            
+
             println!("The player has {} cards in the deck", battle_stat.get_p1().borrow_mut().get_deck_size());
             println!("The opponent has {} cards in the deck\n", battle_stat.get_p2().borrow_mut().get_deck_size());
-            
+
             println!("The player has {} cards in their hand", battle_stat.get_p1().borrow_mut().get_curr_hand_size());
             println!("The opponent has {} cards in the hand\n", battle_stat.get_p2().borrow_mut().get_curr_hand_size());
-            
+
             println!("{}", battle_stat.get_p1().borrow_mut().to_string());
             println!("{}", battle_stat.get_p2().borrow_mut().to_string());
-            
+
 	        self.turn = TurnPhase::PreTurnP1;
 
 	    }
@@ -302,12 +299,12 @@ impl Scene for Battle<'_> {
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), (500,560))?;
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_3,(100,148), (380,560))?;
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), (260,560))?;
-		
+
 		let mut battle_stat = self.battle_handler.borrow_mut();
 		for i in 0..battle_stat.get_p1().borrow_mut().get_curr_hand_size() {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), ((260 + (i * 120)) as i32,560))?;
 		}
-		
+
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
 		//enemy side
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (920,20))?;
@@ -317,19 +314,19 @@ impl Scene for Battle<'_> {
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (440,20))?;
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (320,20))?;
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (200,20))?;
-		
+
 		for i in 0..battle_stat.get_p2().borrow_mut().get_curr_hand_size() {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
 		}
-		
+
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
-		
+
 		//mostly static objects (health bars change tho)
-		
+
 		// Can now update the health bars to dynamically update based on the Battler's health
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(300,20), (790,520))?; //player health bar
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(300,20), (200,190))?; //enemy health bar
-		
+
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
