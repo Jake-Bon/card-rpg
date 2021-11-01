@@ -166,6 +166,7 @@ impl<'a> Battle<'a> {
 	            // draw a card at the start of the turn
                 battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
                 
+                //battle_stat = self.battle_handler.borrow_mut();
 
 	            // Move to the next phase of the turn
 	            println!("End of PreTurnP1");
@@ -269,6 +270,18 @@ impl Scene for Battle<'_> {
 					    self.turn = TurnPhase::PostTurnP1;
 
 				    }
+				    else{
+				        // check if the player is clicking on any of the cards in their hand
+				        let mut battle_stat = self.battle_handler.borrow_mut();
+				        let mut p1_hand_size = battle_stat.get_p1().borrow_mut().get_curr_hand_size();
+				        for i in 0..p1_hand_size{
+				            if ((x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+				                println!("game thinks that the player is clicking on card {}", i);
+
+				            }    
+				        }
+				        
+				    }
 			    }
 
 			    _ => {},
@@ -301,7 +314,8 @@ impl Scene for Battle<'_> {
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), (260,560))?;
 
 		let mut battle_stat = self.battle_handler.borrow_mut();
-		for i in 0..battle_stat.get_p1().borrow_mut().get_curr_hand_size() {
+		let mut p1_hand_size = battle_stat.get_p1().borrow_mut().get_curr_hand_size();
+		for i in 0..p1_hand_size {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), ((260 + (i * 120)) as i32,560))?;
 		}
 
@@ -315,7 +329,8 @@ impl Scene for Battle<'_> {
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (320,20))?;
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (200,20))?;
 
-		for i in 0..battle_stat.get_p2().borrow_mut().get_curr_hand_size() {
+        let mut p2_hand_size = battle_stat.get_p2().borrow_mut().get_curr_hand_size();
+		for i in 0..p2_hand_size {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
 		}
 
