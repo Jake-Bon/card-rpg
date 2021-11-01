@@ -18,3 +18,12 @@ impl Scene for Online {
 		fn render(&mut self) -> Result<(), String> { todo!() }
 
 }
+
+impl Online {
+	pub fn init(wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>) -> Self {
+		Online {
+			wincan,
+			event_system,
+		}
+	}
+}

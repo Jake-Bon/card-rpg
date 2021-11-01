@@ -10,6 +10,7 @@ use sdl2::render::{Texture, TextureCreator, WindowCanvas};
 
 use crate::scenes::Scene;
 use crate::scenes::battle::Battle;
+use crate::scenes::online::Online;
 use crate::scenes::overworld::Overworld;
 use crate::scenes::menu::Menu; // <-- implement with scene change
 use crate::cards::card_system;
@@ -25,6 +26,7 @@ pub struct GameManager<'a> {
 	overworld: Box<dyn Scene + 'a>,
 	battle: Box<dyn Scene + 'a>,
 	menu: Box<dyn Scene + 'a>,
+	online: Box<dyn Scene>,
 	game_state: GameState,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
@@ -38,6 +40,7 @@ impl<'a> GameManager<'a> {
 			0 => self.menu.handle_input(e),
 			1 => self.overworld.handle_input(e),
 			2 => self.battle.handle_input(e),
+			3 => self.online.handle_input(e),
 			_ => {},
 		}
 	}
@@ -56,6 +59,7 @@ impl<'a> GameManager<'a> {
 			0 => self.menu.render()?,
 			1 => self.overworld.render()?,
 			2 => self.battle.render()?,
+			3 => self.online.render()?,
 			_ => {},
 		};
 
@@ -92,11 +96,13 @@ impl<'a> GameManager<'a> {
 		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager))?);
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
+		let online = Box::new(Online::init(Rc::clone(&wincan), Rc::clone(&event_system)));
 
 		Ok(GameManager {
 			overworld,
 			battle,
 			menu,
+			online,
 			game_state: GameState::Running,
 			wincan,
 			event_system,
