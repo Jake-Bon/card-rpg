@@ -54,6 +54,11 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         1 => defend(val, stat.get_active_player()),
         2 => heal(val, stat.get_active_player()),
         3 => mult_next_dmg(val, stat.get_inactive_player()), //multiplier placed on opponent
+        4 => poison(val, stat.get_inactive_player()),
+        5 => cure(stat.get_active_player()),
+        6 => change_mana_regen(val,stat.get_active_player()),//player bumps up own regen
+        7 => change_mana_regen(val,stat.get_inactive_player()),//player bumps down opponent regen
+        8 => health_regen(val,stat.get_active_player()),
         _ => unreachable_action(),
     }
 }
@@ -62,27 +67,21 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
 //TODO - Get CARD from player deck and get card TYPE and VALUE
 
 fn attack (val: i32, target: Rc<RefCell<Battler>>){
-    //print!("ATTACKER\n");
     let mut target = target.borrow_mut();
-
     let def = target.get_defense();
     let mult = target.get_mult();
-    //print!("{} took {} damage!\n",target.get_name(),val-def);
-    print!("{}\n",mult);
+
     target.adjust_curr_health(def-((val as f64*mult) as i32));
     target.set_defense(0);
 }
 
 fn defend (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
-
     target.set_defense(val);
 }
 
 fn heal (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
-
-    //print!("{} healed {} hp!\n",target.get_name(),val);
     target.adjust_curr_health(val);
 }
 
@@ -91,6 +90,26 @@ fn mult_next_dmg(val:i32, target: Rc<RefCell<Battler>>){
 
     //print!("{} healed {} hp!\n",target.get_name(),val);
     target.set_mult(val);
+}
+
+fn poison(val:i32,target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.add_poison(val as u32);
+}
+
+fn cure(target:Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.clear_poison();
+}
+
+fn change_mana_regen(val:i32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.add_energy_regen(val);
+}
+
+fn health_regen(val: i32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.add_health_regen(val);
 }
 
 fn unreachable_action(){
@@ -103,7 +122,8 @@ pub fn deal_cards(player: &mut Battler){
     //      May use another .txt for different classes.
 }
 
-/*pub fn test_libraries(){
+/*
+pub fn test_libraries(){
     let card_map = populate_card_map();
     let battler_map = populate_battler_map();
 
@@ -126,7 +146,20 @@ pub fn deal_cards(player: &mut Battler){
     play_card(Rc::clone(&battle),c2);
     print!("{}\n",c3.to_string());
     play_card(Rc::clone(&battle),c3);
+    parse_card(4,4,Rc::clone(&battle));
+    battle.borrow_mut().update_player_effects();
+    battle.borrow_mut().update_player_effects();
+    battle.borrow_mut().turner();
+    parse_card(5,0,Rc::clone(&battle));
+    battle.borrow_mut().update_player_effects();
+    battle.borrow_mut().update_player_effects();
+    battle.borrow_mut().update_player_effects();
+    parse_card(8,3,Rc::clone(&battle));
+    battle.borrow_mut().update_player_effects();
+    battle.borrow_mut().update_player_effects();
+    battle.borrow_mut().update_player_effects();
     print!("{}\n",battle.borrow_mut().get_turn());
     print!("{}\n",p1.borrow_mut().to_string());
     print!("{}\n",p2.borrow_mut().to_string());
-}*/
+}
+*/

@@ -23,8 +23,6 @@ fn main() -> Result<(), String>{
     let font_manager = Rc::new(RefCell::new(FontManager::init(wincan.clone(), font_context.clone(), &sdl_core.texture_creator)?));
     let mut game_manager = GameManager::init(&sdl_core.sdl_context, wincan, texture_manager, font_manager)?;
 
-    println!("TEST OF BATTLE SYSTEM\n");
-
     //battle_system::test_libraries();
 
     game_manager.start_state_machine();

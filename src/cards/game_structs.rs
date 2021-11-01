@@ -70,7 +70,9 @@ pub struct Battler{
     hand: Vec<u32>, //Current held cards
     deck: Vec<u32>, //Deck to draw from - treat as queue
     discard: Vec<u32>, //Discarded deck
-    effects: Rc<RefCell<Vec<Vec<i32>>>>, //[[effect1 type,effect1 value,effect1 duration],etc]
+    poison: u32,
+    energy_regen: Vec<i32>,
+    health_regen: Vec<i32>,
 }
 
 impl Battler{ //HAND and DECK created as INTRINSIC VALUES
@@ -82,11 +84,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let mult=1;
         let def = 0;
         let mana_delta = 3;
-        let effects_type = Vec::new();
-        let effects_val = Vec::new();
-        let effects_duration = Vec::new();
-        let effects = Rc::new(RefCell::new(vec![effects_type,effects_val,effects_duration]));
-        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,effects}
+        let poison = 0;
+        let energy_regen = vec![0,0];
+        let health_regen = vec![0,0];
+        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,poison,energy_regen,health_regen}
     }
 
     pub fn get_full_health(&self)->i32{
@@ -187,18 +188,6 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.discard.push(c);
     }
 
-    pub fn add_effect(&mut self, etype:i32,eval:i32,edur:i32){
-        self.effects.borrow_mut().push(vec![etype,eval,edur]);
-    }
-
-    pub fn remove_effect(&mut self, pos:usize){
-        self.effects.borrow_mut().remove(pos);
-    }
-
-    pub fn get_effects(&mut self) -> Rc<RefCell<Vec<Vec<i32>>>>{
-        Rc::clone(&self.effects)
-    }
-
     pub fn get_deck_size(&self)->usize{
         self.deck.len()
     }
@@ -249,6 +238,62 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             None
         }
 
+    }
+
+    //EFFECTS
+
+    pub fn add_poison(&mut self,amt: u32){
+        self.poison = self.poison+amt;
+    }
+
+    pub fn get_poison(&self)->u32{
+        self.poison
+    }
+
+    pub fn clear_poison(&mut self){
+        self.poison = 0;
+    }
+
+    pub fn add_energy_regen(&mut self, val:i32){ //CAN BE NEGATIVE!
+        self.energy_regen[0] = val;
+        self.energy_regen[1] = 3 as i32;//turns
+    }
+
+    pub fn get_energy_regen(& self)->i32{ //for display purposes
+        if self.energy_regen[1]>0{
+            self.energy_regen[0]
+        }else{
+            0 as i32
+        }
+    }
+
+    pub fn add_health_regen(&mut self, val:i32){ //CAN BE NEGATIVE!
+        self.health_regen[0] = val;
+        self.health_regen[1] = 3 as i32;//turns
+    }
+
+    pub fn get_health_regen(& self)->i32{ //for display purposes
+        if self.health_regen[1]>0{
+            self.health_regen[0]
+        }else{
+            0 as i32
+        }
+    }
+
+    pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
+        if self.poison>0{
+            self.curr_health = self.curr_health-self.poison as i32;
+            self.poison = self.poison - 1;
+        }
+            self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
+        if self.energy_regen[1]>0 as i32{
+            self.curr_energy = self.curr_energy+self.energy_regen[0];
+            self.energy_regen[1] = self.energy_regen[1] - 1 as i32;
+        }
+        if self.health_regen[1]>0 as i32{
+            self.curr_health = self.curr_health+self.health_regen[0];
+            self.health_regen[1] = self.health_regen[1] - 1 as i32;
+        }
     }
 
     pub fn to_string(&self)->String{
@@ -320,5 +365,10 @@ impl BattleStatus{
 
     pub fn get_card(&self, id: u32)->Card{
         self.card_map.get(&id).unwrap().clone()
+    }
+
+    pub fn update_player_effects(&self){ //WILL NOT USE FOR GAME. USE battler.update_effects() instead
+        self.p1.borrow_mut().update_effects();
+        self.p2.borrow_mut().update_effects();
     }
 }
