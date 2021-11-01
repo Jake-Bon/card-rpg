@@ -25,7 +25,7 @@ fn main() -> Result<(), String>{
 
     println!("TEST OF BATTLE SYSTEM\n");
 
-    battle_system::test_libraries();
+    //battle_system::test_libraries();
 
     game_manager.start_state_machine();
 

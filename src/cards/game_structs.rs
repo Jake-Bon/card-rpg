@@ -226,6 +226,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
     }
 
+    // gets the card from the top of the deck
     pub fn get_deck_card(&self)->Option<u32>{
         if self.deck.len()>0{
             Some(self.deck[0])
