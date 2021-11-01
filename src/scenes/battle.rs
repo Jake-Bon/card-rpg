@@ -127,8 +127,8 @@ impl<'a> Battle<'a> {
             println!("The player has {} cards in the deck", battle_stat.get_p1().borrow_mut().get_deck_size());
             println!("The opponent has {} cards in the deck\n", battle_stat.get_p2().borrow_mut().get_deck_size());
             
-            // draw 4 cards for both players to start the battle
-            for i in 0..4{
+            // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
+            for i in 0..3{
                 battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
                 battle_stat.get_p2().borrow_mut().draw_card();  // p2 is opponent
             }
@@ -148,6 +148,8 @@ impl<'a> Battle<'a> {
 
 	    if self.active_player == 1 {
 
+            let mut battle_stat = self.battle_handler.borrow_mut();
+
 	        if self.turn == TurnPhase::TurnP1 {
 
 	            // Essentially just waits until the end turn button is pressed
@@ -163,6 +165,10 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the beginning of the turn
 
 	            // Can add drawing a card in here and checking handsize/remaining cards
+	            
+	            // draw a card at the start of the turn
+                battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
+                
 
 	            // Move to the next phase of the turn
 	            println!("End of PreTurnP1");
@@ -182,6 +188,9 @@ impl<'a> Battle<'a> {
 
 	    // Enemy logic in the else
 	    else{
+	    
+	        let mut battle_stat = self.battle_handler.borrow_mut();
+	    
 	        if self.turn == TurnPhase::TurnP2 {
 
 	            // Enemy AI should be called from here
@@ -195,6 +204,9 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the beginning of the turn
 
 	            // Can add drawing a card in here and checking handsize/remaining cards
+
+                // draw a card at the start of the turn
+                battle_stat.get_p2().borrow_mut().draw_card();  // p2 is opponent
 
 	            // Move to the next phase of the turn
 	            println!("End of PreTurnP2");
