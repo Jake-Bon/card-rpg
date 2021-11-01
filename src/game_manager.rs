@@ -28,11 +28,8 @@ pub struct GameManager<'a> {
 	overworld: Box<dyn Scene + 'a>,
 	battle: Box<dyn Scene + 'a>,
 	menu: Box<dyn Scene + 'a>,
-<<<<<<< HEAD
 	online: Box<dyn Scene>,
-=======
 	credits: Box<dyn Scene + 'a>,
->>>>>>> main
 	game_state: GameState,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
@@ -47,11 +44,8 @@ impl<'a> GameManager<'a> {
 			0 => self.menu.handle_input(e),
 			1 => self.overworld.handle_input(e),
 			2 => self.battle.handle_input(e),
-<<<<<<< HEAD
 			3 => self.online.handle_input(e),
-=======
-			3 => self.credits.handle_input(e),
->>>>>>> main
+			4 => self.credits.handle_input(e),
 			_ => {},
 		}
 	}
@@ -70,11 +64,8 @@ impl<'a> GameManager<'a> {
 			0 => self.menu.render()?,
 			1 => self.overworld.render()?,
 			2 => self.battle.render()?,
-<<<<<<< HEAD
 			3 => self.online.render()?,
-=======
-			3 => self.credits.render()?,
->>>>>>> main
+			4 => self.credits.render()?,
 			_ => {},
 		};
 
@@ -111,21 +102,15 @@ impl<'a> GameManager<'a> {
 		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
-<<<<<<< HEAD
 		let online = Box::new(Online::init(Rc::clone(&wincan), Rc::clone(&event_system)));
-=======
 		let credits = Box::new(Credits::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
->>>>>>> main
 
 		Ok(GameManager {
 			overworld,
 			battle,
 			menu,
-<<<<<<< HEAD
 			online,
-=======
 			credits,
->>>>>>> main
 			game_state: GameState::Running,
 			wincan,
 			event_system,

@@ -67,14 +67,11 @@ impl Scene for Menu<'_> {
 				}
 
 				if (x_pos > 50 && x_pos < 300) && (y_pos > 550 && y_pos < 650) {
-<<<<<<< HEAD
 					println!("ONLINE");
+					self.event_system.borrow().change_scene(3).unwrap();
 				}
 
 				if (x_pos > 50 && x_pos < 300) && (y_pos > 650 && y_pos < 750) {
-=======
-					self.event_system.borrow().change_scene(3).unwrap();
->>>>>>> main
 					println!("QUIT");
 
 					//GameEvent::WindowClose;
