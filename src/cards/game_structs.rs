@@ -1,6 +1,9 @@
 //extern crate card_experiments;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fs;
+use std::iter::Zip;
 
 #[derive(Clone)]
 pub struct Card{
@@ -40,6 +43,12 @@ impl Card{
 
     pub fn get_sprite_name(&self)->&str{
         &self.img_file
+    }
+
+    pub fn get_lists(&self)->Zip<std::slice::Iter<'_, i32>, std::slice::Iter<'_, i32>>{
+        let a = &self.action_list;
+        let v = &self.value_list;
+        a.iter().zip(v.iter())
     }
 
     pub fn to_string(&self)->String{
@@ -106,6 +115,15 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn get_name(&self) -> &str{
         &self.name
+    }
+
+    pub fn get_mult(&mut self)->f64{
+        let m = self.mult;
+        if m<0{
+            (1 as f64)/(m.abs() as f64)
+        }else{
+            m as f64
+        }
     }
 
     pub fn set_mult(&mut self, m: i32){
@@ -237,16 +255,36 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     }
 }
 
+pub fn populate_card_map()->HashMap<u32,Card>{
+    let mut cards = HashMap::new();
+    let file_data = fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.");
+    for line in (file_data[4..]).split('\n'){ //Remove first character, \u was messing with things
+        //println!("Currently trying to parse: {}", line);
+        if line.len()==0{ //If empty line, skip
+            continue;
+        }else if line.starts_with("##"){ //If commented line, skip
+            continue;
+        }
+
+        let line_data: Vec<&str> = line.split("::").collect();
+        //Collect and parse data into new card
+        cards.insert(line_data[0].parse::<u32>().unwrap(),Card::new(line_data[1].to_string(),line_data[2].to_string(),line_data[3].parse::<u32>().unwrap(),line_data[4].split(',').map(|v| v.parse::<i32>().unwrap()).collect(),line_data[5].split(',').map(|v| v.parse::<i32>().unwrap()).collect(),line_data[6].to_string()));
+    }
+    cards
+}
+
 pub struct BattleStatus{
     p1: Rc<RefCell<Battler>>,
     p2: Rc<RefCell<Battler>>,
     turn: u32,
+    card_map: HashMap<u32,Card>,
 }
 
 impl BattleStatus{
     pub fn new(p1: Rc<RefCell<Battler>>, p2: Rc<RefCell<Battler>>)->BattleStatus{
         let turn =0;
-        BattleStatus{p1,p2,turn}
+        let card_map = populate_card_map();
+        BattleStatus{p1,p2,turn,card_map}
     }
     pub fn turner(&mut self){
         self.turn=(self.turn+1)%2;
@@ -261,5 +299,25 @@ impl BattleStatus{
 
     pub fn get_p2(&mut self)->Rc<RefCell<Battler>>{
         Rc::clone(&self.p2)
+    }
+
+    pub fn get_active_player(&mut self)->Rc<RefCell<Battler>>{
+        if self.turn==0{
+            Rc::clone(&self.p1)
+        }else{
+            Rc::clone(&self.p2)
+        }
+    }
+
+    pub fn get_inactive_player(&mut self)->Rc<RefCell<Battler>>{
+        if self.turn==0{
+            Rc::clone(&self.p2)
+        }else{
+            Rc::clone(&self.p1)
+        }
+    }
+
+    pub fn get_card(&self, id: u32)->Card{
+        self.card_map.get(&id).unwrap().clone()
     }
 }
