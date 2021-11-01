@@ -1,14 +1,26 @@
 ﻿###How to build a card:
 ###All cards must have ALL VALUES SHOWN.
 ###[ID]::[Name]::[Description]::[Energy Cost]::[List of IDS using “,”]::[List of values using “,”]::[Sprite filepath]
-0::Powerful::Does many things...::5::0,1,2,3::4,5,6,7::../assets/Attack_Card.png
-1::Lisrae::The Power of Fluffy Boys Shines Within You::3::2::5::../assets/Heal_Card.png
-2::Card1::Does something.::1::1::1::../assets/Attack_Card.png
-3::Card2::Does something.?::1::1::1::../assets/Attack_Card.png
-4::Card3::?::1::1::1::../assets/Attack_Card.png
-5::Card4::?::1::1::1::../assets/Attack_Card.png
-6::Card5::?::1::1::1::../assets/Attack_Card.png
-7::Card6::?::1::1::1::../assets/Attack_Card.png
-8::Card7::?::1::1::1::../assets/Attack_Card.png
-9::Card8::?::1::1::1::../assets/Attack_Card.png
-10::Card9::?::1::1::1::../assets/Attack_Card.png
+0::Shroud::Envelops the World in Fog::2::1::2::../assets/cards/Defend_Shroud.png
+1::Lisrae::The Power of Fluffy Boys Shines Within You::3::2::5::../assets/cards/Heal_Lisrae.png
+###Could turn this into a status explicitly called "Stormy Waters" or something similar
+2::The Perfect Storm::Until your next turn, all attacks do 2 more damage.::3::3::2::../assets/thePerfectStorm_Card.png
+###Intended to synergize with the Perfect Storm, to have a 2 card combo do 9 damage (for now)
+3::Whirlpool::Attack for 1 damage. Repeat 3 times.::2::0,0,0::1,1,1::../assets/whirlpool_Card.png
+4::Card5::?::1::1::1::../assets/templates/Attack_Card.png
+5::Card6::?::1::1::1::../assets/templates/Attack_Card.png
+6::Card7::?::1::1::1::../assets/templates/Attack_Card.png
+7::Card8::?::1::1::1::../assets/templates/Attack_Card.png
+8::Card9::?::1::1::1::../assets/templates/Attack_Card.png
+9::Card10::?::1::1::1::../assets/templates/Attack_Card.png
+10::Card11::?::1::1::1::../assets/templates/Attack_Card.png
+11::Card12::?::1::1::1::../assets/templates/Attack_Card.png
+12::Card13::?::1::1::1::../assets/templates/Attack_Card.png
+13::Card14::?::1::1::1::../assets/templates/Attack_Card.png
+14::Card15::?::1::1::1::../assets/templates/Attack_Card.png
+15::Card16::?::1::1::1::../assets/templates/Attack_Card.png
+16::Card17::?::1::1::1::../assets/templates/Attack_Card.png
+##max's cards below (values subject to change)
+17::Swab The Deck::Draw 2 cards.::3::1::2::../assets/templates/swab the deck.png
+18::Cutlass::Deal 4 damage.::2::0::4::../assets/templates/cutlass.png
+19::Fishing Minigame::Heal 3 health.::2::2::3::../assets/templates/fish.png
