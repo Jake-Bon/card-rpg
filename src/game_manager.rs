@@ -7,13 +7,15 @@ use sdl2::Sdl;
 use sdl2::image::LoadTexture;
 use sdl2::video::WindowContext;
 use sdl2::render::{Texture, TextureCreator, WindowCanvas};
+use crate::video::text::FontManager;
 
 use crate::scenes::Scene;
 use crate::scenes::battle::Battle;
 use crate::scenes::online::Online;
 use crate::scenes::overworld::Overworld;
 use crate::scenes::menu::Menu; // <-- implement with scene change
-use crate::cards::card_system;
+use crate::scenes::credits::Credits;
+use crate::cards::battle_system;
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
 
@@ -26,10 +28,15 @@ pub struct GameManager<'a> {
 	overworld: Box<dyn Scene + 'a>,
 	battle: Box<dyn Scene + 'a>,
 	menu: Box<dyn Scene + 'a>,
+<<<<<<< HEAD
 	online: Box<dyn Scene>,
+=======
+	credits: Box<dyn Scene + 'a>,
+>>>>>>> main
 	game_state: GameState,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
+	font_manager: Rc<RefCell<FontManager<'a>>>,
 	curr_scene: u32,
 }
 
@@ -40,7 +47,11 @@ impl<'a> GameManager<'a> {
 			0 => self.menu.handle_input(e),
 			1 => self.overworld.handle_input(e),
 			2 => self.battle.handle_input(e),
+<<<<<<< HEAD
 			3 => self.online.handle_input(e),
+=======
+			3 => self.credits.handle_input(e),
+>>>>>>> main
 			_ => {},
 		}
 	}
@@ -59,7 +70,11 @@ impl<'a> GameManager<'a> {
 			0 => self.menu.render()?,
 			1 => self.overworld.render()?,
 			2 => self.battle.render()?,
+<<<<<<< HEAD
 			3 => self.online.render()?,
+=======
+			3 => self.credits.render()?,
+>>>>>>> main
 			_ => {},
 		};
 
@@ -89,26 +104,36 @@ impl<'a> GameManager<'a> {
 		}
 	}
 
-	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>) -> Result<Self, String> {
+	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>, font_manager: Rc<RefCell<FontManager<'a>>>) -> Result<Self, String> {
 
 		let event_system = Rc::new(RefCell::new(EventSystem::init(&sdl_context)?));
 
-		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
-		let battle = Box::new(Battle::init(Rc::clone(&texture_manager))?);
+		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
+		let battle = Box::new(Battle::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
+<<<<<<< HEAD
 		let online = Box::new(Online::init(Rc::clone(&wincan), Rc::clone(&event_system)));
+=======
+		let credits = Box::new(Credits::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
+>>>>>>> main
 
 		Ok(GameManager {
 			overworld,
 			battle,
 			menu,
+<<<<<<< HEAD
 			online,
+=======
+			credits,
+>>>>>>> main
 			game_state: GameState::Running,
 			wincan,
 			event_system,
+			font_manager,
 			curr_scene: 0,
 		})
 	}
+	
 }
 
 
