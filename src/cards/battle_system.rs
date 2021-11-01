@@ -21,7 +21,7 @@ pub fn populate_battler_map ()->HashMap<u32,Battler>{
         let mut health = line_data[2].parse::<i32>().unwrap();
         let mut energy = line_data[3].parse::<i32>().unwrap();
         let mut new_battler = Battler::new(line_data[1].to_string(),health,health,energy,energy);
-        new_battler.set_deck(line_data[4].split(',').map(|v| v.parse::<u32>().unwrap()).collect());
+        new_battler.set_deck(line_data[4].split(',').map(|v| v.trim().parse::<u32>().unwrap()).collect());
         battlers.insert(line_data[0].parse::<u32>().unwrap(),new_battler);
     }
     battlers

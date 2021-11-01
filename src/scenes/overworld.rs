@@ -19,8 +19,8 @@ const modSize: f32 = 4.0;
 const FullW: u32 = 1600;
 const FullH: u32 = 1200;
 
-const SPEED_LIMIT: f32 = 2.0;
-const ACCEL_RATE: f32 = 1.0;
+const SPEED_LIMIT: f32 = 3.0;
+const ACCEL_RATE: f32 = 0.6;
 
 //mod crate::video;
 
@@ -46,7 +46,10 @@ impl<'a> Overworld<'a> {
 			Box_y_pos: (FullH/2 - CAM_H/2 - TILE_SIZE*modSize as u32) as f32,
 			x_vel: 0.0,
 			y_vel: 0.0,
+			delta_x: 0.0,
+			delta_y: 0.0,
 			sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
+			keyPress: [false; 4],
 		};
 		let frame_counter = 0;
 
@@ -62,26 +65,28 @@ impl<'a> Overworld<'a> {
 
 impl Scene for Overworld<'_> {
 	fn handle_input(&mut self, event: GameEvent) {
-		let mut delta_x = 0.0;
-		let mut delta_y = 0.0;
 		// Matching events, most importantly KeyPress(k)'s
 		match event {
 			GameEvent::KeyPress(k) => {
 				//println!("{}", k);
-				if k.eq(&Keycode::W) {delta_y -= ACCEL_RATE}
-				if k.eq(&Keycode::A) {delta_x -= ACCEL_RATE}
-				if k.eq(&Keycode::S) {delta_y += ACCEL_RATE}
-				if k.eq(&Keycode::D) {delta_x += ACCEL_RATE}
+				if k.eq(&Keycode::W) {self.player.keyPress[0]=true}
+				if k.eq(&Keycode::S) {self.player.keyPress[1]=true}
+				if k.eq(&Keycode::A) {self.player.keyPress[2]=true}
+				if k.eq(&Keycode::D) {self.player.keyPress[3]=true}
 				if k.eq(&Keycode::Escape) {
-					delta_x=0.0;
-					delta_y=0.0;
+					self.player.delta_x=0.0;
+					self.player.delta_y=0.0;
 					self.player.x_vel=0.0;
 					self.player.y_vel=0.0;
 					self.event_system.borrow().change_scene(2).unwrap();}
-				self.player.x_vel = (self.player.x_vel + delta_x)
-					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
-				self.player.y_vel = (self.player.y_vel + delta_y)
-					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+
+			},
+			GameEvent::KeyRelease(k) => {
+				//println!("{}", k);
+				if k.eq(&Keycode::W) {self.player.keyPress[0]=false}
+				if k.eq(&Keycode::S) {self.player.keyPress[1]=false}
+				if k.eq(&Keycode::A) {self.player.keyPress[2]=false}
+				if k.eq(&Keycode::D) {self.player.keyPress[3]=false}
 			},
 			_ => {/*println!("No event")*/},
 		}
@@ -115,13 +120,114 @@ struct Player<'a> {
 	Box_y_pos: f32,
 	x_vel: f32,
 	y_vel: f32,
+	delta_x: f32,
+	delta_y: f32,
 	sprite: Rc<Texture<'a>>,
+	keyPress: [bool; 4],
 }
 
 impl<'a> Player<'a> {
 	fn update_movement(&mut self) {
 		// Check if player will go beyond the bounds of the camera
 		// - If yes, set their velocity to 0
+
+		if(self.keyPress[0])//w
+		{
+			self.delta_y -= ACCEL_RATE;
+			self.y_vel = (self.y_vel + self.delta_y)
+				.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+		}
+		else if(self.keyPress[1])//s
+		{
+			self.delta_y += ACCEL_RATE;
+			self.y_vel = (self.y_vel + self.delta_y)
+				.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+		}
+		else //niether
+		{
+			if(self.y_vel>0.0)
+			{
+				self.delta_y -= ACCEL_RATE;
+				self.y_vel = (self.y_vel + self.delta_y)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+				if(self.y_vel<0.0)
+				{
+					self.delta_y = 0.0;
+					self.y_vel = 0.0;
+				}
+			}
+			else if(self.y_vel<0.0)
+			{
+				self.delta_y += ACCEL_RATE;
+				self.y_vel = (self.y_vel + self.delta_y)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+				if(self.y_vel>0.0)
+				{
+					self.delta_y = 0.0;
+					self.y_vel = 0.0;
+				}
+			}
+		}
+
+
+		if(self.keyPress[2])//a
+		{
+			self.delta_x -= ACCEL_RATE;
+			self.x_vel = (self.x_vel + self.delta_x)
+				.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+		}
+		else if(self.keyPress[3])//d
+		{
+			self.delta_x += ACCEL_RATE;
+			self.x_vel = (self.x_vel + self.delta_x)
+				.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+		}
+		else
+		{
+			if(self.x_vel>0.0)
+			{
+				self.delta_x -= ACCEL_RATE;
+				self.x_vel = (self.x_vel + self.delta_x)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+				if(self.x_vel< 0.0)
+				{
+					self.x_vel = 0.0;
+					self.delta_x=0.0;
+				}
+			}
+			else if(self.x_vel<0.0)
+			{
+				self.delta_x += ACCEL_RATE;
+				self.x_vel = (self.x_vel + self.delta_x)
+					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
+				if(self.x_vel>0.0)
+				{
+					self.x_vel = 0.0;
+					self.delta_x = 0.0
+				}
+			}
+
+		}
+
+		//check the ACCEL_RATE
+		if(self.x_vel==-SPEED_LIMIT||self.x_vel==SPEED_LIMIT)
+		{
+			self.delta_x = 0.0;
+		}
+		if(self.y_vel==-SPEED_LIMIT||self.y_vel==SPEED_LIMIT)
+		{
+			self.delta_y = 0.0;
+		}
+
+
+		// println!("{}", self.x_vel);
+		// println!("{}", self.y_vel);
+		// println!("{}", self.delta_x);
+		// println!("{}", self.delta_y);
+
+
+
+
 		if self.x_pos + self.x_vel > CAM_W as f32 - TILE_SIZE as f32 *modSize || self.x_pos + self.x_vel < 0.0 {
 			self.x_vel = 0.0;
 		}
