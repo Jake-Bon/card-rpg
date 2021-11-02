@@ -16,7 +16,7 @@ impl EventSystem {
 			return match event {
 				SDL_Event::Quit{..} => Some(GameEvent::WindowClose),
 				SDL_Event::MouseButtonDown{x: x_pos, y: y_pos, ..} => Some(GameEvent::MouseClick(x_pos, y_pos)),
-				SDL_Event::MouseMotion{x: x_pos, y: y_pos, ..} => Some(GameEvent::MouseHover(x_pos, y_pos)),
+				//SDL_Event::MouseMotion{x: x_pos, y: y_pos, ..} => Some(GameEvent::MouseHover(x_pos, y_pos)),
 				SDL_Event::KeyDown{keycode: Some(k), ..} => Some(GameEvent::KeyPress(k)),
 				SDL_Event::KeyUp{keycode: Some(k), ..} => Some(GameEvent::KeyRelease(k)),
 				SDL_Event::User{code: scene_change_event_id, data1: scene_id, ..} => Some(GameEvent::SceneChange(scene_id as u32)),
