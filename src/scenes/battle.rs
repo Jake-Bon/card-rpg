@@ -16,6 +16,7 @@ use std::fs;
 use std::collections::HashMap;
 
 use crate::cards::battle_enums::TurnPhase;
+use crate::cards::battle_enums::BattleOutcome;
 
 //orig_posx = u32;
 //orig_posy = u32;
@@ -47,6 +48,7 @@ pub struct Battle<'a> {
 	battler_map: HashMap<u32, Battler>,
 	active_player: i8,
 	turn: TurnPhase,
+	outcome: BattleOutcome,
 	battle_handler: Rc<RefCell<BattleStatus>>,
 
 }
@@ -96,6 +98,7 @@ impl<'a> Battle<'a> {
 			battler_map,
 			active_player: 1,
 			turn: TurnPhase::NotInitialized,
+			outcome: BattleOutcome::Undetermined,
 			battle_handler,
 		})
 	}
@@ -104,7 +107,6 @@ impl<'a> Battle<'a> {
 		self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&p1),Rc::clone(&p2))));
 
 	}
-
 
 	// Step should be called via the GameManager
 
@@ -131,133 +133,148 @@ impl<'a> Battle<'a> {
 
             // free up the borrow_mut slot by using a local variable
             let mut battle_stat = self.battle_handler.borrow_mut();
+            
+            let mut _player1 = battle_stat.get_p1();
+            let mut player1 = _player1.borrow_mut();
+            player1.shuffle_deck();
+            
+            let mut _player2 = battle_stat.get_p2();
+            let mut player2 = _player2.borrow_mut();
+            player2.shuffle_deck();
 
-            println!("The player has {} cards in the deck", battle_stat.get_p1().borrow_mut().get_deck_size());
-            println!("The opponent has {} cards in the deck\n", battle_stat.get_p2().borrow_mut().get_deck_size());
+            println!("The player has {} cards in the deck", player1.get_deck_size());
+            println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
 
             // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
             for i in 0..3{
-                battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
-                battle_stat.get_p2().borrow_mut().draw_card();  // p2 is opponent
+                player1.draw_card();  // p1 is player
+                player2.draw_card();  // p2 is opponent
             }
 
-            println!("The player has {} cards in the deck", battle_stat.get_p1().borrow_mut().get_deck_size());
-            println!("The opponent has {} cards in the deck\n", battle_stat.get_p2().borrow_mut().get_deck_size());
+            println!("The player has {} cards in the deck", player1.get_deck_size());
+            println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
 
-            println!("The player has {} cards in their hand", battle_stat.get_p1().borrow_mut().get_curr_hand_size());
-            println!("The opponent has {} cards in the hand\n", battle_stat.get_p2().borrow_mut().get_curr_hand_size());
+            println!("The player has {} cards in their hand", player1.get_curr_hand_size());
+            println!("The opponent has {} cards in the hand\n", player2.get_curr_hand_size());
 
-            println!("{}", battle_stat.get_p1().borrow_mut().to_string());
-            println!("{}", battle_stat.get_p2().borrow_mut().to_string());
+            println!("{}", player1.to_string());
+            println!("{}", player2.to_string());
 
 	        self.turn = TurnPhase::PreTurnP1;
+	        self.outcome = BattleOutcome::Undetermined;
 
 	    }
 
-	    if self.active_player == 1 {
+        if self.outcome == BattleOutcome::Undetermined {
 
-            let mut battle_stat = self.battle_handler.borrow_mut();
+	        if self.active_player == 1 {
 
-	        if self.turn == TurnPhase::TurnP1 {
+                let mut battle_stat = self.battle_handler.borrow_mut();
+                self.outcome = battle_stat.check_victory();
 
-	            // Essentially just waits until the end turn button is pressed
-	            // All of the card playing logic should be in the handle input function
+	            if self.turn == TurnPhase::TurnP1 {
 
-	            // Could also check in here if the player loses all of their health or runs out of cards, to enable designing cards around that
+	                // Essentially just waits until the end turn button is pressed
+	                // All of the card playing logic should be in the handle input function
 
-	            // self.turn should be changed to TurnPhase::PostTurnP1 when clicking the end turn button
+	                // Could also check in here if the player loses all of their health or runs out of cards, to enable designing cards around that
+
+	                // self.turn should be changed to TurnPhase::PostTurnP1 when clicking the end turn button
+
+	            }
+	            else if self.turn == TurnPhase::PreTurnP1 {
+	                // Resolve things that need to be resolved prior to the Player's turn in here
+	                // Intended to check for Statuses that need to be removed at the beginning of the turn
+
+	                // Can add drawing a card in here and checking handsize/remaining cards
+
+	                // draw a card at the start of the turn
+
+				    let mut _p =battle_stat.get_active_player();
+				    let mut player = _p.borrow_mut();
+				    print!("{}\n",player.to_string());
+
+				    if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+					    player.restore_deck();
+					    println!("Skipping p1 turn!");
+					    self.turn = TurnPhase::PostTurnP1;
+				    }else{
+					    player.draw_card();  // p1 is player
+
+	                    // give the player 3 energy per turn
+                        player.adjust_curr_energy(3);  // p1 is player
+
+		                // Move to the next phase of the turn
+		                println!("End of PreTurnP1");
+		                self.turn = TurnPhase::TurnP1;
+				    }
+
+	            }
+	            else if self.turn == TurnPhase::PostTurnP1 {
+	                // Resolve things that need to be resolved after the Player's turn in here
+	                // Intended to check for Statuses that need to be removed at the end of the turn
+
+                    println!("End of PostTurnP1");
+
+				    battle_stat.turner();
+	                self.active_player = -1;
+	                self.turn = TurnPhase::PreTurnP2;
+	            }
+
 
 	        }
-	        else if self.turn == TurnPhase::PreTurnP1 {
-	            // Resolve things that need to be resolved prior to the Player's turn in here
-	            // Intended to check for Statuses that need to be removed at the beginning of the turn
 
-	            // Can add drawing a card in here and checking handsize/remaining cards
+	        // Enemy logic in the else
+	        else{
 
-	            // draw a card at the start of the turn
+	            let mut battle_stat = self.battle_handler.borrow_mut();
+	            self.outcome = battle_stat.check_victory();
 
-				let mut _p =battle_stat.get_active_player();
-				let mut player = _p.borrow_mut();
-				print!("{}\n",player.to_string());
+	            if self.turn == TurnPhase::TurnP2 {
 
-				if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
-					player.restore_deck();
-					println!("Skipping p1 turn!");
-					self.turn = TurnPhase::PostTurnP1;
-				}else{
-					player.draw_card();  // p1 is player
+	                // Enemy AI should be called from here
 
-	                // give the player 3 energy per turn
-                    player.adjust_curr_energy(3);  // p1 is player
 
-		            // Move to the next phase of the turn
-		            println!("End of PreTurnP1");
-		            self.turn = TurnPhase::TurnP1;
-				}
+	                self.turn = TurnPhase::PostTurnP2;
 
+	            }
+	            else if self.turn == TurnPhase::PreTurnP2 {
+	                // Resolve things that need to be resolved prior to the Opponent's turn in here
+	                // Intended to check for Statuses that need to be removed at the beginning of the turn
+
+	                // Can add drawing a card in here and checking handsize/remaining cards
+
+                    // draw a card at the start of the turn
+
+				    let mut _p =battle_stat.get_active_player();
+				    let mut player = _p.borrow_mut();
+				    if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+					    player.restore_deck();
+					    println!("Skipping p2 turn!");
+					    self.turn = TurnPhase::PostTurnP2;
+				    }else{
+					    player.draw_card();  // p2 is player
+
+	                    // give the opponent 3 energy per turn
+                        player.adjust_curr_energy(3);  // p2 is opponent
+
+		                // Move to the next phase of the turn
+		                println!("End of PreTurnP2");
+		                self.turn = TurnPhase::TurnP2;
+				    }
+
+	            }
+	            else if self.turn == TurnPhase::PostTurnP2 {
+	                // Resolve things that need to be resolved after the Opponent's turn in here
+	                // Intended to check for Statuses that need to be removed at the end of the turn
+
+                    println!("End of PostTurnP2");
+                    self.turn = TurnPhase::RoundOver;
+				    battle_stat.turner();
+
+	            }
 	        }
-	        else if self.turn == TurnPhase::PostTurnP1 {
-	            // Resolve things that need to be resolved after the Player's turn in here
-	            // Intended to check for Statuses that need to be removed at the end of the turn
-
-                println!("End of PostTurnP1");
-
-				battle_stat.turner();
-	            self.active_player = -1;
-	            self.turn = TurnPhase::PreTurnP2;
-	        }
-
-
-	    }
-
-	    // Enemy logic in the else
-	    else{
-
-	        let mut battle_stat = self.battle_handler.borrow_mut();
-
-	        if self.turn == TurnPhase::TurnP2 {
-
-	            // Enemy AI should be called from here
-
-
-	            self.turn = TurnPhase::PostTurnP2;
-
-	        }
-	        else if self.turn == TurnPhase::PreTurnP2 {
-	            // Resolve things that need to be resolved prior to the Opponent's turn in here
-	            // Intended to check for Statuses that need to be removed at the beginning of the turn
-
-	            // Can add drawing a card in here and checking handsize/remaining cards
-
-                // draw a card at the start of the turn
-
-				let mut _p =battle_stat.get_active_player();
-				let mut player = _p.borrow_mut();
-				if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
-					player.restore_deck();
-					println!("Skipping p2 turn!");
-					self.turn = TurnPhase::PostTurnP2;
-				}else{
-					player.draw_card();  // p2 is player
-
-	                // give the opponent 3 energy per turn
-                    player.adjust_curr_energy(3);  // p2 is opponent
-
-		            // Move to the next phase of the turn
-		            println!("End of PreTurnP2");
-		            self.turn = TurnPhase::TurnP2;
-				}
-
-	        }
-	        else if self.turn == TurnPhase::PostTurnP2 {
-	            // Resolve things that need to be resolved after the Opponent's turn in here
-	            // Intended to check for Statuses that need to be removed at the end of the turn
-
-                println!("End of PostTurnP2");
-                self.turn = TurnPhase::RoundOver;
-				battle_stat.turner();
-
-	        }
+	    
 	    }
 
         if self.turn == TurnPhase::RoundOver {
@@ -305,53 +322,60 @@ impl Scene for Battle<'_> {
 				        self.event_system.borrow().change_scene(1).unwrap();}
 			        },
 			    GameEvent::MouseClick(x_pos,y_pos) => {
-			        if (x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
-					    println!("End Turn button was pressed");
-					    self.turn = TurnPhase::PostTurnP1;
+			        
+			        // only take input on the player's turn
+			        if self.turn == TurnPhase::TurnP1 {
+			            if (x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530) {
+					        println!("End Turn button was pressed");
+					        self.turn = TurnPhase::PostTurnP1;
 
-				    }
-				    else{
-				        // check if the player is clicking on any of the cards in their hand
-				        //let mut battle_stat = self.battle_handler.borrow_mut();
-				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
-				        for i in 0..p1_hand_size{
-				            if ((x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
-				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
-                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
-
-				                println!("game thinks that the player is clicking on card {}", i);
-
-				                // play the card
-				                let card_ID = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
-				                let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
-
-				                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
-				                
-				                // if the player has enough energy to play the card, play it
-				                let p1_curr_energy = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_energy();
-				                let curr_card_cost = curr_card.get_cost() as i32;
-				                if(p1_curr_energy >= curr_card_cost){
-				                    // if the player has enough energy to cover the cost of playing the card:
-				                    crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-				                    // add card to discard pile after playing
-				                    self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
-				                    // decrement the player's energy
-				                    println!("time to decrement the energy");
-				                    self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-				                    
-				                }
-				                // otherwise, don't
-				                else {
-				                    println!("Not enough energy!");
-				                }
-				                
-				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
-                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
-
-
-				            }
 				        }
+				        else{
+				            // check if the player is clicking on any of the cards in their hand
+				            //let mut battle_stat = self.battle_handler.borrow_mut();
+				            let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
+				            
+				            
+				            
+				            for i in 0..p1_hand_size{
+				                if ((x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+				                    //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+                                    //println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 
+				                    println!("game thinks that the player is clicking on card {}", i);
+
+				                    // play the card
+				                    let card_ID = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
+				                    let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+
+				                    println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+				                    
+				                    // if the player has enough energy to play the card, play it
+				                    let p1_curr_energy = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_energy();
+				                    let curr_card_cost = curr_card.get_cost() as i32;
+				                    if(p1_curr_energy >= curr_card_cost){
+				                        // if the player has enough energy to cover the cost of playing the card:
+				                        crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+				                        // add card to discard pile after playing
+				                        self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+				                        // decrement the player's energy
+				                        println!("time to decrement the energy");
+				                        self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+				                        
+				                    }
+				                    // otherwise, don't
+				                    else {
+				                        println!("Not enough energy!");
+				                    }
+				                    
+				                    //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+                                    //println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+
+
+				                }
+				            }
+
+				        }
 				    }
 			    }
 
@@ -446,6 +470,13 @@ impl Scene for Battle<'_> {
 		// End Turn button text
 		let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
+		
+		match self.outcome {
+		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (600, 330)),
+		    BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (600, 330)),
+		    BattleOutcome::Tie => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DRAW...", (600, 330)),
+		    _ => Ok(()),
+		};
 
 		wincan.present();
 		Ok(())

@@ -13,6 +13,7 @@ pub enum TurnPhase {
 
 #[derive(PartialEq, Eq)]
 pub enum BattleOutcome {
+    Undetermined,
     VictoryP1,
     VictoryP2,
     Tie,

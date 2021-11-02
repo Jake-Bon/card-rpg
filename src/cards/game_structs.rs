@@ -7,6 +7,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::iter::Zip;
 
+use crate::cards::battle_enums::BattleOutcome;
+
+
 #[derive(Clone)]
 pub struct Card{
     name: String,
@@ -387,4 +390,24 @@ impl BattleStatus{
         self.p1.borrow_mut().update_effects();
         self.p2.borrow_mut().update_effects();
     }
+    
+    pub fn check_victory(&self) -> BattleOutcome {
+        
+        let p1_health = self.p1.borrow().get_curr_health();
+        let p2_health = self.p2.borrow().get_curr_health();
+        
+        if(p1_health > 0 && p2_health <= 0){
+            return BattleOutcome::VictoryP1;
+        }
+        else if(p1_health <= 0 && p2_health > 0){
+            return BattleOutcome::VictoryP2;
+        }
+        else if(p1_health <= 0 && p2_health <= 0){
+            return BattleOutcome::Tie;
+        }
+        // else if both players have health above 0, battle isn't over yet
+        return BattleOutcome::Undetermined;
+        
+    }
+    
 }
