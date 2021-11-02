@@ -59,6 +59,7 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         6 => change_mana_regen(val,stat.get_active_player()),//player bumps up own regen
         7 => change_mana_regen(val,stat.get_inactive_player()),//player bumps down opponent regen
         8 => health_regen(val,stat.get_active_player()),
+        9 => draw_cards(val,stat.get_active_player()),
         _ => unreachable_action(),
     }
 }
@@ -110,6 +111,13 @@ fn change_mana_regen(val:i32, target: Rc<RefCell<Battler>>){
 fn health_regen(val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     target.add_health_regen(val);
+}
+
+fn draw_cards(val: i32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    for i in 0 as i32..val{
+        target.draw_card();
+    }
 }
 
 fn unreachable_action(){

@@ -67,6 +67,11 @@ impl<'a> Battle<'a> {
 		let _p1 = Rc::new(RefCell::new(battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
         let _p2 = Rc::new(RefCell::new(battler_map.get(&1).unwrap().clone()));
 
+		_p1.borrow_mut().shuffle_deck();
+		_p2.borrow_mut().shuffle_deck();
+
+		
+
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
 
 		Ok(Battle {
@@ -123,7 +128,7 @@ impl<'a> Battle<'a> {
 
             println!("The player has {} cards in the deck", battle_stat.get_p1().borrow_mut().get_deck_size());
             println!("The opponent has {} cards in the deck\n", battle_stat.get_p2().borrow_mut().get_deck_size());
-            
+
             // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
             for i in 0..3{
                 battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
@@ -162,10 +167,10 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the beginning of the turn
 
 	            // Can add drawing a card in here and checking handsize/remaining cards
-	            
+
 	            // draw a card at the start of the turn
                 battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
-                
+
                 //battle_stat = self.battle_handler.borrow_mut();
 
 	            // Move to the next phase of the turn
@@ -186,9 +191,9 @@ impl<'a> Battle<'a> {
 
 	    // Enemy logic in the else
 	    else{
-	    
+
 	        let mut battle_stat = self.battle_handler.borrow_mut();
-	    
+
 	        if self.turn == TurnPhase::TurnP2 {
 
 	            // Enemy AI should be called from here
@@ -278,27 +283,27 @@ impl Scene for Battle<'_> {
 				            if ((x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
 				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
                                 println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
-				                
+
 				                println!("game thinks that the player is clicking on card {}", i);
-				                
+
 				                // play the card
 				                let card_ID = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
 				                let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
-				                
+
 				                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
-				                
+
 				                // if the player has enough energy to cover the cost of playing the card:
 				                crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
 				                // add card to discard pile after playing
 				                self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
-				                
+
 				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
                                 println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
-				                
 
-				            }    
+
+				            }
 				        }
-				        
+
 				    }
 			    }
 
