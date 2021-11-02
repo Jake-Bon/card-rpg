@@ -308,10 +308,16 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
         if self.energy_regen[1]>0 as i32{
             self.curr_energy = self.curr_energy+self.energy_regen[0];
+            if self.curr_energy>self.full_energy{
+                self.curr_energy = self.full_energy;
+            }
             self.energy_regen[1] = self.energy_regen[1] - 1 as i32;
         }
         if self.health_regen[1]>0 as i32{
             self.curr_health = self.curr_health+self.health_regen[0];
+            if self.curr_health>self.full_health{
+                self.curr_health = self.full_health;
+            }
             self.health_regen[1] = self.health_regen[1] - 1 as i32;
         }
     }

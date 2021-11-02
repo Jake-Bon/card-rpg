@@ -34,6 +34,7 @@ pub struct Battle<'a> {
 	card_textures: Vec<Rc<Texture<'a>>>,
 	play_i: Rc<Texture<'a>>,
 	health: Rc<Texture<'a>>,
+	behind_health:Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
 	tmp_button: Rc<Texture<'a>>,
@@ -49,11 +50,9 @@ pub struct Battle<'a> {
 
 impl<'a> Battle<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
-		let test_1 = texture_manager.borrow_mut().load("assets/templates/Attack_Card.png")?;
-		let test_2 = texture_manager.borrow_mut().load("assets/templates/Defend_Card.png")?;
-		let test_3 = texture_manager.borrow_mut().load("assets/templates/Heal_Card.png")?;
 		let play_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
 		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
+		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
@@ -88,6 +87,7 @@ impl<'a> Battle<'a> {
 			card_textures,
 			play_i,
 			health,
+			behind_health,
 			deck,
 			drop,
 			tmp_button,
@@ -328,13 +328,14 @@ impl Scene for Battle<'_> {
 				                // play the card
 				                let card_ID = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
 				                let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+								self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
 
 				                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
 				                // if the player has enough energy to cover the cost of playing the card:
 				                crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
 				                // add card to discard pile after playing
-				                self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+
 
 				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
                                 println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
@@ -393,7 +394,9 @@ impl Scene for Battle<'_> {
 		// Can now update the health bars to dynamically update based on the Battler's health
 		let p1perc = 300 as f32 * player1.get_health_percent();
 		let p2perc = 300 as f32 * player2.get_health_percent();
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p1perc as u32,20), (790,520))?; //player health bar
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (790,520))?;
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (200,190))?;
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p1perc as u32,20), (790+(300-p1perc as i32),520))?; //player health bar
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p2perc as u32,20), (200,190))?; //enemy health bar
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
