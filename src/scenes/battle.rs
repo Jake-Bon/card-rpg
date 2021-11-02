@@ -70,7 +70,7 @@ impl<'a> Battle<'a> {
 		_p1.borrow_mut().shuffle_deck();
 		_p2.borrow_mut().shuffle_deck();
 
-		
+
 
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
 
@@ -169,19 +169,32 @@ impl<'a> Battle<'a> {
 	            // Can add drawing a card in here and checking handsize/remaining cards
 
 	            // draw a card at the start of the turn
-                battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
+				let mut _p =battle_stat.get_active_player();
+				let mut player = _p.borrow_mut();
+				print!("{}\n",player.to_string());
 
-                //battle_stat = self.battle_handler.borrow_mut();
+				if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+					player.restore_deck();
+					println!("Skipping p1 turn!");
+					self.turn = TurnPhase::PostTurnP1;
+				}else{
+					player.draw_card();  // p1 is player
 
-	            // Move to the next phase of the turn
-	            println!("End of PreTurnP1");
-	            self.turn = TurnPhase::TurnP1;
+	                //battle_stat = self.battle_handler.borrow_mut();
+
+		            // Move to the next phase of the turn
+		            println!("End of PreTurnP1");
+		            self.turn = TurnPhase::TurnP1;
+				}
+
 	        }
 	        else if self.turn == TurnPhase::PostTurnP1 {
 	            // Resolve things that need to be resolved after the Player's turn in here
 	            // Intended to check for Statuses that need to be removed at the end of the turn
 
                 println!("End of PostTurnP1");
+
+				battle_stat.turner();
 	            self.active_player = -1;
 	            self.turn = TurnPhase::PreTurnP2;
 	        }
@@ -209,11 +222,21 @@ impl<'a> Battle<'a> {
 	            // Can add drawing a card in here and checking handsize/remaining cards
 
                 // draw a card at the start of the turn
-                battle_stat.get_p2().borrow_mut().draw_card();  // p2 is opponent
+				let mut _p =battle_stat.get_active_player();
+				let mut player = _p.borrow_mut();
+				if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+					player.restore_deck();
+					println!("Skipping p2 turn!");
+					self.turn = TurnPhase::PostTurnP2;
+				}else{
+					player.draw_card();  // p2 is player
 
-	            // Move to the next phase of the turn
-	            println!("End of PreTurnP2");
-	            self.turn = TurnPhase::TurnP2;
+	                //battle_stat = self.battle_handler.borrow_mut();
+
+		            // Move to the next phase of the turn
+		            println!("End of PreTurnP2");
+		            self.turn = TurnPhase::TurnP2;
+				}
 	        }
 	        else if self.turn == TurnPhase::PostTurnP2 {
 	            // Resolve things that need to be resolved after the Opponent's turn in here
@@ -221,6 +244,7 @@ impl<'a> Battle<'a> {
 
                 println!("End of PostTurnP2");
                 self.turn = TurnPhase::RoundOver;
+				battle_stat.turner();
 
 	        }
 	    }

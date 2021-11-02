@@ -141,6 +141,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.deck = new_deck;
     }
 
+    pub fn restore_deck(&mut self){
+        self.deck = self.discard.clone();
+        (&mut self.deck).shuffle(&mut thread_rng());
+    }
+
     pub fn set_defense(&mut self,d:i32){
         self.def = d;
     }
@@ -342,6 +347,7 @@ impl BattleStatus{
         let card_map = populate_card_map();
         BattleStatus{p1,p2,turn,card_map}
     }
+
     pub fn turner(&mut self){
         self.turn=(self.turn+1)%2;
     }
