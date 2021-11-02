@@ -144,6 +144,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     pub fn restore_deck(&mut self){
         self.deck = self.discard.clone();
         (&mut self.deck).shuffle(&mut thread_rng());
+
     }
 
     pub fn set_defense(&mut self,d:i32){
@@ -381,6 +382,10 @@ impl BattleStatus{
 
     pub fn get_card(&self, id: u32)->Card{
         self.card_map.get(&id).unwrap().clone()
+    }
+
+    pub fn get_card_map_size(&self)->usize{
+        self.card_map.len()
     }
 
     pub fn update_player_effects(&self){ //WILL NOT USE FOR GAME. USE battler.update_effects() instead

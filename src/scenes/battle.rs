@@ -31,9 +31,7 @@ pub struct Battle<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
-	test_1: Rc<Texture<'a>>,
-	test_2: Rc<Texture<'a>>,
-	test_3: Rc<Texture<'a>>,
+	card_textures: Vec<Rc<Texture<'a>>>,
 	play_i: Rc<Texture<'a>>,
 	health: Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
@@ -64,6 +62,7 @@ impl<'a> Battle<'a> {
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
 
+
 		let _p1 = Rc::new(RefCell::new(battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
         let _p2 = Rc::new(RefCell::new(battler_map.get(&1).unwrap().clone()));
 
@@ -74,13 +73,20 @@ impl<'a> Battle<'a> {
 
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
 
+		let num_cards = battle_handler.borrow_mut().get_card_map_size();
+		let mut card_textures: Vec<Rc<Texture>> = Vec::new();
+		for i in 0..num_cards{
+			let tmp_card = battle_handler.borrow_mut().get_card(i as u32);
+			let path = tmp_card.get_sprite_name();
+			let texture = texture_manager.borrow_mut().load(path)?;
+			card_textures.push(texture);
+		}
+
 		Ok(Battle {
 			wincan,
 			event_system,
 			font_manager,
-			test_1,
-			test_2,
-			test_3,
+			card_textures,
 			play_i,
 			health,
 			deck,
@@ -304,7 +310,7 @@ impl Scene for Battle<'_> {
 				        //let mut battle_stat = self.battle_handler.borrow_mut();
 				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
 				        for i in 0..p1_hand_size{
-				            if ((x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+				            if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
 				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
                                 println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 
@@ -361,9 +367,12 @@ impl Scene for Battle<'_> {
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), (260,560))?;
 
 		let mut battle_stat = self.battle_handler.borrow_mut();
-		let mut p1_hand_size = battle_stat.get_p1().borrow_mut().get_curr_hand_size();
+		let mut _p = battle_stat.get_p1();
+		let mut player = _p.borrow_mut();
+		let mut p1_hand_size = player.get_curr_hand_size();
 		for i in 0..p1_hand_size {
-		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), ((260 + (i * 120)) as i32,560))?;
+			let curr_hand = player.select_hand(i as usize).unwrap();
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(100,148), ((260 + (i * 120)) as i32,560))?;
 		}
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
