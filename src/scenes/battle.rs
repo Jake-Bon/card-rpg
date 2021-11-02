@@ -272,11 +272,29 @@ impl Scene for Battle<'_> {
 				    }
 				    else{
 				        // check if the player is clicking on any of the cards in their hand
-				        let mut battle_stat = self.battle_handler.borrow_mut();
-				        let mut p1_hand_size = battle_stat.get_p1().borrow_mut().get_curr_hand_size();
+				        //let mut battle_stat = self.battle_handler.borrow_mut();
+				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
 				        for i in 0..p1_hand_size{
 				            if ((x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+				                
 				                println!("game thinks that the player is clicking on card {}", i);
+				                
+				                // play the card
+				                let card_ID = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
+				                let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+				                
+				                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+				                
+				                // if the player has enough energy to cover the cost of playing the card:
+				                crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+				                // add card to discard pile after playing
+				                self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+				                
+				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+				                
 
 				            }    
 				        }
