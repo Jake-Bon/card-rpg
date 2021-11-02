@@ -159,8 +159,8 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn adjust_curr_energy(&mut self,h:i32){
         self.curr_energy = self.curr_energy+h;
-        if self.curr_energy>self.curr_energy{
-            self.curr_energy = self.curr_energy;
+        if self.curr_energy>self.full_energy{
+            self.curr_energy = self.full_energy;
         }
     }
 

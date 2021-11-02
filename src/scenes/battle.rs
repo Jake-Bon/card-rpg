@@ -39,6 +39,8 @@ pub struct Battle<'a> {
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
 	tmp_button: Rc<Texture<'a>>,
+	e_pip_unfilled: Rc<Texture<'a>>,
+	e_pip_filled: Rc<Texture<'a>>,
 	accepting_input: bool,
 
 	// BATTLE DATA
@@ -59,6 +61,8 @@ impl<'a> Battle<'a> {
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
+		let e_pip_unfilled = texture_manager.borrow_mut().load("assets/energyPipEmpty.png")?;
+		let e_pip_filled = texture_manager.borrow_mut().load("assets/energyPipFilled.png")?;
 		let accepting_input = true;
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
 																		//of Option<T>. DO NOT REMOVE
@@ -81,6 +85,8 @@ impl<'a> Battle<'a> {
 			deck,
 			drop,
 			tmp_button,
+			e_pip_unfilled,
+			e_pip_filled,
 			accepting_input,
 			battler_map,
 			active_player: 1,
@@ -166,6 +172,9 @@ impl<'a> Battle<'a> {
 	            // draw a card at the start of the turn
                 battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
                 
+                // give the player 3 energy per turn
+                battle_stat.get_p1().borrow_mut().adjust_curr_energy(3);  // p1 is player
+                
                 //battle_stat = self.battle_handler.borrow_mut();
 
 	            // Move to the next phase of the turn
@@ -205,6 +214,9 @@ impl<'a> Battle<'a> {
 
                 // draw a card at the start of the turn
                 battle_stat.get_p2().borrow_mut().draw_card();  // p2 is opponent
+                
+                // give the opponent 3 energy per turn
+                battle_stat.get_p2().borrow_mut().adjust_curr_energy(3);  // p2 is opponent
 
 	            // Move to the next phase of the turn
 	            println!("End of PreTurnP2");
@@ -287,10 +299,23 @@ impl Scene for Battle<'_> {
 				                
 				                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 				                
-				                // if the player has enough energy to cover the cost of playing the card:
-				                crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-				                // add card to discard pile after playing
-				                self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+				                // if the player has enough energy to play the card, play it
+				                let p1_curr_energy = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_energy();
+				                let curr_card_cost = curr_card.get_cost() as i32;
+				                if(p1_curr_energy >= curr_card_cost){
+				                    // if the player has enough energy to cover the cost of playing the card:
+				                    crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+				                    // add card to discard pile after playing
+				                    self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+				                    // decrement the player's energy
+				                    println!("time to decrement the energy");
+				                    self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+				                    
+				                }
+				                // otherwise, don't
+				                else {
+				                    println!("Not enough energy!");
+				                }
 				                
 				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
                                 println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
@@ -338,6 +363,18 @@ impl Scene for Battle<'_> {
 		}
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
+		
+		// draw the player's energy pips
+		let p1_curr_energy = battle_stat.get_p1().borrow_mut().get_curr_energy();
+		for i in 0..10 {
+		    if i < p1_curr_energy {
+		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_filled, (20 + (i * 20), 530));
+		    }
+		    else {
+		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_unfilled, (20 + (i * 20), 530));
+		    }
+		}
+		
 		//enemy side
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (920,20))?;
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (800,20))?;
@@ -353,6 +390,17 @@ impl Scene for Battle<'_> {
 		}
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
+
+        // draw the player's energy pips
+		let p2_curr_energy = battle_stat.get_p2().borrow_mut().get_curr_energy();
+		for i in 0..10 {
+		    if i < p2_curr_energy {
+		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_filled, (1240 - (i * 20), 184));
+		    }
+		    else {
+		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_unfilled, (1240 - (i * 20), 184));
+		    }
+		}
 
 		//mostly static objects (health bars change tho)
 
