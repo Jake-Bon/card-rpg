@@ -44,7 +44,7 @@ impl Card{
     }
 
     pub fn get_sprite_name(&self)->&str{
-        &self.img_file
+        &self.img_file.trim()
     }
 
     pub fn get_lists(&self)->Zip<std::slice::Iter<'_, i32>, std::slice::Iter<'_, i32>>{
@@ -256,7 +256,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     }
 
     pub fn select_hand(&self,index:usize)->Option<u32>{
-        if self.hand.len()>0{
+        if self.hand.len()>0 && index < self.hand.len(){
             Some(self.hand[index])
         }else{
             None
