@@ -8,7 +8,7 @@ use std::iter::Zip;
 pub fn populate_battler_map ()->HashMap<u32,Battler>{
     let mut battlers = HashMap::new();
     let file_data = fs::read_to_string("src/cards/battler-library.txt").expect("An error occurred whilst attempting to open the library.");
-    for line in (file_data).split('\n'){ //Remove first character, \u was messing with things
+    for line in file_data.trim().split('\n'){ //Remove first character, \u was messing with things
         //println!("Currently trying to parse: {}", line);
         if line.len()==0{ //If empty line, skip
             continue;
@@ -122,12 +122,6 @@ fn draw_cards(val: i32, target: Rc<RefCell<Battler>>){
 
 fn unreachable_action(){
     print!("Hope you're happy.\n");
-}
-
-pub fn deal_cards(player: &mut Battler){
-    print!("...\n");
-    //TODO: Make player deck set-able. Need to have avail Cards
-    //      May use another .txt for different classes.
 }
 
 /*

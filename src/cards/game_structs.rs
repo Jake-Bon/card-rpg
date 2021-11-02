@@ -120,6 +120,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.def
     }
 
+    pub fn get_health_percent(&self)->f32{
+        self.curr_health as f32/self.full_health as f32
+    }
+
     pub fn get_name(&self) -> &str{
         &self.name
     }
@@ -320,7 +324,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 pub fn populate_card_map()->HashMap<u32,Card>{
     let mut cards = HashMap::new();
     let file_data = fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.");
-    for line in (file_data[4..]).split('\n'){ //Remove first character, \u was messing with things
+    for line in file_data.trim().split('\n'){ //Remove first character, \u was messing with things
         //println!("Currently trying to parse: {}", line);
         if line.len()==0{ //If empty line, skip
             continue;

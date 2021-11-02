@@ -1,4 +1,4 @@
-﻿###How to build a card:
+###How to build a card:
 ###All cards must have ALL VALUES SHOWN.
 ###[ID]::[Name]::[Description]::[Energy Cost]::[List of Types using “,”]::[List of Values using “,”]::[Sprite filepath]
 0::Shroud::Envelops the World in Fog. Defend for 2 hp.::2::1::2::assets/cards/Defend_Shroud.png
@@ -21,7 +21,7 @@
 12::Kitty Does Drugs::The drugs invigorate kitty who then hits the enemy with the empty syringe. Heal 4 and deal 1 damage.::4::0,2::1,4::assets/cards/kitty does drugs.png
 13::Straw Hat::Defend for 4.::2::1::4::assets/cards/straw_hat.png
 14::Sparkle! Sparkle!::Everyone's kawaii pirate idol reporting for duty~! Cure any poison status.::3::5::0::assets/cards/sparkles.png
-15::Time to Rock!::Let’s pump everyone up! Gain 2 extra mana for 3 turns.::3::6::2::assets/templates/Attack_Card.png
+15::Time to Rock!::Let’s pump everyone up! Gain 2 extra mana for 3 turns.::3::6::2::assets/cards/rocknroll.png
 16::Card17::?::1::1::1::assets/templates/Attack_Card.png
 ###max's cards below (values subject to change)
 17::Swab The Deck::Draw 2 cards.::3::1::2::assets/cards/swab the deck.png
