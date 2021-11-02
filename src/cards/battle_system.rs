@@ -83,7 +83,11 @@ fn defend (val: i32, target: Rc<RefCell<Battler>>){
 
 fn heal (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
-    target.adjust_curr_health(val);
+    let mut new_val = val;
+    if val<0{
+        new_val = val + target.get_defense();
+    }
+    target.adjust_curr_health(new_val);
 }
 
 fn mult_next_dmg(val:i32, target: Rc<RefCell<Battler>>){
