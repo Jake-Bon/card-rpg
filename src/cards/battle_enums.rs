@@ -10,3 +10,11 @@ pub enum TurnPhase {
     RoundOver,
     BattleOver,
 }
+
+#[derive(PartialEq, Eq)]
+pub enum BattleOutcome {
+    Undetermined,
+    VictoryP1,
+    VictoryP2,
+    Tie,
+}
