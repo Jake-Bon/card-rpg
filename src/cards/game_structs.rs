@@ -1,4 +1,6 @@
-//extern crate card_experiments;
+extern crate rand;
+use rand::{Rng,thread_rng};
+use rand::prelude::SliceRandom;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -90,6 +92,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,poison,energy_regen,health_regen}
     }
 
+    pub fn shuffle_deck(&mut self){
+        (&mut self.deck).shuffle(&mut thread_rng());
+    }
+
     pub fn get_full_health(&self)->i32{
         self.full_health
     }
@@ -133,6 +139,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn set_deck(&mut self, new_deck: Vec<u32>){
         self.deck = new_deck;
+    }
+
+    pub fn restore_deck(&mut self){
+        self.deck = self.discard.clone();
+        (&mut self.deck).shuffle(&mut thread_rng());
     }
 
     pub fn set_defense(&mut self,d:i32){
@@ -190,6 +201,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn get_deck_size(&self)->usize{
         self.deck.len()
+    }
+
+    pub fn get_deck(&self)->Vec<u32>{//use for debug purposes only
+        self.deck.clone()
     }
 
     pub fn get_curr_hand_size(&self)->usize{
@@ -332,6 +347,7 @@ impl BattleStatus{
         let card_map = populate_card_map();
         BattleStatus{p1,p2,turn,card_map}
     }
+
     pub fn turner(&mut self){
         self.turn=(self.turn+1)%2;
     }
