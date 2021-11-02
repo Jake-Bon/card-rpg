@@ -318,8 +318,8 @@ impl Scene for Battle<'_> {
 				        // check if the player is clicking on any of the cards in their hand
 				        //let mut battle_stat = self.battle_handler.borrow_mut();
 				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
-				        for i in 0..p1_hand_size{
-				            if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+				            if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+								let i = ((x_pos-260)/120) as usize;
 				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
                                 println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 
@@ -341,7 +341,6 @@ impl Scene for Battle<'_> {
                                 println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 
 
-				            }
 				        }
 
 				    }

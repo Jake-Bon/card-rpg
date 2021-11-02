@@ -155,6 +155,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.def = d;
     }
 
+    pub fn add_defense(&mut self,d:i32){
+        self.def = self.def + d;
+    }
+
     pub fn set_full_health(&mut self,h: i32){
         self.full_health = h;
     }
