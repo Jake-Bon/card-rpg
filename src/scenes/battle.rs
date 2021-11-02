@@ -326,20 +326,22 @@ impl Scene for Battle<'_> {
 				                println!("game thinks that the player is clicking on card {}", i);
 
 				                // play the card
-				                let card_ID = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
-				                let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
-								self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+								let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
+								if(!card_rslt.is_none()){
+									let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
+					                let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+									self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
 
-				                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+					                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
-				                // if the player has enough energy to cover the cost of playing the card:
-				                crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-				                // add card to discard pile after playing
+					                // if the player has enough energy to cover the cost of playing the card:
+					                crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+					                // add card to discard pile after playing
 
 
-				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
-                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
-
+					                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+	                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+								}
 
 				        }
 
@@ -376,17 +378,23 @@ impl Scene for Battle<'_> {
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(100,148), ((260 + (i * 120)) as i32,560))?;
 		}
 
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
+
 		//enemy side
 
 		let mut _p2 = battle_stat.get_p2();
 		let mut player2 = _p2.borrow_mut();
 		let mut p2_hand_size = player2.get_curr_hand_size();
+		if player1.get_deck_size()!=0{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
+		}
+
 		for i in 0..p2_hand_size {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
 		}
 
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
+		if player2.get_deck_size()!=0{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
+		}
 
 		//mostly static objects (health bars change tho)
 

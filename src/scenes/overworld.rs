@@ -40,7 +40,7 @@ impl<'a> Overworld<'a> {
 		let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
 		let enemy_map = texture_manager.borrow_mut().load("assets/enemy_map.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
-		
+
 		let player = Player {
 			x_pos: (CAM_W/2 - TILE_SIZE*modSize as u32 ) as f32,
 			y_pos: (CAM_H/2 - TILE_SIZE*modSize as u32) as f32,
@@ -67,8 +67,8 @@ impl<'a> Overworld<'a> {
 			y_vel: 0.0,
 			sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
 		};
-		
-		
+
+
 		let frame_counter = 0;
 
 		Ok(Overworld{
@@ -120,40 +120,42 @@ impl Scene for Overworld<'_> {
 		self.player.update_movement();
 		self.enemy.update_movement();
 
-		
+
 		// hard coded enemy collision
 		if (self.player.ABSx_pos > 300.0-40.0 && self.player.ABSx_pos < 340.0
 			&& self.player.ABSy_pos > 300.0-40.0 && self.player.ABSy_pos < 340.0) {
 			self.player.x_vel=0.0;
 			self.player.y_vel=0.0;
-			self.player.x_pos= (CAM_W/2 - TILE_SIZE*modSize as u32 ) as f32;
-			self.player.y_pos= (CAM_H/2 - TILE_SIZE*modSize as u32) as f32;
-			self.player.ABSx_pos= (FullW/2 - TILE_SIZE*modSize as u32) as f32;
-			self.player.ABSy_pos= (FullH/2 - TILE_SIZE*modSize as u32) as f32;
-			self.player.Box_x_pos= (FullW/2 - CAM_W/2  - TILE_SIZE*modSize as u32) as f32;
-			self.player.Box_y_pos= (FullH/2 - CAM_H/2 - TILE_SIZE*modSize as u32) as f32;
+			self.player.delta_x=0.0;
+			self.player.delta_y=0.0;
+			//self.player.x_pos= (CAM_W/2 - TILE_SIZE*modSize as u32 ) as f32;
+			//self.player.y_pos= (CAM_H/2 - TILE_SIZE*modSize as u32) as f32;
+			//self.player.ABSx_pos= (FullW/2 - TILE_SIZE*modSize as u32) as f32;
+			//self.player.ABSy_pos= (FullH/2 - TILE_SIZE*modSize as u32) as f32;
+			//self.player.Box_x_pos= (FullW/2 - CAM_W/2  - TILE_SIZE*modSize as u32) as f32;
+			//self.player.Box_y_pos= (FullH/2 - CAM_H/2 - TILE_SIZE*modSize as u32) as f32;
 			self.event_system.borrow().change_scene(2).unwrap();
 		}
-		
-		
+
+
 		// Draw background color
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 128, 128))?;
-		
+
 		// Draw background image
 		crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.tile_set,(self.player.Box_x_pos as i32,self.player.Box_y_pos as i32),(CAM_W,CAM_H),(0,0))?;
-		
+
 		// draw enemy map (temporary hotfix for purpose of having presentable midterm build)
 		crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.enemy_map,
 			(self.player.Box_x_pos as i32,self.player.Box_y_pos as i32),
 			(CAM_W,CAM_H),(0,0))?;
-		
+
 		// Draw player
 		crate::video::gfx::draw_sprite(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
-		
+
 		// Draw enemy (doesn't work yet)
 		//crate::video::gfx::draw_sprite(&mut wincan, &self.enemy.sprite,
 		//	(self.enemy.x_pos as i32, self.enemy.y_pos as i32))?;
-		
+
 		// "press esc" text
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.tmp_button,(300,100), (0,300))?;
 
