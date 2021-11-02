@@ -132,6 +132,7 @@ impl Scene for Overworld<'_> {
 			self.player.ABSy_pos= (FullH/2 - TILE_SIZE*modSize as u32) as f32;
 			self.player.Box_x_pos= (FullW/2 - CAM_W/2  - TILE_SIZE*modSize as u32) as f32;
 			self.player.Box_y_pos= (FullH/2 - CAM_H/2 - TILE_SIZE*modSize as u32) as f32;
+			self.player.keyPress= [false; 4];
 			self.event_system.borrow().change_scene(2).unwrap();
 		}
 		
