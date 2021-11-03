@@ -1,26 +1,29 @@
-﻿###How to build a card:
+###How to build a card:
 ###All cards must have ALL VALUES SHOWN.
-###[ID]::[Name]::[Description]::[Energy Cost]::[List of IDS using “,”]::[List of values using “,”]::[Sprite filepath]
-0::Shroud::Envelops the World in Fog::2::1::2::../assets/cards/Defend_Shroud.png
-1::Lisrae::The Power of Fluffy Boys Shines Within You::3::2::5::../assets/cards/Heal_Lisrae.png
+###[ID]::[Name]::[Description]::[Energy Cost]::[List of Types using “,”]::[List of Values using “,”]::[Sprite filepath]
+0::Shroud::Envelops the World in Fog. Defend for 2 hp.::2::1::2::assets/cards/Defend_Shroud.png
+1::Lisrae::The power of Fluffy Boys shines within you. Heal 5 hp.::3::2::5::assets/cards/Heal_Lisrae.png
 ###Could turn this into a status explicitly called "Stormy Waters" or something similar
-2::The Perfect Storm::Until your next turn, all attacks do 2 more damage.::3::3::2::../assets/thePerfectStorm_Card.png
+2::The Perfect Storm::Until your next turn, all attacks do 2 more damage.::3::3::2::assets/cards/thePerfectStorm_Card.png
 ###Intended to synergize with the Perfect Storm, to have a 2 card combo do 9 damage (for now)
-3::Whirlpool::Attack for 1 damage. Repeat 3 times.::2::0,0,0::1,1,1::../assets/whirlpool_Card.png
-4::Card5::?::1::1::1::../assets/templates/Attack_Card.png
-5::Card6::?::1::1::1::../assets/templates/Attack_Card.png
-6::Card7::?::1::1::1::../assets/templates/Attack_Card.png
-7::Card8::?::1::1::1::../assets/templates/Attack_Card.png
-8::Card9::?::1::1::1::../assets/templates/Attack_Card.png
-9::Card10::?::1::1::1::../assets/templates/Attack_Card.png
-10::Card11::?::1::1::1::../assets/templates/Attack_Card.png
-11::Card12::?::1::1::1::../assets/templates/Attack_Card.png
-12::Card13::?::1::1::1::../assets/templates/Attack_Card.png
-13::Card14::?::1::1::1::../assets/templates/Attack_Card.png
-14::Card15::?::1::1::1::../assets/templates/Attack_Card.png
-15::Card16::?::1::1::1::../assets/templates/Attack_Card.png
-16::Card17::?::1::1::1::../assets/templates/Attack_Card.png
-##max's cards below (values subject to change)
-17::Swab The Deck::Draw 2 cards.::3::1::2::../assets/templates/swab the deck.png
-18::Cutlass::Deal 4 damage.::2::0::4::../assets/templates/cutlass.png
-19::Fishing Minigame::Heal 3 health.::2::2::3::../assets/templates/fish.png
+3::Whirlpool::Attack for 1 damage. Repeat 3 times.::2::0,0,0::1,1,1::assets/cards/whirlpool_Card.png
+###Simple regen card
+4::Grand Theft Parakeet::Have your parrot steal some food. Regen 3 hp for 3 turns.::4::8::3::assets/cards/Health_Regen_Parakeet.png
+###-2 reduces enemy mana regen
+5::Holy Hook Grenade::One..Two..Five! Deal 3 damage and slow enemy mana regen.::5::0,7::3,-2::assets/cards/holy_hook_grenade_Card.png
+6::Photosynthesis::Taste the sun! Regen 3 energy for 3 turns.::4::6::3::assets/cards/Energy_Regen_Photosynthesis.png
+###healing for -8 effectively does 8 damage to self
+7::Last Shot ::Time to make a risky move, all for the sake of victory. Deal 10 damage to the opponent but take 8 damage yourself.::10::0,2::10,-8::assets/cards/last_shot.png
+8::Demon’s Poison::You’ve really pissed him off, huh? Take poison damage for 3 turns, starting at 3.::5::4::3::assets/cards/demons_poison.png
+9::Barrel Protection::The best way to escape gunshots and death indeed. Defend for 3.::3::1::3::assets/cards/barrel_protection.png
+10::Ghastly Cannonball::It's hard to shoot your enemy when your ships are filled with gas. Deal 2 damage and defend for 1.::3::0,1::2,1::assets/cards/a 'gastly' cannonball.png
+11::Vcard::The most impenetrable defense ;D Defend for 5.::4::1::5::assets/cards/v card.png
+12::Kitty Does Drugs::The drugs invigorate kitty who then hits the enemy with the empty syringe. Heal 4 and deal 1 damage.::4::0,2::1,4::assets/cards/kitty does drugs.png
+13::Straw Hat::Defend for 4.::2::1::4::assets/cards/straw_hat.png
+14::Sparkle! Sparkle!::Everyone's kawaii pirate idol reporting for duty~! Cure any poison status.::3::5::0::assets/cards/sparkles.png
+15::Time to Rock!::Let’s pump everyone up! Gain 2 extra mana for 3 turns.::3::6::2::assets/cards/rocknroll.png
+16::Card17::?::1::1::1::assets/templates/Attack_Card.png
+###max's cards below (values subject to change)
+17::Swab The Deck::Draw 2 cards.::3::9::2::assets/cards/swab the deck.png
+18::Cutlass::Deal 4 damage.::2::0::4::assets/cards/cutlass.png
+19::Fishing Minigame::Heal 3 health.::2::2::3::assets/cards/fish.png

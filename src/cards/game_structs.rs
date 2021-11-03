@@ -1,4 +1,6 @@
-//extern crate card_experiments;
+extern crate rand;
+use rand::{Rng,thread_rng};
+use rand::prelude::SliceRandom;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -90,6 +92,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,poison,energy_regen,health_regen}
     }
 
+    pub fn shuffle_deck(&mut self){
+        (&mut self.deck).shuffle(&mut thread_rng());
+    }
+
     pub fn get_full_health(&self)->i32{
         self.full_health
     }
@@ -114,6 +120,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.def
     }
 
+    pub fn get_health_percent(&self)->f32{
+        self.curr_health as f32/self.full_health as f32
+    }
+
     pub fn get_name(&self) -> &str{
         &self.name
     }
@@ -135,8 +145,18 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.deck = new_deck;
     }
 
+    pub fn restore_deck(&mut self){
+        self.deck = self.discard.clone();
+        (&mut self.deck).shuffle(&mut thread_rng());
+
+    }
+
     pub fn set_defense(&mut self,d:i32){
         self.def = d;
+    }
+
+    pub fn add_defense(&mut self,d:i32){
+        self.def = self.def + d;
     }
 
     pub fn set_full_health(&mut self,h: i32){
@@ -190,6 +210,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn get_deck_size(&self)->usize{
         self.deck.len()
+    }
+
+    pub fn get_deck(&self)->Vec<u32>{//use for debug purposes only
+        self.deck.clone()
     }
 
     pub fn get_curr_hand_size(&self)->usize{
@@ -288,10 +312,16 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
         if self.energy_regen[1]>0 as i32{
             self.curr_energy = self.curr_energy+self.energy_regen[0];
+            if self.curr_energy>self.full_energy{
+                self.curr_energy = self.full_energy;
+            }
             self.energy_regen[1] = self.energy_regen[1] - 1 as i32;
         }
         if self.health_regen[1]>0 as i32{
             self.curr_health = self.curr_health+self.health_regen[0];
+            if self.curr_health>self.full_health{
+                self.curr_health = self.full_health;
+            }
             self.health_regen[1] = self.health_regen[1] - 1 as i32;
         }
     }
@@ -304,7 +334,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 pub fn populate_card_map()->HashMap<u32,Card>{
     let mut cards = HashMap::new();
     let file_data = fs::read_to_string("src/cards/card-library.txt").expect("An error occurred whilst attempting to open the library.");
-    for line in (file_data[4..]).split('\n'){ //Remove first character, \u was messing with things
+    for line in file_data.trim().split('\n'){ //Remove first character, \u was messing with things
         //println!("Currently trying to parse: {}", line);
         if line.len()==0{ //If empty line, skip
             continue;
@@ -332,6 +362,7 @@ impl BattleStatus{
         let card_map = populate_card_map();
         BattleStatus{p1,p2,turn,card_map}
     }
+
     pub fn turner(&mut self){
         self.turn=(self.turn+1)%2;
     }
@@ -365,6 +396,10 @@ impl BattleStatus{
 
     pub fn get_card(&self, id: u32)->Card{
         self.card_map.get(&id).unwrap().clone()
+    }
+
+    pub fn get_card_map_size(&self)->usize{
+        self.card_map.len()
     }
 
     pub fn update_player_effects(&self){ //WILL NOT USE FOR GAME. USE battler.update_effects() instead

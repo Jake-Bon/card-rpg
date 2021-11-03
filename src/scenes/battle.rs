@@ -31,11 +31,10 @@ pub struct Battle<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
-	test_1: Rc<Texture<'a>>,
-	test_2: Rc<Texture<'a>>,
-	test_3: Rc<Texture<'a>>,
+	card_textures: Vec<Rc<Texture<'a>>>,
 	play_i: Rc<Texture<'a>>,
 	health: Rc<Texture<'a>>,
+	behind_health:Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
 	tmp_button: Rc<Texture<'a>>,
@@ -51,11 +50,9 @@ pub struct Battle<'a> {
 
 impl<'a> Battle<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
-		let test_1 = texture_manager.borrow_mut().load("assets/templates/Attack_Card.png")?;
-		let test_2 = texture_manager.borrow_mut().load("assets/templates/Defend_Card.png")?;
-		let test_3 = texture_manager.borrow_mut().load("assets/templates/Heal_Card.png")?;
 		let play_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
 		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
+		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
@@ -64,20 +61,33 @@ impl<'a> Battle<'a> {
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
 
+
 		let _p1 = Rc::new(RefCell::new(battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
         let _p2 = Rc::new(RefCell::new(battler_map.get(&1).unwrap().clone()));
 
+
+
+
+
 		let mut battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
+
+		let num_cards = battle_handler.borrow_mut().get_card_map_size();
+		let mut card_textures: Vec<Rc<Texture>> = Vec::new();
+		for i in 0..num_cards{
+			let tmp_card = battle_handler.borrow_mut().get_card(i as u32);
+			let path = tmp_card.get_sprite_name();
+			let texture = texture_manager.borrow_mut().load(path)?;
+			card_textures.push(texture);
+		}
 
 		Ok(Battle {
 			wincan,
 			event_system,
 			font_manager,
-			test_1,
-			test_2,
-			test_3,
+			card_textures,
 			play_i,
 			health,
+			behind_health,
 			deck,
 			drop,
 			tmp_button,
@@ -116,6 +126,9 @@ impl<'a> Battle<'a> {
             let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
             let _p2 = Rc::new(RefCell::new(self.battler_map.get(&1).unwrap().clone()));
 
+			_p1.borrow_mut().shuffle_deck();
+			_p2.borrow_mut().shuffle_deck();
+
 		    self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
 
             // free up the borrow_mut slot by using a local variable
@@ -123,7 +136,7 @@ impl<'a> Battle<'a> {
 
             println!("The player has {} cards in the deck", battle_stat.get_p1().borrow_mut().get_deck_size());
             println!("The opponent has {} cards in the deck\n", battle_stat.get_p2().borrow_mut().get_deck_size());
-            
+
             // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
             for i in 0..3{
                 battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
@@ -162,21 +175,37 @@ impl<'a> Battle<'a> {
 	            // Intended to check for Statuses that need to be removed at the beginning of the turn
 
 	            // Can add drawing a card in here and checking handsize/remaining cards
-	            
-	            // draw a card at the start of the turn
-                battle_stat.get_p1().borrow_mut().draw_card();  // p1 is player
-                
-                //battle_stat = self.battle_handler.borrow_mut();
 
-	            // Move to the next phase of the turn
-	            println!("End of PreTurnP1");
-	            self.turn = TurnPhase::TurnP1;
+	            // draw a card at the start of the turn
+				let mut _p =battle_stat.get_active_player();
+				let mut player = _p.borrow_mut();
+				print!("{}\n",player.to_string());
+
+				if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+					player.restore_deck();
+					println!("Skipping p1 turn!");
+					self.turn = TurnPhase::PostTurnP1;
+				}else{
+					player.draw_card();  // p1 is player
+
+	                //battle_stat = self.battle_handler.borrow_mut();
+
+		            // Move to the next phase of the turn
+		            println!("End of PreTurnP1");
+		            self.turn = TurnPhase::TurnP1;
+				}
+
 	        }
 	        else if self.turn == TurnPhase::PostTurnP1 {
 	            // Resolve things that need to be resolved after the Player's turn in here
 	            // Intended to check for Statuses that need to be removed at the end of the turn
 
                 println!("End of PostTurnP1");
+				let mut _p =battle_stat.get_active_player();
+				let mut player = _p.borrow_mut();
+				player.update_effects();
+
+				battle_stat.turner();
 	            self.active_player = -1;
 	            self.turn = TurnPhase::PreTurnP2;
 	        }
@@ -186,9 +215,9 @@ impl<'a> Battle<'a> {
 
 	    // Enemy logic in the else
 	    else{
-	    
+
 	        let mut battle_stat = self.battle_handler.borrow_mut();
-	    
+
 	        if self.turn == TurnPhase::TurnP2 {
 
 	            // Enemy AI should be called from here
@@ -204,18 +233,33 @@ impl<'a> Battle<'a> {
 	            // Can add drawing a card in here and checking handsize/remaining cards
 
                 // draw a card at the start of the turn
-                battle_stat.get_p2().borrow_mut().draw_card();  // p2 is opponent
+				let mut _p =battle_stat.get_active_player();
+				let mut player = _p.borrow_mut();
+				if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+					player.restore_deck();
+					println!("Skipping p2 turn!");
+					self.turn = TurnPhase::PostTurnP2;
+				}else{
+					player.draw_card();  // p2 is player
 
-	            // Move to the next phase of the turn
-	            println!("End of PreTurnP2");
-	            self.turn = TurnPhase::TurnP2;
+	                //battle_stat = self.battle_handler.borrow_mut();
+
+		            // Move to the next phase of the turn
+		            println!("End of PreTurnP2");
+		            self.turn = TurnPhase::TurnP2;
+				}
 	        }
 	        else if self.turn == TurnPhase::PostTurnP2 {
 	            // Resolve things that need to be resolved after the Opponent's turn in here
 	            // Intended to check for Statuses that need to be removed at the end of the turn
 
+				let mut _p =battle_stat.get_active_player();
+				let mut player = _p.borrow_mut();
+				player.update_effects();
+
                 println!("End of PostTurnP2");
                 self.turn = TurnPhase::RoundOver;
+				battle_stat.turner();
 
 	        }
 	    }
@@ -272,15 +316,33 @@ impl Scene for Battle<'_> {
 				    }
 				    else{
 				        // check if the player is clicking on any of the cards in their hand
-				        let mut battle_stat = self.battle_handler.borrow_mut();
-				        let mut p1_hand_size = battle_stat.get_p1().borrow_mut().get_curr_hand_size();
-				        for i in 0..p1_hand_size{
-				            if ((x_pos > (260 + (i * 120) as i32) && x_pos < (360 + (i * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+				        //let mut battle_stat = self.battle_handler.borrow_mut();
+				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
+				            if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+								let i = ((x_pos-260)/120) as usize;
+				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+
 				                println!("game thinks that the player is clicking on card {}", i);
 
-				            }    
+				                // play the card
+				                let card_ID = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
+				                let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+								self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+
+				                println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+				                // if the player has enough energy to cover the cost of playing the card:
+				                crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+				                // add card to discard pile after playing
+
+
+				                println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+                                println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+
+
 				        }
-				        
+
 				    }
 			    }
 
@@ -304,32 +366,22 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop,(1280,300), (0,550))?; //wood for the back
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop,(1280,180), (0,0))?; //wood for the back
 
-		//player
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), (980,560))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_2,(100,148), (860,560))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_3,(100,148), (740,560))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_2,(100,148), (620,560))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), (500,560))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_3,(100,148), (380,560))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), (260,560))?;
 
 		let mut battle_stat = self.battle_handler.borrow_mut();
-		let mut p1_hand_size = battle_stat.get_p1().borrow_mut().get_curr_hand_size();
+		let mut _p1 = battle_stat.get_p1();
+		let mut player1 = _p1.borrow_mut();
+		let mut p1_hand_size = player1.get_curr_hand_size();
 		for i in 0..p1_hand_size {
-		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.test_1,(100,148), ((260 + (i * 120)) as i32,560))?;
+			let curr_hand = player1.select_hand(i as usize).unwrap();
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(100,148), ((260 + (i * 120)) as i32,560))?;
 		}
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
 		//enemy side
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (920,20))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (800,20))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (680,20))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (560,20))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (440,20))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (320,20))?;
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (200,20))?;
 
-        let mut p2_hand_size = battle_stat.get_p2().borrow_mut().get_curr_hand_size();
+		let mut _p2 = battle_stat.get_p2();
+		let mut player2 = _p2.borrow_mut();
+		let mut p2_hand_size = player2.get_curr_hand_size();
 		for i in 0..p2_hand_size {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
 		}
@@ -339,8 +391,12 @@ impl Scene for Battle<'_> {
 		//mostly static objects (health bars change tho)
 
 		// Can now update the health bars to dynamically update based on the Battler's health
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(300,20), (790,520))?; //player health bar
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(300,20), (200,190))?; //enemy health bar
+		let p1perc = 300 as f32 * player1.get_health_percent();
+		let p2perc = 300 as f32 * player2.get_health_percent();
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (790,520))?;
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (200,190))?;
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p1perc as u32,20), (790+(300-p1perc as i32),520))?; //player health bar
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p2perc as u32,20), (200,190))?; //enemy health bar
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon

@@ -8,7 +8,7 @@ use std::iter::Zip;
 pub fn populate_battler_map ()->HashMap<u32,Battler>{
     let mut battlers = HashMap::new();
     let file_data = fs::read_to_string("src/cards/battler-library.txt").expect("An error occurred whilst attempting to open the library.");
-    for line in (file_data).split('\n'){ //Remove first character, \u was messing with things
+    for line in file_data.trim().split('\n'){ //Remove first character, \u was messing with things
         //println!("Currently trying to parse: {}", line);
         if line.len()==0{ //If empty line, skip
             continue;
@@ -59,6 +59,7 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         6 => change_mana_regen(val,stat.get_active_player()),//player bumps up own regen
         7 => change_mana_regen(val,stat.get_inactive_player()),//player bumps down opponent regen
         8 => health_regen(val,stat.get_active_player()),
+        9 => draw_cards(val,stat.get_active_player()),
         _ => unreachable_action(),
     }
 }
@@ -77,12 +78,16 @@ fn attack (val: i32, target: Rc<RefCell<Battler>>){
 
 fn defend (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
-    target.set_defense(val);
+    target.add_defense(val);
 }
 
 fn heal (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
-    target.adjust_curr_health(val);
+    let mut new_val = val;
+    if val<0{
+        new_val = val + target.get_defense();
+    }
+    target.adjust_curr_health(new_val);
 }
 
 fn mult_next_dmg(val:i32, target: Rc<RefCell<Battler>>){
@@ -112,54 +117,13 @@ fn health_regen(val: i32, target: Rc<RefCell<Battler>>){
     target.add_health_regen(val);
 }
 
+fn draw_cards(val: i32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    for i in 0 as i32..val{
+        target.draw_card();
+    }
+}
+
 fn unreachable_action(){
     print!("Hope you're happy.\n");
 }
-
-pub fn deal_cards(player: &mut Battler){
-    print!("...\n");
-    //TODO: Make player deck set-able. Need to have avail Cards
-    //      May use another .txt for different classes.
-}
-
-/*
-pub fn test_libraries(){
-    let card_map = populate_card_map();
-    let battler_map = populate_battler_map();
-
-    let _p1 = battler_map.get(&0).unwrap().clone(); //Must UNWRAP AND CLONE players from map for battle use
-    let _p2 = battler_map.get(&1).unwrap().clone();
-    let cardID = _p1.get_deck_card().unwrap(); //Must UNWRAP given card ID when drawing from deck
-    let card1 = card_map.get(&cardID).unwrap(); //MUST UNWRAP cards from map
-    print!("{}\n",card1.to_string());
-
-    let p1 = Rc::new(RefCell::new(_p1)); //Must WRAP players in refcell for battle actions
-    let p2 = Rc::new(RefCell::new(_p2));
-
-    let battle = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&p1),Rc::clone(&p2)))); //MUST use REFCELLS
-    let c1 = battle.borrow_mut().get_card(2);
-    let c2 = battle.borrow_mut().get_card(3);
-    let c3 = battle.borrow_mut().get_card(3);
-    print!("{}\n",c1.to_string());
-    play_card(Rc::clone(&battle),c1);
-    print!("{}\n",c2.to_string());
-    play_card(Rc::clone(&battle),c2);
-    print!("{}\n",c3.to_string());
-    play_card(Rc::clone(&battle),c3);
-    parse_card(4,4,Rc::clone(&battle));
-    battle.borrow_mut().update_player_effects();
-    battle.borrow_mut().update_player_effects();
-    battle.borrow_mut().turner();
-    parse_card(5,0,Rc::clone(&battle));
-    battle.borrow_mut().update_player_effects();
-    battle.borrow_mut().update_player_effects();
-    battle.borrow_mut().update_player_effects();
-    parse_card(8,3,Rc::clone(&battle));
-    battle.borrow_mut().update_player_effects();
-    battle.borrow_mut().update_player_effects();
-    battle.borrow_mut().update_player_effects();
-    print!("{}\n",battle.borrow_mut().get_turn());
-    print!("{}\n",p1.borrow_mut().to_string());
-    print!("{}\n",p2.borrow_mut().to_string());
-}
-*/
