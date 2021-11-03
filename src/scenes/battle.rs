@@ -480,16 +480,16 @@ impl Scene for Battle<'_> {
 		
 		//add health text
 		let mut fontm = self.font_manager.borrow_mut();
-		fontm.draw_text(&mut wincan, &player2.get_curr_health().to_string(), (200,190)); //p1 health number
-		fontm.draw_text(&mut wincan, &player1.get_curr_health().to_string(), (790,520)); //p2 health number
-
-		/*//display mana bars
-		let p1mana = 200 as f32 * player1.get_energy_percent();
-		let p2mana = 200 as f32 * player2.get_energy_percent();
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_mana,(200,20), (890,495))?;
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_mana,(200,20), (200,215))?;
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana,(p1mana as u32,20), (890+(200-p1mana as i32),495))?; //player health bar
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana,(p2mana as u32,20), (200,215))?; //enemy health bar*/
+		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 150, 0),
+			&player2.get_curr_health().to_string(), (200,190+25));
+		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 150, 0),
+			&player1.get_curr_health().to_string(), (790,520-25));
+		
+		//add mana text
+		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 15, Color::RGB(95, 95, 0),
+			&player2.get_curr_energy().to_string(), (1060,210));
+		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 15, Color::RGB(95, 95, 0),
+			&player1.get_curr_energy().to_string(), (20,505));
 		
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
