@@ -463,11 +463,11 @@ impl Scene for Battle<'_> {
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(100,148), ((260 + (i * 120)) as i32,560))?;
 		}
 
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
+		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
 
 		// draw the player's energy pips
 		let p1_curr_energy = player1.get_curr_energy();
-		for i in 0..10 {
+		for i in 0..player1.get_full_energy() {
 		    if i < p1_curr_energy {
 		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_filled, (20 + (i * 20), 530));
 		    }
@@ -481,7 +481,7 @@ impl Scene for Battle<'_> {
 		let mut _p2 = battle_stat.get_p2();
 		let mut player2 = _p2.borrow_mut();
 		let mut p2_hand_size = player2.get_curr_hand_size();
-		if player2.get_deck_size()<=0{
+		if player1.get_deck_size()>0{
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
 		}
 
@@ -489,7 +489,7 @@ impl Scene for Battle<'_> {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
 		}
 
-		if player1.get_deck_size()<=0{
+		if player2.get_deck_size()>0{
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
 		}
 
@@ -505,7 +505,7 @@ impl Scene for Battle<'_> {
         // draw the enemy's energy pips
 		let p2_curr_energy = player2.get_curr_energy();
 
-		for i in 0..10 {
+		for i in 0..player2.get_full_energy() {
 		    if i < p2_curr_energy {
 		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_filled, (1240 - (i * 20), 184));
 		    }

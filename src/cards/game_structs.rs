@@ -154,6 +154,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn restore_deck(&mut self){
         self.deck = self.discard.clone();
+        self.discard.clear();
         (&mut self.deck).shuffle(&mut thread_rng());
 
     }
@@ -334,7 +335,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     }
 
     pub fn to_string(&self)->String{
-        format!("Name: {}\nHealth: {}/{}\nEnergy: {}/{}\nHand Size: {}/{}",self.name,self.curr_health,self.full_health,self.curr_energy,self.full_energy,self.hand.len(),self.hand_size)
+        format!("Name: {}\nHealth: {}/{}\nEnergy: {}/{}\nHand Size: {}/{}\nDeck Size: {}\nDiscard Size: {}\n",self.name,self.curr_health,self.full_health,self.curr_energy,self.full_energy,self.hand.len(),self.hand_size,self.deck.len(),self.discard.len())
     }
 }
 

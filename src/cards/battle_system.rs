@@ -85,7 +85,7 @@ fn heal (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     let mut new_val = val;
     if val<0{
-        new_val = val + target.get_defense();
+        new_val = (val as f64*target.get_mult()) as i32 + target.get_defense();
     }
     target.adjust_curr_health(new_val);
 }
