@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::thread;
 use std::time::Duration;
 use std::net::{TcpListener, TcpStream};
@@ -13,5 +14,7 @@ fn main() {
     println!("Connection Established")
 }
 
-fn handle_connection(stream: TcpStream) {
+fn handle_connection(mut stream: TcpStream) {
+    thread::sleep(Duration::from_secs(4));
+    stream.write(b"Hello");
 }
