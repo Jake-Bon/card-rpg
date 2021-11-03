@@ -477,14 +477,19 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (200,190))?;
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p1perc as u32,20), (790+(300-p1perc as i32),520))?; //player health bar
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p2perc as u32,20), (200,190))?; //enemy health bar
+		
+		//add health text
+		let mut fontm = self.font_manager.borrow_mut();
+		fontm.draw_text(&mut wincan, &player2.get_curr_health().to_string(), (200,190)); //p1 health number
+		fontm.draw_text(&mut wincan, &player1.get_curr_health().to_string(), (790,520)); //p2 health number
 
-		//display mana bars
+		/*//display mana bars
 		let p1mana = 200 as f32 * player1.get_energy_percent();
 		let p2mana = 200 as f32 * player2.get_energy_percent();
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_mana,(200,20), (890,495))?;
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_mana,(200,20), (200,215))?;
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana,(p1mana as u32,20), (890+(200-p1mana as i32),495))?; //player health bar
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana,(p2mana as u32,20), (200,215))?; //enemy health bar
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana,(p2mana as u32,20), (200,215))?; //enemy health bar*/
 		
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
@@ -495,7 +500,7 @@ impl Scene for Battle<'_> {
 		// End Turn button "sprite"
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
 		// End Turn button text
-		let mut fontm = self.font_manager.borrow_mut();
+		//let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
 		
 		match self.outcome {
