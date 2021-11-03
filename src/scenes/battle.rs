@@ -33,7 +33,8 @@ pub struct Battle<'a> {
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
 	card_textures: Vec<Rc<Texture<'a>>>,
-	play_i: Rc<Texture<'a>>,
+	play1_i: Rc<Texture<'a>>,
+	play2_i: Rc<Texture<'a>>,
 	health: Rc<Texture<'a>>,
 	behind_health:Rc<Texture<'a>>,
 	mana: Rc<Texture<'a>>,
@@ -56,7 +57,8 @@ pub struct Battle<'a> {
 
 impl<'a> Battle<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
-		let play_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
+		let play1_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
+		let play2_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummyenemy.png")?;
 		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let mana = texture_manager.borrow_mut().load("assets/temp_energy.png")?;
@@ -95,7 +97,8 @@ impl<'a> Battle<'a> {
 			event_system,
 			font_manager,
 			card_textures,
-			play_i,
+			play1_i,
+			play2_i,
 			health,
 			behind_health,
 			mana,
@@ -492,9 +495,8 @@ impl Scene for Battle<'_> {
 			&player1.get_curr_energy().to_string(), (20,505));
 		
 
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_i,(150,150), (60,560))?; //player icon
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play2_i,(150,150), (1070,20))?; //enemy icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.tmp_button,(300,100), (0,300))?;
 
 		// End Turn button "sprite"
