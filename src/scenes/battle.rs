@@ -209,9 +209,6 @@ impl<'a> Battle<'a> {
 				    }else{
 					    player.draw_card();  // p1 is player
 
-	                    // give the player 3 energy per turn
-                        player.adjust_curr_energy(3);  // p1 is player
-
 		                // Move to the next phase of the turn
 		                println!("End of PreTurnP1");
 		                self.turn = TurnPhase::TurnP1;
@@ -222,17 +219,19 @@ impl<'a> Battle<'a> {
 	                // Resolve things that need to be resolved after the Player's turn in here
 	                // Intended to check for Statuses that need to be removed at the end of the turn
 
-                    println!("End of PostTurnP1");
+                    //println!("End of PostTurnP1");
 
+				    let mut _p =battle_stat.get_active_player();
+				    let mut player = _p.borrow_mut();
+				    player.update_effects();
+				    
 				    battle_stat.turner();
 	                self.active_player = -1;
 	                self.turn = TurnPhase::PreTurnP2;
+	                
+	                println!("End of PostTurnP1");
+	                
 	            }
-
-                println!("End of PostTurnP1");
-				let mut _p =battle_stat.get_active_player();
-				let mut player = _p.borrow_mut();
-				player.update_effects();
 
 	        }
 
@@ -348,6 +347,8 @@ impl Scene for Battle<'_> {
 				        //let mut battle_stat = self.battle_handler.borrow_mut();
 						
 				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
+				        //let curr_turn = self.battle_handler.borrow_mut().get_turn();
+				        
 						if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
 							let i = ((x_pos-260)/120) as usize;
 							//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
@@ -357,16 +358,30 @@ impl Scene for Battle<'_> {
 
 							// play the card
 							let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
+							//let card_cost = card_rslt.unwrap().get_cost();
 							if (!card_rslt.is_none()){
 								let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
 								let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
-								self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+								let curr_card_cost = curr_card.get_cost() as i32;
+								println!("card cost is {}", curr_card_cost);
+								let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
+								println!("current energy is {}", curr_energy);
+								// only play if player has enough energy
+								if (curr_energy >= curr_card_cost){
 
-								//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+								    //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
-								// if the player has enough energy to cover the cost of playing the card:
-								crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-								// add card to discard pile after playing
+								    // if the player has enough energy to cover the cost of playing the card:
+								    crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+								    // add card to discard pile after playing
+								    self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+								    self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+								
+								}
+								// otherwise, don't
+			                    else {
+			                        println!("Not enough energy!");
+			                    }
 
 
 								//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
@@ -409,7 +424,7 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
 		
 		// draw the player's energy pips
-		let p1_curr_energy = battle_stat.get_p1().borrow_mut().get_curr_energy();
+		let p1_curr_energy = player1.get_curr_energy();
 		for i in 0..10 {
 		    if i < p1_curr_energy {
 		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_filled, (20 + (i * 20), 530));
@@ -437,7 +452,7 @@ impl Scene for Battle<'_> {
 		}
 
         // draw the enemy's energy pips
-		let p2_curr_energy = battle_stat.get_p2().borrow_mut().get_curr_energy();
+		let p2_curr_energy = player2.get_curr_energy();
 		for i in 0..10 {
 		    if i < p2_curr_energy {
 		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_filled, (1240 - (i * 20), 184));
