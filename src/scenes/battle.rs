@@ -59,7 +59,7 @@ impl<'a> Battle<'a> {
 		let play_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
 		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
-		let mana = texture_manager.borrow_mut().load("assets/temp_health.png")?;
+		let mana = texture_manager.borrow_mut().load("assets/temp_energy.png")?;
 		let behind_mana = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
