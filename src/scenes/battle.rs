@@ -40,10 +40,11 @@ pub struct Battle<'a> {
 	behind_mana:Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
-	tmp_button: Rc<Texture<'a>>,
 	e_pip_unfilled: Rc<Texture<'a>>,
 	e_pip_filled: Rc<Texture<'a>>,
 	accepting_input: bool,
+
+	tmp_enemy_played_card: usize,
 
 	// BATTLE DATA
 	battler_map: HashMap<u32, Battler>,
@@ -63,10 +64,10 @@ impl<'a> Battle<'a> {
 		let behind_mana = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
-		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
 		let e_pip_unfilled = texture_manager.borrow_mut().load("assets/energyPipEmpty.png")?;
 		let e_pip_filled = texture_manager.borrow_mut().load("assets/energyPipFilled.png")?;
 		let accepting_input = true;
+		let tmp_enemy_played_card = 100;
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
@@ -102,7 +103,7 @@ impl<'a> Battle<'a> {
 			behind_mana,
 			deck,
 			drop,
-			tmp_button,
+			tmp_enemy_played_card,
 			e_pip_unfilled,
 			e_pip_filled,
 			accepting_input,
@@ -147,11 +148,11 @@ impl<'a> Battle<'a> {
 
             // free up the borrow_mut slot by using a local variable
             let mut battle_stat = self.battle_handler.borrow_mut();
-            
+
             let mut _player1 = battle_stat.get_p1();
             let mut player1 = _player1.borrow_mut();
             player1.shuffle_deck();
-            
+
             let mut _player2 = battle_stat.get_p2();
             let mut player2 = _player2.borrow_mut();
             player2.shuffle_deck();
@@ -160,7 +161,7 @@ impl<'a> Battle<'a> {
             println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
 
             // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
-            for i in 0..3{
+            for i in 0..4{
                 player1.draw_card();  // p1 is player
                 player2.draw_card();  // p2 is opponent
             }
@@ -230,13 +231,13 @@ impl<'a> Battle<'a> {
 				    let mut _p =battle_stat.get_active_player();
 				    let mut player = _p.borrow_mut();
 				    player.update_effects();
-				    
+
 				    battle_stat.turner();
 	                self.active_player = -1;
 	                self.turn = TurnPhase::PreTurnP2;
-	                
+
 	                println!("End of PostTurnP1");
-	                
+
 	            }
 
 	        }
@@ -244,13 +245,42 @@ impl<'a> Battle<'a> {
 	        // Enemy logic in the else
 	        else{
 
-	            let mut battle_stat = self.battle_handler.borrow_mut();
-	            self.outcome = battle_stat.check_victory();
+	            self.outcome = self.battle_handler.borrow_mut().check_victory();
 
 	            if self.turn == TurnPhase::TurnP2 {
 
 	                // Enemy AI should be called from here
+					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
+					//let card_cost = card_rslt.unwrap().get_cost();
+					if (!card_rslt.is_none()){
+						let card_ID = card_rslt.unwrap();//self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();
+						let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+						let curr_card_cost = curr_card.get_cost() as i32;
+						println!("card cost is {}", curr_card_cost);
+						let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
+						println!("current energy is {}", curr_energy);
+						// only play if player has enough energy
+						if (curr_energy >= curr_card_cost){
 
+							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+							// if the player has enough energy to cover the cost of playing the card:
+							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+							// add card to discard pile after playing
+							self.tmp_enemy_played_card = card_ID as usize;
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+
+						}
+						// otherwise, don't
+						else {
+							println!("Not enough energy!");
+						}
+
+
+						//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+						//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+					}
 
 	                self.turn = TurnPhase::PostTurnP2;
 
@@ -263,7 +293,7 @@ impl<'a> Battle<'a> {
 
                     // draw a card at the start of the turn
 
-				    let mut _p =battle_stat.get_active_player();
+				    let mut _p =self.battle_handler.borrow_mut().get_active_player();
 				    let mut player = _p.borrow_mut();
 				    if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
 					    player.restore_deck();
@@ -271,6 +301,8 @@ impl<'a> Battle<'a> {
 					    self.turn = TurnPhase::PostTurnP2;
 				    }else{
 					    player.draw_card();  // p2 is player
+
+
 
 	                    // give the opponent 3 energy per turn
                         player.adjust_curr_energy(3);  // p2 is opponent
@@ -285,17 +317,17 @@ impl<'a> Battle<'a> {
 	                // Resolve things that need to be resolved after the Opponent's turn in here
 	                // Intended to check for Statuses that need to be removed at the end of the turn
 
-					let mut _p =battle_stat.get_active_player();
+					let mut _p =self.battle_handler.borrow_mut().get_active_player();
 					let mut player = _p.borrow_mut();
 					player.update_effects();
 
 					println!("End of PostTurnP2");
 					self.turn = TurnPhase::RoundOver;
-					battle_stat.turner();
+					self.battle_handler.borrow_mut().turner();
 
 	            }
 	        }
-	    
+
 	    }
 
         if self.turn == TurnPhase::RoundOver {
@@ -351,10 +383,10 @@ impl Scene for Battle<'_> {
 				    else{
 				        // check if the player is clicking on any of the cards in their hand
 				        //let mut battle_stat = self.battle_handler.borrow_mut();
-						
+
 				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
 				        //let curr_turn = self.battle_handler.borrow_mut().get_turn();
-				        
+
 						if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
 							let i = ((x_pos-260)/120) as usize;
 							//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
@@ -382,7 +414,7 @@ impl Scene for Battle<'_> {
 								    // add card to discard pile after playing
 								    self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
 								    self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-								
+
 								}
 								// otherwise, don't
 			                    else {
@@ -428,7 +460,7 @@ impl Scene for Battle<'_> {
 		}
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
-		
+
 		// draw the player's energy pips
 		let p1_curr_energy = player1.get_curr_energy();
 		for i in 0..10 {
@@ -439,7 +471,7 @@ impl Scene for Battle<'_> {
 		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_unfilled, (20 + (i * 20), 530));
 		    }
 		}
-		
+
 		//enemy side
 
 		let mut _p2 = battle_stat.get_p2();
@@ -457,8 +489,18 @@ impl Scene for Battle<'_> {
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
 		}
 
+		let mut fontm = self.font_manager.borrow_mut();
+		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(150, 0, 0),
+			"Enemy Played:", (600,300-25));
+		if self.tmp_enemy_played_card<100{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.tmp_enemy_played_card)).unwrap(),(100,148),(600,300))?;
+		}else{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148),(600,300))?;
+		}
+
         // draw the enemy's energy pips
 		let p2_curr_energy = player2.get_curr_energy();
+
 		for i in 0..10 {
 		    if i < p2_curr_energy {
 		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_filled, (1240 - (i * 20), 184));
@@ -477,32 +519,30 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (200,190))?;
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p1perc as u32,20), (790+(300-p1perc as i32),520))?; //player health bar
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p2perc as u32,20), (200,190))?; //enemy health bar
-		
+
 		//add health text
-		let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 150, 0),
 			&player2.get_curr_health().to_string(), (200,190+25));
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 150, 0),
 			&player1.get_curr_health().to_string(), (790,520-25));
-		
+
 		//add mana text
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 15, Color::RGB(95, 95, 0),
 			&player2.get_curr_energy().to_string(), (1060,210));
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 15, Color::RGB(95, 95, 0),
 			&player1.get_curr_energy().to_string(), (20,505));
-		
+
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.tmp_button,(300,100), (0,300))?;
 
 		// End Turn button "sprite"
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
 		// End Turn button text
 		//let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
-		
+
 		match self.outcome {
 		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (600, 330)),
 		    BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (600, 330)),
