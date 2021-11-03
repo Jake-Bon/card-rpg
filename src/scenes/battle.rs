@@ -36,6 +36,8 @@ pub struct Battle<'a> {
 	play_i: Rc<Texture<'a>>,
 	health: Rc<Texture<'a>>,
 	behind_health:Rc<Texture<'a>>,
+	mana: Rc<Texture<'a>>,
+	behind_mana:Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
 	tmp_button: Rc<Texture<'a>>,
@@ -57,6 +59,8 @@ impl<'a> Battle<'a> {
 		let play_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
 		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
+		let mana = texture_manager.borrow_mut().load("assets/temp_health.png")?;
+		let behind_mana = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
@@ -94,6 +98,8 @@ impl<'a> Battle<'a> {
 			play_i,
 			health,
 			behind_health,
+			mana,
+			behind_mana,
 			deck,
 			drop,
 			tmp_button,
@@ -471,6 +477,15 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (200,190))?;
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p1perc as u32,20), (790+(300-p1perc as i32),520))?; //player health bar
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p2perc as u32,20), (200,190))?; //enemy health bar
+
+		//display mana bars
+		let p1mana = 200 as f32 * player1.get_energy_percent();
+		let p2mana = 200 as f32 * player2.get_energy_percent();
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_mana,(200,20), (890,495))?;
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_mana,(200,20), (200,215))?;
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana,(p1mana as u32,20), (890+(200-p1mana as i32),495))?; //player health bar
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana,(p2mana as u32,20), (200,215))?; //enemy health bar
+		
 
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
