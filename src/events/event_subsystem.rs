@@ -14,7 +14,9 @@ impl EventSystem {
 	pub fn update(&mut self) -> Vec<Option<GameEvent>> {
 
 		let mut game_events:Vec<Option<GameEvent>> = Vec::new();
+		let mut i = 0;
 		for event in self.event_pump.poll_iter() {
+			i += 1;
 			match event {
 				SDL_Event::Quit{..} => game_events.push(Some(GameEvent::WindowClose)),
 				SDL_Event::MouseButtonDown{x: x_pos, y: y_pos, ..} => game_events.push(Some(GameEvent::MouseClick(x_pos, y_pos))),
@@ -31,7 +33,7 @@ impl EventSystem {
 				_ => game_events.push(None),
 			}
 		}
-
+		if i > 0 {println!("{}", i);}
 		return game_events;
 	}
 
