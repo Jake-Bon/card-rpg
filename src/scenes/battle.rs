@@ -165,8 +165,8 @@ impl<'a> Battle<'a> {
 
             // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
             for i in 0..4{
-                player1.draw_card();  // p1 is player
-                player2.draw_card();  // p2 is opponent
+                player1.draw_card(false);  // p1 is player
+                player2.draw_card(false);  // p2 is opponent
             }
 
             println!("The player has {} cards in the deck", player1.get_deck_size());
@@ -217,7 +217,7 @@ impl<'a> Battle<'a> {
 					    println!("Skipping p1 turn!");
 					    self.turn = TurnPhase::PostTurnP1;
 				    }else{
-					    player.draw_card();  // p1 is player
+					    player.draw_card(false);  // p1 is player
 
 		                // Move to the next phase of the turn
 		                println!("End of PreTurnP1");
@@ -258,6 +258,7 @@ impl<'a> Battle<'a> {
 					if (!card_rslt.is_none()){
 						let card_ID = card_rslt.unwrap();//self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();
 						let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+						print!("{}\n",curr_card.to_string());
 						let curr_card_cost = curr_card.get_cost() as i32;
 						println!("card cost is {}", curr_card_cost);
 						let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
@@ -303,7 +304,7 @@ impl<'a> Battle<'a> {
 					    println!("Skipping p2 turn!");
 					    self.turn = TurnPhase::PostTurnP2;
 				    }else{
-					    player.draw_card();  // p2 is player
+					    player.draw_card(false);  // p2 is player
 
 
 
@@ -480,7 +481,7 @@ impl Scene for Battle<'_> {
 		let mut _p2 = battle_stat.get_p2();
 		let mut player2 = _p2.borrow_mut();
 		let mut p2_hand_size = player2.get_curr_hand_size();
-		if player1.get_deck_size()!=0{
+		if player2.get_deck_size()<=0{
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
 		}
 
@@ -488,7 +489,7 @@ impl Scene for Battle<'_> {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
 		}
 
-		if player2.get_deck_size()!=0{
+		if player1.get_deck_size()<=0{
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
 		}
 
@@ -536,8 +537,8 @@ impl Scene for Battle<'_> {
 			&player1.get_curr_energy().to_string(), (20,505));
 
 
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (60,560))?; //player icon
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_i,(150,150), (60,560))?; //player icon
+		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play2_i,(150,150), (1070,20))?; //enemy icon
 		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play_i,(150,150), (1070,20))?; //enemy icon
 
 		// End Turn button "sprite"

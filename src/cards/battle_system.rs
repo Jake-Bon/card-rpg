@@ -119,8 +119,14 @@ fn health_regen(val: i32, target: Rc<RefCell<Battler>>){
 
 fn draw_cards(val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
+    let mut dif = target.get_full_hand_size() - target.get_curr_hand_size()+1;
     for i in 0 as i32..val{
-        target.draw_card();
+        if dif>0{
+            target.draw_card(true);
+        }else{
+            break;
+        }
+        dif-=1;
     }
 }
 

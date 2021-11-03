@@ -255,8 +255,8 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
     }
 
-    pub fn draw_card(&mut self){ //Deck => Hand
-        if self.deck.len()>0 && self.hand.len()<self.hand_size{
+    pub fn draw_card(&mut self,is_safe: bool){ //Deck => Hand
+        if self.deck.len()>0 && (is_safe||self.hand.len()<self.hand_size){
             self.add_card_to_hand(self.deck[0]);
             self.deck_del_card();
         }
@@ -413,12 +413,12 @@ impl BattleStatus{
         self.p1.borrow_mut().update_effects();
         self.p2.borrow_mut().update_effects();
     }
-    
+
     pub fn check_victory(&self) -> BattleOutcome {
-        
+
         let p1_health = self.p1.borrow().get_curr_health();
         let p2_health = self.p2.borrow().get_curr_health();
-        
+
         if(p1_health > 0 && p2_health <= 0){
             return BattleOutcome::VictoryP1;
         }
@@ -430,7 +430,7 @@ impl BattleStatus{
         }
         // else if both players have health above 0, battle isn't over yet
         return BattleOutcome::Undetermined;
-        
+
     }
-    
+
 }
