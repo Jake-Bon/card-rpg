@@ -5,6 +5,8 @@ use std::net::TcpStream;
 
 use sdl2::render::WindowCanvas;
 
+use futures::executor::block_on;
+
 use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
 
@@ -25,7 +27,7 @@ impl Scene for Online {
 				self.stream = Some(TcpStream::connect("127.0.0.1:7878").expect("Connection Failed"));
 			}
 
-			self.update_from_server();
+			block_on(self.update_from_server());
 
 			Ok(())
 		}
