@@ -88,7 +88,7 @@ impl Scene for Overworld<'_> {
 		// Matching events, most importantly KeyPress(k)'s
 		match event {
 			GameEvent::KeyPress(k) => {
-				//println!("{}", k);
+				//println!("p:{}", k);
 				if k.eq(&Keycode::W) {self.player.keyPress[0]=true}
 				if k.eq(&Keycode::S) {self.player.keyPress[1]=true}
 				if k.eq(&Keycode::A) {self.player.keyPress[2]=true}
@@ -104,13 +104,13 @@ impl Scene for Overworld<'_> {
 
 			},
 			GameEvent::KeyRelease(k) => {
-				//println!("{}", k);
+				//println!("r:{}", k);
 				if k.eq(&Keycode::W) {self.player.keyPress[0]=false}
 				if k.eq(&Keycode::S) {self.player.keyPress[1]=false}
 				if k.eq(&Keycode::A) {self.player.keyPress[2]=false}
 				if k.eq(&Keycode::D) {self.player.keyPress[3]=false}
 			},
-			_ => {/*println!("No event")*/},
+			_ => {println!(/*"No event"*/)},
 		}
 	}
 

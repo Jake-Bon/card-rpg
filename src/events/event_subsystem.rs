@@ -11,20 +11,22 @@ pub struct EventSystem {
 
 impl EventSystem {
 
-	pub fn update(&mut self) -> Option<GameEvent> {
+	pub fn update(&mut self) -> Vec<Option<GameEvent>> {
+
+		let mut game_events:Vec<Option<GameEvent>> = Vec::new();
 		for event in self.event_pump.poll_iter() {
-			return match event {
-				SDL_Event::Quit{..} => Some(GameEvent::WindowClose),
-				SDL_Event::MouseButtonDown{x: x_pos, y: y_pos, ..} => Some(GameEvent::MouseClick(x_pos, y_pos)),
-				//SDL_Event::MouseMotion{x: x_pos, y: y_pos, ..} => Some(GameEvent::MouseHover(x_pos, y_pos)),
-				SDL_Event::KeyDown{keycode: Some(k), ..} => Some(GameEvent::KeyPress(k)),
-				SDL_Event::KeyUp{keycode: Some(k), ..} => Some(GameEvent::KeyRelease(k)),
-				SDL_Event::User{code: scene_change_event_id, data1: scene_id, ..} => Some(GameEvent::SceneChange(scene_id as u32)),
-				_ => None,
+			match event {
+				SDL_Event::Quit{..} => game_events.push(Some(GameEvent::WindowClose)),
+				SDL_Event::MouseButtonDown{x: x_pos, y: y_pos, ..} => game_events.push(Some(GameEvent::MouseClick(x_pos, y_pos))),
+				//SDL_Event::MouseMotion{x: x_pos, y: y_pos, ..} => game_events.push(Some(GameEvent::MouseHover(x_pos, y_pos))), // I think we can uncomment this now?
+				SDL_Event::KeyDown{keycode: Some(k), ..} => game_events.push(Some(GameEvent::KeyPress(k))),
+				SDL_Event::KeyUp{keycode: Some(k), ..} => game_events.push(Some(GameEvent::KeyRelease(k))),
+				SDL_Event::User{code: scene_change_event_id, data1: scene_id, ..} => game_events.push(Some(GameEvent::SceneChange(scene_id as u32))),
+				_ => game_events.push(None),
 			}
 		}
-
-		None
+		
+		return game_events;
 	}
 
 	pub fn init(sdl_context: &Sdl) -> Result<Self, String> {
