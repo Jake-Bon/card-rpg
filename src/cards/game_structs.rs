@@ -115,6 +115,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.curr_energy
     }
 
+    pub fn get_energy_percent(&self)->f32{ //&&&&&&&&&&&&&&&&
+        self.curr_energy as f32/self.full_energy as f32
+    }
+
     pub fn get_full_hand_size(&self)->usize{
         self.hand_size
     }
