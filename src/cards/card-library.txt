@@ -22,7 +22,7 @@
 13::Straw Hat::Defend for 4.::2::1::4::assets/cards/straw_hat.png
 14::Sparkle! Sparkle!::Everyone's kawaii pirate idol reporting for duty~! Cure any poison status.::3::5::0::assets/cards/sparkles.png
 15::Time to Rock!::Let’s pump everyone up! Gain 2 extra mana for 3 turns.::3::6::2::assets/cards/rocknroll.png
-16::Card17::?::1::1::1::assets/templates/Attack_Card.png
+16::High Noon::Draw 1 card.::1::9::1::assets/cards/high_noon.png
 ###max's cards below (values subject to change)
 17::Swab The Deck::Draw 2 cards.::3::9::2::assets/cards/swab the deck.png
 18::Cutlass::Deal 4 damage.::2::0::4::assets/cards/cutlass.png

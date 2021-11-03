@@ -7,6 +7,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::iter::Zip;
 
+use crate::cards::battle_enums::BattleOutcome;
+
+
 #[derive(Clone)]
 pub struct Card{
     name: String,
@@ -44,7 +47,7 @@ impl Card{
     }
 
     pub fn get_sprite_name(&self)->&str{
-        &self.img_file
+        &self.img_file.trim()
     }
 
     pub fn get_lists(&self)->Zip<std::slice::Iter<'_, i32>, std::slice::Iter<'_, i32>>{
@@ -110,6 +113,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn get_curr_energy(&self)->i32{
         self.curr_energy
+    }
+
+    pub fn get_energy_percent(&self)->f32{ //&&&&&&&&&&&&&&&&
+        self.curr_energy as f32/self.full_energy as f32
     }
 
     pub fn get_full_hand_size(&self)->usize{
@@ -179,8 +186,8 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn adjust_curr_energy(&mut self,h:i32){
         self.curr_energy = self.curr_energy+h;
-        if self.curr_energy>self.curr_energy{
-            self.curr_energy = self.curr_energy;
+        if self.curr_energy>self.full_energy{
+            self.curr_energy = self.full_energy;
         }
     }
 
@@ -248,15 +255,15 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
     }
 
-    pub fn draw_card(&mut self){ //Deck => Hand
-        if self.deck.len()>0 && self.hand.len()<self.hand_size{
+    pub fn draw_card(&mut self,is_safe: bool){ //Deck => Hand
+        if self.deck.len()>0 && (is_safe||self.hand.len()<self.hand_size){
             self.add_card_to_hand(self.deck[0]);
             self.deck_del_card();
         }
     }
 
     pub fn select_hand(&self,index:usize)->Option<u32>{
-        if self.hand.len()>0{
+        if self.hand.len()>0 && index < self.hand.len(){
             Some(self.hand[index])
         }else{
             None
@@ -406,4 +413,24 @@ impl BattleStatus{
         self.p1.borrow_mut().update_effects();
         self.p2.borrow_mut().update_effects();
     }
+
+    pub fn check_victory(&self) -> BattleOutcome {
+
+        let p1_health = self.p1.borrow().get_curr_health();
+        let p2_health = self.p2.borrow().get_curr_health();
+
+        if(p1_health > 0 && p2_health <= 0){
+            return BattleOutcome::VictoryP1;
+        }
+        else if(p1_health <= 0 && p2_health > 0){
+            return BattleOutcome::VictoryP2;
+        }
+        else if(p1_health <= 0 && p2_health <= 0){
+            return BattleOutcome::Tie;
+        }
+        // else if both players have health above 0, battle isn't over yet
+        return BattleOutcome::Undetermined;
+
+    }
+
 }

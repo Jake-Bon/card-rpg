@@ -51,14 +51,16 @@ impl<'a> GameManager<'a> {
 	}
 
 	fn update(&mut self) -> Result<(), String>{
-		let game_event = self.event_system.borrow_mut().update();
-
-		match game_event {
-			Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
-			Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
-			Some(e) => self.handle_input(e),
-			None => {},
+		let game_events = self.event_system.borrow_mut().update();
+		for event in game_events {
+			match event {
+				Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
+				Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
+				Some(e) => self.handle_input(e),
+				None => {},
+			}
 		}
+
 
 		match self.curr_scene {
 			0 => self.menu.render()?,
@@ -118,7 +120,7 @@ impl<'a> GameManager<'a> {
 			curr_scene: 0,
 		})
 	}
-	
+
 }
 
 
