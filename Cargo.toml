@@ -8,11 +8,6 @@ edition = "2018"
 [dependencies]
 rand = "0.8.4"
 
-[dependencies.futures]
-version = "^0.3.17"
-default-features = false
-features = ["thread-pool"]
-
 [dependencies.sdl2]
 version = "^0.34"
 default-features = false

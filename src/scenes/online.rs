@@ -1,21 +1,22 @@
-use std::pin::Pin;
-use std::rc::Rc;
+
 use std::sync::Arc;
-use std::cell::RefCell;
+use std::task::Context;
+use std::task::Poll;
+use std::pin::Pin;
 use std::io;
 use std::io::prelude::*;
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::net::TcpStream;
+use std::future::Future;
 
 use sdl2::render::WindowCanvas;
-
-use futures::Future;
-use futures::executor::ThreadPool;
 
 use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
 
 pub struct Online {
-	//pool: ThreadPool,
+	stream: TcpConnection,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 }
@@ -27,6 +28,12 @@ impl Scene for Online {
 		}
 
 		fn render(&mut self) -> Result<(), String> {
+			let stream = unsafe {Pin::new_unchecked(&mut self.stream)};
+			let cx = Context::from_waker(&waker);
+			match stream.poll(&mut &mut cx) {
+				Poll::Ready(value) => println!("Data: {}", String::from_utf8_lossy(&value)),
+				Poll::Pending => {},
+			}
 			Ok(())
 		}
 
@@ -36,33 +43,37 @@ impl Online {
 
 	pub fn init(wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>) -> Self {
 
-		//let pool = ThreadPool::new().expect("Failed to create thread pool");
+		let stream = TcpConnection::connect("127.0.0.1:7878").unwrap();
+
 		Online {
-			//pool,
+			stream,
 			wincan,
 			event_system,
 		}
 	}
 }
 
-
 struct TcpConnection {
-	watcher: Arc<TcpStream>,
+	stream: TcpStream,
+}
+
+impl Future for TcpConnection {
+	type Output = [u8; 1024];
+	fn poll(mut self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Self::Output> {
+		let mut buffer = [0; 1024];
+		if self.stream.read(&mut buffer).unwrap() > 0 {
+			return Poll::Ready(buffer)
+		}
+		Poll::Pending
+	}
 }
 
 impl TcpConnection {
-	pub async fn connect(address: &str) -> io::Result<TcpConnection> {
-		let watcher = Arc::new(TcpStream::connect(address)?);
+	fn connect(addr: &str) -> io::Result<Self> {
+		let stream = TcpStream::connect(addr)?;
+
 		Ok(TcpConnection {
-			watcher,
+			stream,
 		})
 	}
-
-	async fn poll_server() -> io::Result<()> {
-		let stream = TcpConnection::connect("127.0.0.1:7878").await;
-		let (reader, mut writer) = (&stream, &stream);
-		Ok(())
-	}
-
 }
-
