@@ -8,13 +8,13 @@ use sdl2::render::WindowCanvas;
 
 use futures::Future;
 use futures::task::*;
-use futures::executor::block_on;
+use futures::executor::{block_on, LocalPool};
 
 use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
 
 pub struct Online {
-	stream: TcpConnection,
+	// pool: LocalPool,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 }
@@ -26,56 +26,28 @@ impl Scene for Online {
 		}
 
 		fn render(&mut self) -> Result<(), String> {
-
+			// self.pool.run();
 			Ok(())
 		}
 
 }
 
 impl Online {
+
 	pub fn init(wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>) -> Self {
+		
+		// let mut pool = LocalPool::new();
+
 		Online {
-			stream: TcpConnection::init("127.0.0.1:7878"),
+			// pool,
 			wincan,
 			event_system,
 		}
 	}
 }
 
-
-struct TcpConnection {
-	stream: TcpStream,
-	buffer: [u8; 1024],
+async fn try_run(address: &str) -> Result<(), String> {
+	let stream = TcpStream::connect(address);
+	Ok(())
 }
 
-impl TcpConnection {
-	fn init(address: &str) -> Self {
-		let mut stream = TcpStream::connect(address).unwrap();
-		let mut buffer = [0; 1024];
-
-		TcpConnection {
-			stream,
-			buffer,
-		}
-
-	}
-}
-
-impl Future for TcpConnection {	
-	type Output = [u8; 1024];
-	fn poll(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Self::Output> {
-		let mut stream = &self.stream;
-		let mut buffer = self.buffer;
-		if stream.read(&mut buffer).unwrap() > 0 {
-			return Poll::Ready(self.buffer)
-		}
-
-		Poll::Pending
-	}
-}
-
-impl Read for TcpConnection {
-	fn read(&mut self, buffer: &mut [u8]) -> Result<usize, std::io::Error> {
-		self.stream.read(buffer)
-	}
-}
