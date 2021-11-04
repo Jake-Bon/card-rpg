@@ -23,7 +23,7 @@ const TileW: u32 = FullW/TileS;
 const TileH: u32 = FullW/TileS;
 const SpriteTileS: u32 = 40;
 
-const SPEED_LIMIT: f32 = 3.0;
+const SPEED_LIMIT: f32 = 6.0;
 const ACCEL_RATE: f32 = 0.6;
 
 //mod crate::video;
@@ -128,9 +128,8 @@ impl Scene for Overworld<'_> {
 		self.enemy.update_movement();
 
 
-		self.frames = if (self.frames) > 7 {
-			print!("{}\n",self.frames);
-					self.anim_water = ((self.anim_water+1)%5);
+		self.frames = if (self.frames) > 5 {
+					self.anim_water = ((self.anim_water+1)%9);
 					0
 				}
 				else {
