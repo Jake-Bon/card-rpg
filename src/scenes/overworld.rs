@@ -16,8 +16,12 @@ use crate::video::gfx::TILE_SIZE;
 
 const modSize: f32 = 4.0;
 
-const FullW: u32 = 1600;
-const FullH: u32 = 1200;
+const FullW: u32 = 2400;
+const FullH: u32 = 1800;
+const TileS: u32 = 40;
+const TileW: u32 = FullW/TileS;
+const TileH: u32 = FullW/TileS;
+const SpriteTileS: u32 = 40;
 
 const SPEED_LIMIT: f32 = 3.0;
 const ACCEL_RATE: f32 = 0.6;
@@ -31,15 +35,16 @@ pub struct Overworld<'a> {
 	enemy_map: Rc<Texture<'a>>,
 	player: Player<'a>,
 	enemy: Enemy<'a>,
-	tmp_button: Rc<Texture<'a>>,
+	anim_water: u32,
+	frames: u32,
 }
 
 impl<'a> Overworld<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>)  -> Result<Self, String> {
 		//let tile_map = [0; 144];
-		let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
+		//let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
+		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 		let enemy_map = texture_manager.borrow_mut().load("assets/enemy_map.png")?;
-		let tmp_button = texture_manager.borrow_mut().load("assets/tmp.png")?;
 
 		let player = Player {
 			x_pos: (CAM_W/2 - TILE_SIZE*modSize as u32 ) as f32,
@@ -69,7 +74,8 @@ impl<'a> Overworld<'a> {
 		};
 
 
-		let frame_counter = 0;
+		let frames = 0;
+		let anim_water = 0;
 
 		Ok(Overworld{
 			wincan,
@@ -78,7 +84,8 @@ impl<'a> Overworld<'a> {
 			enemy_map,
 			player,
 			enemy,
-			tmp_button,
+			frames,
+			anim_water,
 		})
 	}
 }
@@ -121,6 +128,18 @@ impl Scene for Overworld<'_> {
 		self.enemy.update_movement();
 
 
+		self.frames = if (self.frames) > 7 {
+			print!("{}\n",self.frames);
+					self.anim_water = ((self.anim_water+1)%5);
+					0
+				}
+				else {
+					self.frames + 1
+				};
+
+
+
+
 		// hard coded enemy collision
 		if (self.player.ABSx_pos > 300.0-40.0 && self.player.ABSx_pos < 340.0
 			&& self.player.ABSy_pos > 300.0-40.0 && self.player.ABSy_pos < 340.0) {
@@ -142,7 +161,8 @@ impl Scene for Overworld<'_> {
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 128, 128))?;
 
 		// Draw background image
-		crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.tile_set,(self.player.Box_x_pos as i32,self.player.Box_y_pos as i32),(CAM_W,CAM_H),(0,0))?;
+		//crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.tile_set,(self.player.Box_x_pos as i32,self.player.Box_y_pos as i32),(CAM_W,CAM_H),(0,0))?;
+		crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.tile_set,((self.anim_water*SpriteTileS) as i32,0),(40,40),(TileS,TileS),(-(self.player.Box_x_pos as i32),-(self.player.Box_y_pos as i32)),(TileW,TileH))?;
 
 		// draw enemy map (temporary hotfix for purpose of having presentable midterm build)
 		crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.enemy_map,
@@ -156,8 +176,6 @@ impl Scene for Overworld<'_> {
 		//crate::video::gfx::draw_sprite(&mut wincan, &self.enemy.sprite,
 		//	(self.enemy.x_pos as i32, self.enemy.y_pos as i32))?;
 
-		// "press esc" text
-		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.tmp_button,(300,100), (0,300))?;
 
 		wincan.present();
 
