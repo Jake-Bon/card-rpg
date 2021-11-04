@@ -3,22 +3,24 @@ use std::thread;
 use std::time::Duration;
 use std::net::{TcpListener, TcpStream};
 
-use futures::stream::Stream;
 use futures::executor::block_on;
 
-fn main() {
-    block_on(accept("127.0.0.1:7878"));
+fn main() -> Result<()>{
+    block_on(accept("127.0.0.1:7878"))?;
+    Ok(())
 }
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_connection(stream: &mut TcpStream) -> Result<()>{
     thread::sleep(Duration::from_secs(4));
-    stream.write(b"Hello");
+    stream.write(b"Hi")?;
+    Ok(())
 }
 
 async fn accept(address: &str) -> Result<()> {
     let listener = TcpListener::bind(address)?;
     for stream in listener.incoming() {
-        let stream = stream?;
+        let mut stream = stream?;
+        handle_connection(&mut stream)?;
         println!("Connection from: {}", stream.peer_addr()?);
     }
     Ok(())
