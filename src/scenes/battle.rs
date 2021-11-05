@@ -43,6 +43,11 @@ pub struct Battle<'a> {
 	drop: Rc<Texture<'a>>,
 	e_pip_unfilled: Rc<Texture<'a>>,
 	e_pip_filled: Rc<Texture<'a>>,
+	armor: Rc<Texture<'a>>,
+	healing: Rc<Texture<'a>>,
+	posion: Rc<Texture<'a>>,
+	mana_boost: Rc<Texture<'a>>,
+	mana_drain: Rc<Texture<'a>>,
 	accepting_input: bool,
 
 	tmp_enemy_played_card: usize,
@@ -68,6 +73,11 @@ impl<'a> Battle<'a> {
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let e_pip_unfilled = texture_manager.borrow_mut().load("assets/energyPipEmpty.png")?;
 		let e_pip_filled = texture_manager.borrow_mut().load("assets/energyPipFilled.png")?;
+		let armor = texture_manager.borrow_mut().load("assets/effects/shield.png")?;
+		let healing = texture_manager.borrow_mut().load("assets/effects/healing.png")?;
+		let posion = texture_manager.borrow_mut().load("assets/effects/posion.png")?;
+		let mana_boost = texture_manager.borrow_mut().load("assets/effects/mana_boost.png")?;
+		let mana_drain = texture_manager.borrow_mut().load("assets/effects/mana_drain.png")?;
 		let accepting_input = true;
 		let tmp_enemy_played_card = 100;
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
@@ -109,6 +119,11 @@ impl<'a> Battle<'a> {
 			tmp_enemy_played_card,
 			e_pip_unfilled,
 			e_pip_filled,
+			armor,
+			healing,
+			posion,
+			mana_boost,
+			mana_drain,
 			accepting_input,
 			battler_map,
 			active_player: 1,
@@ -476,6 +491,19 @@ impl Scene for Battle<'_> {
 		    }
 		}
 
+		// draw the player's status effects
+		let mut p1_status_effects = Vec::new();
+		if player1.get_defense() > 1 {p1_status_effects.push(&self.armor);}
+		if player1.get_health_regen() > 1 {p1_status_effects.push(&self.healing);}
+		if player1.get_poison() > 1 {p1_status_effects.push(&self.posion)};
+		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);}
+		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);}
+
+		for i in 0..p1_status_effects.len() {
+			crate::video::gfx::draw_sprite(&mut wincan, p1_status_effects[i], (790+280-(i*30) as i32, 480));
+		}
+		
+
 		//enemy side
 
 		let mut _p2 = battle_stat.get_p2();
@@ -512,6 +540,17 @@ impl Scene for Battle<'_> {
 		    else {
 		        crate::video::gfx::draw_sprite(&mut wincan, &self.e_pip_unfilled, (1240 - (i * 20), 184));
 		    }
+		}
+
+		let mut p2_status_effects = Vec::new();
+		if player2.get_defense() > 1 {p2_status_effects.push(&self.armor);}
+		if player2.get_health_regen() > 1 {p2_status_effects.push(&self.healing);}
+		if player2.get_poison() > 1 {p2_status_effects.push(&self.posion)};
+		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);}
+		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);}
+
+		for i in 0..p2_status_effects.len() {
+			crate::video::gfx::draw_sprite(&mut wincan, p2_status_effects[i], (200+280-(i*30) as i32, 230));
 		}
 
 		//mostly static objects (health bars change tho)
