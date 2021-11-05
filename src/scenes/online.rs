@@ -1,9 +1,12 @@
 
+use std::pin::Pin;
+use std::task::{Context, Waker, RawWaker, RawWakerVTable};
 use std::io;
 use std::io::prelude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::net::TcpStream;
+use std::future::Future;
 
 
 use sdl2::render::WindowCanvas;
@@ -13,6 +16,7 @@ use crate::scenes::{Scene, GameEvent};
 
 pub struct Online {
 	buffer: [u8; 1024],
+	waker: Waker,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 }
@@ -25,7 +29,10 @@ impl Scene for Online {
 
 		fn render(&mut self) -> Result<(), String> {
 			let mut buffer = [0; 1024];
-			let server_data = poll_server(&mut buffer);
+			let mut server_data = poll_server(&mut buffer);
+			let mut cx = Context::from_waker(&self.waker);
+			let pin = unsafe { Pin::new_unchecked(&mut server_data) };
+			pin.poll(&mut cx);
 
 			Ok(())
 		}
@@ -37,8 +44,11 @@ impl Online {
 	pub fn init(wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>) -> Self {
 
 		let buffer = [0; 1024];
+		let raw_waker = RawWaker::new(&(), &VTABLE);
+		let waker = unsafe {Waker::from_raw(raw_waker)}; 
 
 		Online {
+			waker,
 			buffer,
 			wincan,
 			event_system,
@@ -70,5 +80,22 @@ impl TcpConnection {
 		})
 	}
 }
+
+impl Unpin for TcpConnection {}
+
+unsafe fn vt_clone(data: *const()) -> RawWaker {
+	RawWaker::new(data, &VTABLE)
+}
+
+unsafe fn vt_wake(data: *const()) {}
+unsafe fn vt_wake_by_ref(data: *const()) {}
+unsafe fn vt_drop(data: *const()) {}
+
+static VTABLE: RawWakerVTable = RawWakerVTable::new(
+	vt_clone,
+	vt_wake,
+	vt_wake_by_ref,
+	vt_drop,
+);
 
 
