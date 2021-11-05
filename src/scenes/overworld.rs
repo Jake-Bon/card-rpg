@@ -1,5 +1,11 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::fs::File;
+use std::io::BufReader;
+use std::io::prelude::*;
+
+//use image::io::Reader as ImageReader;
+//use image::{Rgba,GenericImage};
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
@@ -20,13 +26,32 @@ const FullW: u32 = 2400;
 const FullH: u32 = 1800;
 const TileS: u32 = 40;
 const TileW: u32 = FullW/TileS;
-const TileH: u32 = FullW/TileS;
+const TileH: u32 = FullH/TileS;
 const SpriteTileS: u32 = 40;
 
 const SPEED_LIMIT: f32 = 6.0;
 const ACCEL_RATE: f32 = 0.6;
 
 //mod crate::video;
+
+fn map_reader(map: &str) -> Result<Vec<u8>,String>{
+	let file = File::open(map.to_string()).expect("File not opened.");
+	let mut buf_reader = BufReader::new(file);
+
+	let mut bytes: Vec<u8> = Vec::new();
+	buf_reader.read_to_end(&mut bytes);
+
+	bytes.drain(0..66);//remove bmp header
+	let mut map: Vec<u8> = Vec::new();
+	for i in 0..TileH{
+		let j = TileH as i32-i as i32;
+		print!("{} {}\n",j*TileW as i32,(j+1)*TileW as i32);
+		map.extend_from_slice(&(bytes[(j-1) as usize*TileW as usize..j as usize*TileW as usize]));
+	}
+	print!("{} {:?}\n\n\n",bytes.len(),bytes);
+
+	Ok(map)
+}
 
 pub struct Overworld<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
@@ -37,6 +62,7 @@ pub struct Overworld<'a> {
 	enemy: Enemy<'a>,
 	anim_water: u32,
 	frames: u32,
+	map_rep: Vec<u8>,
 }
 
 impl<'a> Overworld<'a> {
@@ -77,6 +103,8 @@ impl<'a> Overworld<'a> {
 		let frames = 0;
 		let anim_water = 0;
 
+		let map_rep = map_reader("src/scenes/world-1.bmp")?;
+
 		Ok(Overworld{
 			wincan,
 			event_system,
@@ -86,6 +114,7 @@ impl<'a> Overworld<'a> {
 			enemy,
 			frames,
 			anim_water,
+			map_rep,
 		})
 	}
 }
@@ -161,7 +190,25 @@ impl Scene for Overworld<'_> {
 
 		// Draw background image
 		//crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.tile_set,(self.player.Box_x_pos as i32,self.player.Box_y_pos as i32),(CAM_W,CAM_H),(0,0))?;
-		crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.tile_set,((self.anim_water*SpriteTileS) as i32,0),(40,40),(TileS,TileS),(-(self.player.Box_x_pos as i32),-(self.player.Box_y_pos as i32)),(TileW,TileH))?;
+		crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.tile_set,((self.anim_water*SpriteTileS) as i32,0),(SpriteTileS,SpriteTileS),(TileS,TileS),(-(self.player.Box_x_pos as i32),-(self.player.Box_y_pos as i32)),(TileW,TileH))?;
+
+		let mut sprite_x: i32 = 0;
+		let mut sprite_y: i32 = 0;
+		for i in 0 as i32..self.map_rep.len() as i32{
+
+			if self.map_rep[i as usize]==1{
+				sprite_x = 0;
+				sprite_y = SpriteTileS as i32;
+			}else if self.map_rep[i as usize]==2{
+				sprite_x = SpriteTileS as i32;
+				sprite_y = SpriteTileS as i32;
+			}else{
+				continue;
+			}
+			let x = (i%TileW as i32)*TileS as i32;
+			let y = (i/TileW as i32)*TileS as i32;
+			crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.tile_set,(sprite_x,sprite_y),(SpriteTileS,SpriteTileS),(TileS,TileS),(-(self.player.Box_x_pos as i32)+x,-(self.player.Box_y_pos as i32)+y),(1,1));
+		}
 
 		// draw enemy map (temporary hotfix for purpose of having presentable midterm build)
 		crate::video::gfx::draw_sprite_from_sheet(&mut wincan, &self.enemy_map,
