@@ -17,6 +17,7 @@ use crate::scenes::{Scene, GameEvent};
 pub struct Online {
 	buffer: [u8; 1024],
 	waker: Waker,
+	connection: Option<TcpConnection>,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 }
@@ -50,6 +51,7 @@ impl Online {
 		Online {
 			waker,
 			buffer,
+			connection: None,
 			wincan,
 			event_system,
 		}
