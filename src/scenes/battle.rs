@@ -493,9 +493,9 @@ impl Scene for Battle<'_> {
 
 		// draw the player's status effects
 		let mut p1_status_effects = Vec::new();
-		if player1.get_defense() > 1 {p1_status_effects.push(&self.armor);}
-		if player1.get_health_regen() > 1 {p1_status_effects.push(&self.healing);}
-		if player1.get_poison() > 1 {p1_status_effects.push(&self.posion)};
+		if player1.get_defense() > 0 {p1_status_effects.push(&self.armor);}
+		if player1.get_health_regen() > 0 {p1_status_effects.push(&self.healing);}
+		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion)};
 		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);}
 		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);}
 
@@ -543,9 +543,9 @@ impl Scene for Battle<'_> {
 		}
 
 		let mut p2_status_effects = Vec::new();
-		if player2.get_defense() > 1 {p2_status_effects.push(&self.armor);}
-		if player2.get_health_regen() > 1 {p2_status_effects.push(&self.healing);}
-		if player2.get_poison() > 1 {p2_status_effects.push(&self.posion)};
+		if player2.get_defense() > 0 {p2_status_effects.push(&self.armor);}
+		if player2.get_health_regen() > 0 {p2_status_effects.push(&self.healing);}
+		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion)};
 		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);}
 		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);}
 
