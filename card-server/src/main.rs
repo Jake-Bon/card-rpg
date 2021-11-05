@@ -9,8 +9,10 @@ fn main() -> Result<()>{
 }
 
 fn handle_connection(stream: &mut TcpStream) -> Result<()>{
-    thread::sleep(Duration::from_secs(4));
-    stream.write(b"Hi")?;
+    loop {
+        thread::sleep(Duration::from_secs(4));
+        stream.write(b"Hi")?;
+    }
     Ok(())
 }
 

@@ -1,14 +1,10 @@
 
-use std::sync::Arc;
-use std::task::Context;
-use std::task::Poll;
-use std::pin::Pin;
 use std::io;
 use std::io::prelude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::net::TcpStream;
-use std::future::Future;
+
 
 use sdl2::render::WindowCanvas;
 
@@ -16,7 +12,7 @@ use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
 
 pub struct Online {
-	stream: TcpConnection,
+	buffer: [u8; 1024],
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 }
@@ -28,12 +24,9 @@ impl Scene for Online {
 		}
 
 		fn render(&mut self) -> Result<(), String> {
-			let stream = unsafe {Pin::new_unchecked(&mut self.stream)};
-			let cx = Context::from_waker(&waker);
-			match stream.poll(&mut &mut cx) {
-				Poll::Ready(value) => println!("Data: {}", String::from_utf8_lossy(&value)),
-				Poll::Pending => {},
-			}
+			let mut buffer = [0; 1024];
+			let server_data = poll_server(&mut buffer);
+
 			Ok(())
 		}
 
@@ -43,37 +36,39 @@ impl Online {
 
 	pub fn init(wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>) -> Self {
 
-		let stream = TcpConnection::connect("127.0.0.1:7878").unwrap();
+		let buffer = [0; 1024];
 
 		Online {
-			stream,
+			buffer,
 			wincan,
 			event_system,
 		}
 	}
 }
 
+async fn poll_server(buffer: &mut [u8; 1024]) -> io::Result<()> {
+	read(buffer).await?;
+	println!("data: {}", String::from_utf8_lossy(buffer));
+	Ok(())
+}
+
+async fn read(buf: &mut [u8]) -> io::Result<usize> {
+	let mut connection = TcpConnection::connect("127.0.0.1:7878").await?;
+	connection.stream.read(buf)
+}
+
 struct TcpConnection {
 	stream: TcpStream,
 }
 
-impl Future for TcpConnection {
-	type Output = [u8; 1024];
-	fn poll(mut self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Self::Output> {
-		let mut buffer = [0; 1024];
-		if self.stream.read(&mut buffer).unwrap() > 0 {
-			return Poll::Ready(buffer)
-		}
-		Poll::Pending
-	}
-}
-
 impl TcpConnection {
-	fn connect(addr: &str) -> io::Result<Self> {
-		let stream = TcpStream::connect(addr)?;
 
+	async fn connect(addr: &str) -> io::Result<TcpConnection> {
+		let stream = TcpStream::connect(addr)?;
 		Ok(TcpConnection {
 			stream,
 		})
 	}
 }
+
+
