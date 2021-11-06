@@ -90,8 +90,8 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let def = 0;
         let mana_delta = 3;
         let poison = 0;
-        let energy_regen = vec![0,0];
-        let health_regen = vec![0,0];
+        let energy_regen = Vec::new();
+        let health_regen = Vec::new();
         Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,poison,energy_regen,health_regen}
     }
 
@@ -287,29 +287,43 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     }
 
     pub fn add_energy_regen(&mut self, val:i32){ //CAN BE NEGATIVE!
-        self.energy_regen[0] = val;
-        self.energy_regen[1] = 3 as i32;//turns
+        self.energy_regen.push(3 as i32);//turns
+        self.energy_regen.push(val);
     }
 
-    pub fn get_energy_regen(& self)->i32{ //for display purposes
-        if self.energy_regen[1]>0{
-            self.energy_regen[0]
-        }else{
-            0 as i32
+    pub fn get_energy_regen(& self)->i32{
+        let mut rslt = 0 as i32;
+        if self.energy_regen.len()==0{
+            return rslt;
         }
+        for i in 0..self.energy_regen.len()/2{ //First get amount of regen
+            rslt = if self.energy_regen[i*2]>0{
+                self.energy_regen[i*2+1]
+            }else{
+                0
+            };
+        }
+        rslt
     }
 
     pub fn add_health_regen(&mut self, val:i32){ //CAN BE NEGATIVE!
-        self.health_regen[0] = val;
-        self.health_regen[1] = 3 as i32;//turns
+        self.health_regen.push(3 as i32);//turns
+        self.health_regen.push(val);
     }
 
     pub fn get_health_regen(& self)->i32{ //for display purposes
-        if self.health_regen[1]>0{
-            self.health_regen[0]
-        }else{
-            0 as i32
+        let mut rslt = 0 as i32;
+        if self.health_regen.len()==0{
+            return rslt;
         }
+        for i in 0..self.health_regen.len()/2{
+            rslt = if self.health_regen[i*2]>0{
+                self.health_regen[i*2+1]
+            }else{
+                0
+            };
+        }
+        rslt
     }
 
     pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
@@ -318,19 +332,41 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             self.poison = self.poison - 1;
         }
             self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
-        if self.energy_regen[1]>0 as i32{
-            self.curr_energy = self.curr_energy+self.energy_regen[0];
-            if self.curr_energy>self.full_energy{
-                self.curr_energy = self.full_energy;
+        if self.energy_regen.len()>0{
+            for i in 0..(self.energy_regen.len())/2{ //Go through every value/turn pair
+                self.curr_energy = self.curr_energy+self.energy_regen[i*2+1];
+                if self.curr_energy>self.full_energy{
+                    self.curr_energy = self.full_energy;
+                }
+                self.energy_regen[i*2] = self.energy_regen[i*2] - 1 as i32;
             }
-            self.energy_regen[1] = self.energy_regen[1] - 1 as i32;
+
+            let mut new_vec: Vec<i32> = Vec::new();
+            for i in 0..self.energy_regen.len()/2{ //then remove any exhausted regen effects
+                if self.energy_regen[i*2]>0{
+                    new_vec.push(self.energy_regen[i*2]);
+                    new_vec.push(self.energy_regen[i*2+1]);
+                }
+            }
+            self.energy_regen = new_vec;
         }
-        if self.health_regen[1]>0 as i32{
-            self.curr_health = self.curr_health+self.health_regen[0];
-            if self.curr_health>self.full_health{
-                self.curr_health = self.full_health;
+        if self.health_regen.len()>0{
+            for i in 0..(self.health_regen.len())/2{ //Go through every value/turn pair
+                self.curr_health = self.curr_health+self.health_regen[i*2+1];
+                if self.curr_health>self.full_health{
+                    self.curr_health = self.full_health;
+                }
+                self.health_regen[i*2] = self.health_regen[i*2] - 1 as i32;
             }
-            self.health_regen[1] = self.health_regen[1] - 1 as i32;
+
+            let mut new_vec: Vec<i32> = Vec::new(); //Then remove any exhausted health effects
+            for i in 0..self.health_regen.len()/2{
+                if self.health_regen[i*2]>0{
+                    new_vec.push(self.health_regen[i*2]);
+                    new_vec.push(self.health_regen[i*2+1]);
+                }
+            }
+            self.health_regen = new_vec;
         }
     }
 
