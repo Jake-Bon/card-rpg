@@ -11,7 +11,7 @@ use crate::game_manager::TextureManager;
 
 pub const CAM_W: u32 = 1280;
 pub const CAM_H: u32 = 720;
-pub const TILE_SIZE: u32 = 10;
+pub const TILE_SIZE: u32 = 40;
 
 // Fills the given WindowCanvas wincan with the given Color fill_color
 pub fn fill_screen(wincan: &mut WindowCanvas, fill_color: Color) -> Result<(), String> {
