@@ -354,16 +354,22 @@ impl<'a> Player<'a> {
 				self.y_vel/=4.0;
 				self.delta_y=0.0;
 
+				self.Box_x_pos += self.last_safe_x-self.ABSx_pos;
+				self.Box_y_pos += self.last_safe_y-self.ABSy_pos;
 				self.ABSx_pos = self.last_safe_x;
 				self.ABSy_pos = self.last_safe_y;
+
 				//UP/DOWN COLLISION
 			}
 			if (left_checks&&self.x_vel<0.0)||(right_checks&&self.x_vel>0.0){
 				self.x_vel/=4.0;
 				self.delta_x=0.0;
 
+				self.Box_x_pos += self.last_safe_x-self.ABSx_pos;
+				self.Box_y_pos += self.last_safe_y-self.ABSy_pos;
 				self.ABSx_pos = self.last_safe_x;
 				self.ABSy_pos = self.last_safe_y;
+
 				//LEFT/RIGHT COLLISION
 			}
 		}else{
@@ -372,6 +378,7 @@ impl<'a> Player<'a> {
 		}
 		// Add velocity to position, clamp to ensure bounds are never exceeded.
 		// TILE_SIZE * 4 because the TILE_SIZE are scaled x4
+
 		if((self.ABSx_pos-self.Box_x_pos <= (CAM_W/2+5) as f32) && (self.ABSx_pos-self.Box_x_pos >= (CAM_W/2-5) as f32))
 		{
 			self.Box_x_pos = (self.Box_x_pos + self.x_vel).clamp(0.0, (FullW-CAM_W) as f32);
