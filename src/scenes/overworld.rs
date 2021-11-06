@@ -53,7 +53,7 @@ pub struct Overworld<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	tile_set: Rc<Texture<'a>>,
-	enemy_map: Rc<Texture<'a>>,
+	enemy_sprite: Rc<Texture<'a>>,
 	player: Player<'a>,
 	enemy: Enemy<'a>,
 	anim_water: u32,
@@ -66,7 +66,7 @@ impl<'a> Overworld<'a> {
 		//let tile_map = [0; 144];
 		//let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
-		let enemy_map = texture_manager.borrow_mut().load("assets/enemy_map.png")?;
+		let enemy_sprite = texture_manager.borrow_mut().load("assets/simple_enemy_sprite.png")?;
 		let map_rep = map_reader("src/scenes/world-1.bmp")?;
 
 		let player = Player {
@@ -105,7 +105,7 @@ impl<'a> Overworld<'a> {
 			wincan,
 			event_system,
 			tile_set,
-			enemy_map,
+			enemy_sprite,
 			player,
 			enemy,
 			frames,
@@ -194,18 +194,12 @@ impl Scene for Overworld<'_> {
 			crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.tile_set,(sprite_x,sprite_y),(SpriteTILE_SIZE,SpriteTILE_SIZE),(TILE_SIZE,TILE_SIZE),(-(self.player.Box_x_pos as i32)+x,-(self.player.Box_y_pos as i32)+y),(1,1));
 		}
 
-		// draw enemy map (temporary hotfix for purpose of having presentable midterm build)
-		print!("---------------------X  {} {} {}\n",-((self.player.Box_x_pos) as i32),self.enemy.ABSx_pos as i32,(-(self.player.Box_x_pos) as i32+self.enemy.ABSx_pos as i32));
-		print!("---------------------Y  {} {} {}\n",-((self.player.Box_y_pos) as i32),self.enemy.ABSy_pos as i32,(-(self.player.Box_y_pos) as i32+self.enemy.ABSy_pos as i32));
-		crate::video::gfx::draw_sprite(&mut wincan, &self.enemy_map, (-240, -160))?;
+		// draw enemy
+		crate::video::gfx::draw_sprite(&mut wincan, &self.enemy_sprite, (self.enemy.ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy.ABSy_pos as i32-self.player.Box_y_pos as i32))?;
 
 
 		// Draw player
 		crate::video::gfx::draw_sprite(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
-
-		// Draw enemy (doesn't work yet)
-		//crate::video::gfx::draw_sprite(&mut wincan, &self.enemy.sprite,
-		//	(self.enemy.x_pos as i32, self.enemy.y_pos as i32))?;
 
 
 		wincan.present();
