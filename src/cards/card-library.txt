@@ -6,7 +6,7 @@
 ###Could turn this into a status explicitly called "Stormy Waters" or something similar
 2::The Perfect Storm::Until your next turn, all attacks do 2 more damage.::3::3::2::assets/cards/thePerfectStorm_Card.png
 ###Intended to synergize with the Perfect Storm, to have a 2 card combo do 9 damage (for now)
-3::Whirlpool::Attack for 1 damage. Repeat 3 times.::2::0,0,0::1,1,1::assets/cards/whirlpool_Card.png
+3::Whirlpool::Attack for 1 damage. Repeat 2 times.::2::0,0,0::1,1,1::assets/cards/whirlpool_Card.png
 ###Simple regen card
 4::Grand Theft Parakeet::Have your parrot steal some food. Regen 3 hp for 3 turns.::4::8::3::assets/cards/Health_Regen_Parakeet.png
 ###-2 reduces enemy mana regen
@@ -27,3 +27,6 @@
 17::Swab The Deck::Draw 2 cards.::3::9::2::assets/cards/swab the deck.png
 18::Cutlass::Deal 4 damage.::2::0::4::assets/cards/cutlass.png
 19::Fishing Minigame::Heal 3 health.::2::2::3::assets/cards/fish.png
+###Currently the 3 Rats also get added to the discard pile
+20::Pest Problem::Shuffle 3 Rats into your opponent's deck::7::11,11,11,13::21,21,21,0::assets/cards/pestProblem_Card.png
+21::Rat::Deal 1 damage to both players::3::0,2::1,-1::assets/cards/rat_Card.png

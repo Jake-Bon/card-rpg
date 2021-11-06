@@ -331,7 +331,14 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             self.curr_health = self.curr_health-self.poison as i32;
             self.poison = self.poison - 1;
         }
-            self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
+        
+        self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
+        
+        // stop overflow via base regen
+        if self.curr_energy>self.full_energy{
+            self.curr_energy = self.full_energy;
+        }
+        
         if self.energy_regen.len()>0{
             for i in 0..(self.energy_regen.len())/2{ //Go through every value/turn pair
                 self.curr_energy = self.curr_energy+self.energy_regen[i*2+1];

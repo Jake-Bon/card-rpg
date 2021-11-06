@@ -60,6 +60,10 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         7 => change_mana_regen(val,stat.get_inactive_player()),//player bumps down opponent regen
         8 => health_regen(val,stat.get_active_player()),
         9 => draw_cards(val,stat.get_active_player()),
+        10 => insert_into_deck(val as u32, stat.get_active_player()), // insert into caster's deck
+        11 => insert_into_deck(val as u32, stat.get_inactive_player()), // insert into caster's opponent's deck
+        12 => shuffle_deck(stat.get_active_player()),   // shuffle caster's deck
+        13 => shuffle_deck(stat.get_inactive_player()), // shuffle caster's opponent's deck
         _ => unreachable_action(),
     }
 }
@@ -128,6 +132,18 @@ fn draw_cards(val: i32, target: Rc<RefCell<Battler>>){
         }
         dif-=1;
     }
+}
+
+// inserts the card with the given card_ID into the deck of the given target
+fn insert_into_deck(card_ID: u32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.add_card_to_deck(card_ID);
+}
+
+// shuffles the deck of the given target player
+fn shuffle_deck(target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.shuffle_deck();
 }
 
 fn unreachable_action(){

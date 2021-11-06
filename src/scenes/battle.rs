@@ -157,7 +157,8 @@ impl<'a> Battle<'a> {
 
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
             let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
-            let _p2 = Rc::new(RefCell::new(self.battler_map.get(&1).unwrap().clone()));
+            // change the number in self.battler_map.get(&X) to change battler ID
+            let _p2 = Rc::new(RefCell::new(self.battler_map.get(&2).unwrap().clone()));
 
 			_p1.borrow_mut().shuffle_deck();
 			_p2.borrow_mut().shuffle_deck();
