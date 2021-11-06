@@ -58,6 +58,21 @@ pub fn draw_sprite(wincan: &mut WindowCanvas, sprite_texture: &'_ Texture, (x_po
     Ok(())
 }
 
+// Draws sprite at the given location
+// Uses the dimensions of the texture itself, doesn't do any resizing
+//first bool false left, true right
+//second bool false upright, true downward
+pub fn draw_sprite_mirror(wincan: &mut WindowCanvas, sprite_texture: &'_ Texture, (x_pos, y_pos): (i32, i32),horiz: bool, vert: bool) -> Result<(), String> {
+
+    // queries the texture to get the sprite width and the sprite height
+    let sprite_info = sprite_texture.query();
+
+    // draw the sprite at the given position
+    wincan.copy_ex(&sprite_texture, None, Rect::new(x_pos, y_pos, sprite_info.width, sprite_info.height), 0.0, None, horiz, vert)?;
+
+    Ok(())
+}
+
 // Draws sprite from a sprite sheet at the given location
 // The three tuples are as follows:
 //      (sheet_x, sheet_y) = The position in the sprite sheet. Should be the top left corner of the sprite in the sprite sheet you want to draw.

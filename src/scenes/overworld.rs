@@ -85,6 +85,7 @@ impl<'a> Overworld<'a> {
 			map_copy: map_rep.clone(),
 			last_safe_x: (CAM_W/2 - TILE_SIZE) as f32,
 			last_safe_y: (CAM_H/2 - TILE_SIZE) as f32,
+			is_flipped: false,
 		};
 
 		let enemy = Enemy {
@@ -199,7 +200,8 @@ impl Scene for Overworld<'_> {
 
 
 		// Draw player
-		crate::video::gfx::draw_sprite(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32))?;
+		self.player.is_flipped = if self.player.x_vel>0.0{true}else if self.player.x_vel<0.0{false}else{self.player.is_flipped};
+		crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32),self.player.is_flipped,false)?;
 
 
 		wincan.present();
@@ -225,6 +227,7 @@ struct Player<'a> {
 	map_copy: Vec<u8>,
 	last_safe_x: f32,
 	last_safe_y: f32,
+	is_flipped: bool,
 }
 
 impl<'a> Player<'a> {
