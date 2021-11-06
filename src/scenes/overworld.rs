@@ -4,6 +4,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::*;
 
+use rand::{thread_rng,Rng};
+
 //use image::io::Reader as ImageReader;
 //use image::{Rgba,GenericImage};
 
@@ -33,6 +35,7 @@ const ACCEL_RATE: f32 = 0.3;
 //mod crate::video;
 
 fn map_reader(map: &str) -> Result<Vec<u8>,String>{
+	let mut rng = thread_rng();
 	let file = File::open(map.to_string()).expect("File not opened.");
 	let mut buf_reader = BufReader::new(file);
 
@@ -44,6 +47,18 @@ fn map_reader(map: &str) -> Result<Vec<u8>,String>{
 	for i in 0..TileH{ //mirror map vertically to how it is drawn
 		let j = TileH as i32-i as i32;
 		map.extend_from_slice(&(bytes[(j-1) as usize*TileW as usize..j as usize*TileW as usize]));
+	}
+
+	let mut random_num: f32 = 0.0;
+	for i in 0..map.len(){
+		random_num = rng.gen_range(0.0..2.0);
+		if random_num>=1.7{
+			if map[i]==1{
+				map[i]+=2;
+			}else if map[i]==2{
+				map[i]+=2;
+			}
+		}
 	}
 
 	Ok(map)
@@ -183,8 +198,14 @@ impl Scene for Overworld<'_> {
 			if self.map_rep[i as usize]==1{ //SAND
 				sprite_x = 0;
 				sprite_y = SpriteTILE_SIZE as i32;
-			}else if self.map_rep[i as usize]==2{ //GRASS
+			}else if self.map_rep[i as usize]==3{ //Sand + Palm
 				sprite_x = SpriteTILE_SIZE as i32;
+				sprite_y = SpriteTILE_SIZE as i32;
+			}else if self.map_rep[i as usize]==2{ //GRASS
+				sprite_x = (SpriteTILE_SIZE as i32)*2 as i32;
+				sprite_y = SpriteTILE_SIZE as i32;
+			}else if self.map_rep[i as usize]==4{ //Grass + Flower
+				sprite_x = (SpriteTILE_SIZE as i32)*3 as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
 			}else{//Add more types if needed
 				continue;
