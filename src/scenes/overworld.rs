@@ -147,7 +147,7 @@ impl Scene for Overworld<'_> {
 		self.enemy.update_movement();
 
 
-		self.frames = if (self.frames) > 5 {
+		self.frames = if (self.frames) > 9 {
 			self.anim_water = ((self.anim_water+1)%9);
 			0
 		}
@@ -349,15 +349,20 @@ impl<'a> Player<'a> {
 		let left_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x+TileW as usize*(map_y_down)]!=0;
 		let right_checks = self.map_copy[map_x_right+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
 
-		if up_checks||down_checks||left_checks||right_checks{
-			if (up_checks&&self.y_vel<0.0)||(down_checks&&self.y_vel>0.0){
-				self.y_vel/=4.0;
+		if up_checks||down_checks||left_checks||right_checks{ //If any collision detected
+			if self.ABSx_pos > (CAM_W/2) as f32&&self.ABSx_pos < (FullW-CAM_W/2) as f32{ //If position is close to border
+				self.Box_x_pos += self.last_safe_x-self.ABSx_pos;						//Ensure player snaps back
+			}
+			if self.ABSy_pos > (CAM_H/2) as f32&&self.ABSy_pos < (FullH-CAM_H/2) as f32{
+				self.Box_y_pos += self.last_safe_y-self.ABSy_pos;
+			}
+
+			if (up_checks&&self.y_vel<0.0)||(down_checks&&self.y_vel>0.0){ //Checks directions according to velocity
+				self.y_vel/=4.0;//lets player approach tile			   	//Following if has same structure
 				self.delta_y=0.0;
 
-				self.Box_x_pos += self.last_safe_x-self.ABSx_pos;
-				self.Box_y_pos += self.last_safe_y-self.ABSy_pos;
-				self.ABSx_pos = self.last_safe_x;
-				self.ABSy_pos = self.last_safe_y;
+				self.ABSx_pos = self.last_safe_x; //Stores last safe player position
+				self.ABSy_pos = self.last_safe_y-self.y_vel; //Ensures player never stays in tile
 
 				//UP/DOWN COLLISION
 			}
@@ -365,15 +370,13 @@ impl<'a> Player<'a> {
 				self.x_vel/=4.0;
 				self.delta_x=0.0;
 
-				self.Box_x_pos += self.last_safe_x-self.ABSx_pos;
-				self.Box_y_pos += self.last_safe_y-self.ABSy_pos;
-				self.ABSx_pos = self.last_safe_x;
+				self.ABSx_pos = self.last_safe_x -self.x_vel;
 				self.ABSy_pos = self.last_safe_y;
 
 				//LEFT/RIGHT COLLISION
 			}
 		}else{
-			self.last_safe_x=self.ABSx_pos;
+			self.last_safe_x=self.ABSx_pos; //If unsafe position, revert
 			self.last_safe_y=self.ABSy_pos;
 		}
 		// Add velocity to position, clamp to ensure bounds are never exceeded.
