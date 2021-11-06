@@ -43,12 +43,10 @@ fn map_reader(map: &str) -> Result<Vec<u8>,String>{
 
 	bytes.drain(0..66);//remove bmp header
 	let mut map: Vec<u8> = Vec::new();
-	for i in 0..TileH{
+	for i in 0..TileH{ //mirror map vertically to how it is drawn
 		let j = TileH as i32-i as i32;
-		print!("{} {}\n",j*TileW as i32,(j+1)*TileW as i32);
 		map.extend_from_slice(&(bytes[(j-1) as usize*TileW as usize..j as usize*TileW as usize]));
 	}
-	print!("{} {:?}\n\n\n",bytes.len(),bytes);
 
 	Ok(map)
 }
@@ -71,6 +69,7 @@ impl<'a> Overworld<'a> {
 		//let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 		let enemy_map = texture_manager.borrow_mut().load("assets/enemy_map.png")?;
+		let map_rep = map_reader("src/scenes/world-1.bmp")?;
 
 		let player = Player {
 			x_pos: (CAM_W/2 - TILE_SIZE*modSize as u32 ) as f32,
@@ -85,6 +84,9 @@ impl<'a> Overworld<'a> {
 			delta_y: 0.0,
 			sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
 			keyPress: [false; 4],
+			map_copy: map_rep.clone(),
+			last_safe_x: (CAM_W/2 - TILE_SIZE*modSize as u32 ) as f32,
+			last_safe_y: (CAM_H/2 - TILE_SIZE*modSize as u32) as f32,
 		};
 
 		let enemy = Enemy {
@@ -103,8 +105,6 @@ impl<'a> Overworld<'a> {
 		let frames = 0;
 		let anim_water = 0;
 
-		let map_rep = map_reader("src/scenes/world-1.bmp")?;
-
 		Ok(Overworld{
 			wincan,
 			event_system,
@@ -117,6 +117,7 @@ impl<'a> Overworld<'a> {
 			map_rep,
 		})
 	}
+
 }
 
 impl Scene for Overworld<'_> {
@@ -196,13 +197,13 @@ impl Scene for Overworld<'_> {
 		let mut sprite_y: i32 = 0;
 		for i in 0 as i32..self.map_rep.len() as i32{
 
-			if self.map_rep[i as usize]==1{
+			if self.map_rep[i as usize]==1{ //SAND
 				sprite_x = 0;
 				sprite_y = SpriteTileS as i32;
-			}else if self.map_rep[i as usize]==2{
+			}else if self.map_rep[i as usize]==2{ //GRASS
 				sprite_x = SpriteTileS as i32;
 				sprite_y = SpriteTileS as i32;
-			}else{
+			}else{//Add more types if needed
 				continue;
 			}
 			let x = (i%TileW as i32)*TileS as i32;
@@ -243,6 +244,9 @@ struct Player<'a> {
 	delta_y: f32,
 	sprite: Rc<Texture<'a>>,
 	keyPress: [bool; 4],
+	map_copy: Vec<u8>,
+	last_safe_x: f32,
+	last_safe_y: f32,
 }
 
 impl<'a> Player<'a> {
@@ -345,13 +349,48 @@ impl<'a> Player<'a> {
 		// println!("{}", self.delta_y);
 
 
-
-
-		if self.x_pos + self.x_vel > CAM_W as f32 - TILE_SIZE as f32 *modSize || self.x_pos + self.x_vel < 0.0 {
+		if (self.x_pos + self.x_vel > CAM_W as f32 - TILE_SIZE as f32 *modSize) || self.x_pos + self.x_vel < 0.0 {
+			print!("vel = 0\n");
 			self.x_vel = 0.0;
 		}
 		if self.y_pos + self.y_vel > CAM_H as f32 - TILE_SIZE as f32 *modSize || self.y_pos + self.y_vel < 0.0 {
 			self.y_vel = 0.0;
+		}
+
+		let map_x = (self.ABSx_pos/TileS as f32) as usize;
+		let map_y = (self.ABSy_pos/TileS as f32) as usize;
+		let map_x_left = if map_x==0{map_x}else{map_x-1};
+		let map_x_right = if map_x==(TileW) as usize{map_x}else{map_x+1};
+		let map_y_up = if map_y==0{map_y}else{map_y-1};
+		let map_y_down = if map_y==(TileH) as usize{map_y}else{map_y+1};
+		print!("{} {}\n",map_x_right,map_x_left);
+
+		let up_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y)]!=0;
+		let down_checks = self.map_copy[map_x+TileW as usize*(map_y_down)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
+		let left_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x+TileW as usize*(map_y_down)]!=0;
+		let right_checks = self.map_copy[map_x_right+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
+
+
+		 if (up_checks&&self.y_vel<0.0)||(down_checks&&self.y_vel>0.0){
+			self.y_vel=0.0;
+			self.delta_y=0.0;
+
+			self.ABSx_pos = self.last_safe_x;
+			self.ABSy_pos = self.last_safe_y;
+			//UP/DOWN COLLISION
+		}
+		if (left_checks&&self.x_vel<0.0)||(right_checks&&self.x_vel>0.0){
+			self.x_vel=0.0;
+			self.delta_x=0.0;
+			//self.last_safe_y+=self.y_vel;
+
+			self.ABSx_pos = self.last_safe_x;
+			self.ABSy_pos = self.last_safe_y;
+			//LEFT/RIGHT COLLISION
+		}
+		else{
+			self.last_safe_x = self.ABSx_pos;
+			self.last_safe_y = self.ABSy_pos;
 		}
 		// Add velocity to position, clamp to ensure bounds are never exceeded.
 		// TILE_SIZE * 4 because the tiles are scaled x4
