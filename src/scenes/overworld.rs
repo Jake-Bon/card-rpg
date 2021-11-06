@@ -370,27 +370,28 @@ impl<'a> Player<'a> {
 		let left_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x+TileW as usize*(map_y_down)]!=0;
 		let right_checks = self.map_copy[map_x_right+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
 
+		if up_checks||down_checks||left_checks||right_checks{
+			if (up_checks&&self.y_vel<0.0)||(down_checks&&self.y_vel>0.0){
+				self.y_vel/=4.0;
+				self.delta_y=0.0;
 
-		 if (up_checks&&self.y_vel<0.0)||(down_checks&&self.y_vel>0.0){
-			self.y_vel=0.0;
-			self.delta_y=0.0;
 
-			self.ABSx_pos = self.last_safe_x;
-			self.ABSy_pos = self.last_safe_y;
-			//UP/DOWN COLLISION
-		}
-		if (left_checks&&self.x_vel<0.0)||(right_checks&&self.x_vel>0.0){
-			self.x_vel=0.0;
-			self.delta_x=0.0;
-			//self.last_safe_y+=self.y_vel;
+				self.ABSx_pos = self.last_safe_x;
+				self.ABSy_pos = self.last_safe_y;
+				//UP/DOWN COLLISION
+			}
+			if (left_checks&&self.x_vel<0.0)||(right_checks&&self.x_vel>0.0){
+				self.x_vel/=4.0;
+				self.delta_x=0.0;
+				//self.last_safe_y+=self.y_vel;
 
-			self.ABSx_pos = self.last_safe_x;
-			self.ABSy_pos = self.last_safe_y;
-			//LEFT/RIGHT COLLISION
-		}
-		else{
-			self.last_safe_x = self.ABSx_pos;
-			self.last_safe_y = self.ABSy_pos;
+				self.ABSx_pos = self.last_safe_x;
+				self.ABSy_pos = self.last_safe_y;
+				//LEFT/RIGHT COLLISION
+			}
+		}else{
+			self.last_safe_x=self.ABSx_pos;
+			self.last_safe_y=self.ABSy_pos;
 		}
 		// Add velocity to position, clamp to ensure bounds are never exceeded.
 		// TILE_SIZE * 4 because the tiles are scaled x4
