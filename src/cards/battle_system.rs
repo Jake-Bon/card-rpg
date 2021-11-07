@@ -45,12 +45,11 @@ pub fn play_card(stat: Rc<RefCell<BattleStatus>>,card:Card){
 pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
     let mut stat = stat.borrow_mut();
 
-    let mut p1 = stat.get_p1();
-    let mut p2 = stat.get_p2();
 
 
     match id as u32{ //p1 = first-person player
-        0 => attack(val, stat.get_inactive_player()),
+        0 => {let mult = stat.get_inactive_player().borrow_mut().get_mult();
+            attack(val, mult, stat.get_inactive_player())},
         1 => defend(val, stat.get_active_player()),
         2 => heal(val, stat.get_active_player()),
         3 => mult_next_dmg(val, stat.get_inactive_player()), //multiplier placed on opponent
@@ -64,7 +63,8 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         11 => insert_into_deck(val as u32, stat.get_inactive_player()), // insert into caster's opponent's deck
         12 => shuffle_deck(stat.get_active_player()),   // shuffle caster's deck
         13 => shuffle_deck(stat.get_inactive_player()), // shuffle caster's opponent's deck
-        14 => attack(val, stat.get_active_player()),    // attack self (use this instead of healing for negative values to account for dmg multipliers)
+        14 => {let mult = stat.get_inactive_player().borrow_mut().get_mult();
+            attack(val, mult, stat.get_active_player())},    // attack self (use this instead of healing for negative values to account for dmg multipliers)
         _ => unreachable_action(),
     }
 }
@@ -72,10 +72,9 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
 //TODO - According to turn apply attack, defend, and heal to correct player. Check if these work properly.
 //TODO - Get CARD from player deck and get card TYPE and VALUE
 
-fn attack (val: i32, target: Rc<RefCell<Battler>>){
+fn attack (val: i32, mult:f64, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     let def = target.get_defense();
-    let mult = target.get_mult();
 
     target.adjust_curr_health(def-((val as f64*mult) as i32));
     target.set_defense(0);
@@ -88,11 +87,7 @@ fn defend (val: i32, target: Rc<RefCell<Battler>>){
 
 fn heal (val: i32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
-    let mut new_val = val;
-    if val<0{
-        new_val = (val as f64*target.get_mult()) as i32 + target.get_defense();
-    }
-    target.adjust_curr_health(new_val);
+    target.adjust_curr_health(val);
 }
 
 fn mult_next_dmg(val:i32, target: Rc<RefCell<Battler>>){
