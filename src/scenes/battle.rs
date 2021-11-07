@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::fs;
 use std::collections::HashMap;
 use std::time::{Instant, Duration};
-use std::thread::sleep;
+//use std::thread::sleep; // sleep should only be used for testing, sleep will lock the entire program until sleeping is done
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
@@ -60,6 +60,7 @@ pub struct Battle<'a> {
 	turn: TurnPhase,
 	outcome: BattleOutcome,
 	battle_handler: Rc<RefCell<BattleStatus>>,
+	enemy_delay_inst: Instant,
 
 }
 
@@ -132,6 +133,7 @@ impl<'a> Battle<'a> {
 			turn: TurnPhase::NotInitialized,
 			outcome: BattleOutcome::Undetermined,
 			battle_handler,
+			enemy_delay_inst: Instant::now(),
 		})
 	}
 
@@ -268,7 +270,8 @@ impl<'a> Battle<'a> {
 
 	            self.outcome = self.battle_handler.borrow_mut().check_victory();
 
-	            if self.turn == TurnPhase::TurnP2 {
+                // self.enemy_delay_inst is updated in the PreTurnP2 phase. After 1 second, the code below runs
+	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 
 	                // Enemy AI should be called from here
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
@@ -304,7 +307,13 @@ impl<'a> Battle<'a> {
 						//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 					}
 
+                    // delay the turn phase by 1 second
+                    println!("waiting another second...");
+	                self.enemy_delay_inst = Instant::now();
+	                
+	                // eventually, when the enemy learns how to play multiple cards per turn, this will have to wait until all cards are played
 	                self.turn = TurnPhase::PostTurnP2;
+	                
 
 	            }
 	            else if self.turn == TurnPhase::PreTurnP2 {
@@ -335,12 +344,18 @@ impl<'a> Battle<'a> {
 		                
 		                // delay the turn phase by 1 second
 		                println!("waiting a second...");
-		                sleep(Duration::new(1, 0));
+                        
+                        // Using an instant allows us to still let the player do things like hover over cards while it isn't their turn
+                        // locking up the program completely via sleep() wouldn't let us do this
+                        
+                        // Update the delay instant so we can reuse one over and over again
+		                self.enemy_delay_inst = Instant::now();
 		                
 				    }
 
 	            }
-	            else if self.turn == TurnPhase::PostTurnP2 {
+	            // self.enemy_delay_inst is updated again in the TurnP2 phase. After 1 second, the code below runs
+	            else if self.turn == TurnPhase::PostTurnP2  && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 	                // Resolve things that need to be resolved after the Opponent's turn in here
 	                // Intended to check for Statuses that need to be removed at the end of the turn
 
@@ -350,7 +365,7 @@ impl<'a> Battle<'a> {
 
                     // delay the turn phase by 1 second
 		            println!("waiting another second...");
-		            sleep(Duration::new(1, 0));
+		            //sleep(Duration::new(1, 0));
 
 					println!("End of PostTurnP2");
 					self.turn = TurnPhase::RoundOver;
@@ -425,7 +440,7 @@ impl Scene for Battle<'_> {
 
 							//println!("game thinks that the player is clicking on card {}", i);
 
-                            if self.turn == TurnPhase::TurnP1 {
+                            if self.turn == TurnPhase::TurnP1 && self.outcome == BattleOutcome::Undetermined {
                             
 							    // play the card
 							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
@@ -601,9 +616,9 @@ impl Scene for Battle<'_> {
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
 
 		match self.outcome {
-		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (600, 330)),
-		    BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (600, 330)),
-		    BattleOutcome::Tie => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DRAW...", (600, 330)),
+		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (50, 330)),
+		    BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (50, 330)),
+		    BattleOutcome::Tie => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DRAW...", (50, 330)),
 		    _ => {
 		    
 		        // if the battle is ongoing and it's the enemy's turn, say so
