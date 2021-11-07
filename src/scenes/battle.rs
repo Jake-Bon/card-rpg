@@ -1,5 +1,9 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::fs;
+use std::collections::HashMap;
+use std::time::{Instant, Duration};
+use std::thread::sleep;
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
@@ -12,8 +16,6 @@ use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
 
 use crate::cards::game_structs::*;
-use std::fs;
-use std::collections::HashMap;
 
 use crate::cards::battle_enums::TurnPhase;
 use crate::cards::battle_enums::BattleOutcome;
@@ -325,11 +327,16 @@ impl<'a> Battle<'a> {
 
 
 	                    // give the opponent 3 energy per turn
-                        player.adjust_curr_energy(3);  // p2 is opponent
+                        //player.adjust_curr_energy(3);  // p2 is opponent
 
 		                // Move to the next phase of the turn
 		                println!("End of PreTurnP2");
 		                self.turn = TurnPhase::TurnP2;
+		                
+		                // delay the turn phase by 1 second
+		                println!("waiting a second...");
+		                sleep(Duration::new(1, 0));
+		                
 				    }
 
 	            }
@@ -340,6 +347,10 @@ impl<'a> Battle<'a> {
 					let mut _p =self.battle_handler.borrow_mut().get_active_player();
 					let mut player = _p.borrow_mut();
 					player.update_effects();
+
+                    // delay the turn phase by 1 second
+		            println!("waiting another second...");
+		            sleep(Duration::new(1, 0));
 
 					println!("End of PostTurnP2");
 					self.turn = TurnPhase::RoundOver;
@@ -414,36 +425,39 @@ impl Scene for Battle<'_> {
 
 							//println!("game thinks that the player is clicking on card {}", i);
 
-							// play the card
-							let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
-							//let card_cost = card_rslt.unwrap().get_cost();
-							if (!card_rslt.is_none()){
-								let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
-								let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
-								let curr_card_cost = curr_card.get_cost() as i32;
-								println!("card cost is {}", curr_card_cost);
-								let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
-								println!("current energy is {}", curr_energy);
-								// only play if player has enough energy
-								if (curr_energy >= curr_card_cost){
+                            if self.turn == TurnPhase::TurnP1 {
+                            
+							    // play the card
+							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
+							    //let card_cost = card_rslt.unwrap().get_cost();
+							    if (!card_rslt.is_none()){
+								    let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
+								    let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+								    let curr_card_cost = curr_card.get_cost() as i32;
+								    println!("card cost is {}", curr_card_cost);
+								    let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
+								    println!("current energy is {}", curr_energy);
+								    // only play if player has enough energy
+								    if (curr_energy >= curr_card_cost){
 
-								    //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+								        //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
-								    // if the player has enough energy to cover the cost of playing the card:
-								    crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-								    // add card to discard pile after playing
-								    self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
-								    self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+								        // if the player has enough energy to cover the cost of playing the card:
+								        crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+								        // add card to discard pile after playing
+								        self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
+								        self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 
-								}
-								// otherwise, don't
-			                    else {
-			                        println!("Not enough energy!");
-			                    }
+								    }
+								    // otherwise, don't
+			                        else {
+			                            println!("Not enough energy!");
+			                        }
 
 
-								//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
-								//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+								    //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+								    //println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+							    }
 							}
 						}
 				    }
@@ -590,7 +604,15 @@ impl Scene for Battle<'_> {
 		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (600, 330)),
 		    BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (600, 330)),
 		    BattleOutcome::Tie => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DRAW...", (600, 330)),
-		    _ => Ok(()),
+		    _ => {
+		    
+		        // if the battle is ongoing and it's the enemy's turn, say so
+		        if self.turn == TurnPhase::PreTurnP2 || self.turn == TurnPhase::TurnP2 || self.turn == TurnPhase::PostTurnP2 {
+                    fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "Opponent's Turn...", (50, 330));
+                }
+                Ok(())
+		    
+		    },
 		};
 
 		wincan.present();

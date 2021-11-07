@@ -64,6 +64,7 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         11 => insert_into_deck(val as u32, stat.get_inactive_player()), // insert into caster's opponent's deck
         12 => shuffle_deck(stat.get_active_player()),   // shuffle caster's deck
         13 => shuffle_deck(stat.get_inactive_player()), // shuffle caster's opponent's deck
+        14 => attack(val, stat.get_active_player()),    // attack self (use this instead of healing for negative values to account for dmg multipliers)
         _ => unreachable_action(),
     }
 }
