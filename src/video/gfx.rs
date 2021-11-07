@@ -22,6 +22,12 @@ pub fn fill_screen(wincan: &mut WindowCanvas, fill_color: Color) -> Result<(), S
 
 }
 
+pub fn draw_rect(wincan: &mut WindowCanvas, color: Color,(desired_width,desired_height):(u32,u32), (start_x, start_y): (i32, i32)) -> Result<(), String> {
+    wincan.set_draw_color(color);
+    wincan.fill_rect(Rect::new(start_x,start_y,desired_width,desired_height));
+    Ok(())
+}
+
 // Draws sprite stretched to fit the entire window
 pub fn draw_sprite_to_fit(wincan: &mut WindowCanvas, sprite_texture: &'_ Texture) -> Result<(), String> {
 

@@ -310,10 +310,10 @@ impl<'a> Battle<'a> {
                     // delay the turn phase by 1 second
                     println!("waiting another second...");
 	                self.enemy_delay_inst = Instant::now();
-	                
+
 	                // eventually, when the enemy learns how to play multiple cards per turn, this will have to wait until all cards are played
 	                self.turn = TurnPhase::PostTurnP2;
-	                
+
 
 	            }
 	            else if self.turn == TurnPhase::PreTurnP2 {
@@ -341,16 +341,16 @@ impl<'a> Battle<'a> {
 		                // Move to the next phase of the turn
 		                println!("End of PreTurnP2");
 		                self.turn = TurnPhase::TurnP2;
-		                
+
 		                // delay the turn phase by 1 second
 		                println!("waiting a second...");
-                        
+
                         // Using an instant allows us to still let the player do things like hover over cards while it isn't their turn
                         // locking up the program completely via sleep() wouldn't let us do this
-                        
+
                         // Update the delay instant so we can reuse one over and over again
 		                self.enemy_delay_inst = Instant::now();
-		                
+
 				    }
 
 	            }
@@ -441,7 +441,7 @@ impl Scene for Battle<'_> {
 							//println!("game thinks that the player is clicking on card {}", i);
 
                             if self.turn == TurnPhase::TurnP1 && self.outcome == BattleOutcome::Undetermined {
-                            
+
 							    // play the card
 							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
 							    //let card_cost = card_rslt.unwrap().get_cost();
@@ -532,7 +532,7 @@ impl Scene for Battle<'_> {
 		for i in 0..p1_status_effects.len() {
 			crate::video::gfx::draw_sprite(&mut wincan, p1_status_effects[i], (790+280-(i*30) as i32, 480));
 		}
-		
+
 
 		//enemy side
 
@@ -588,16 +588,38 @@ impl Scene for Battle<'_> {
 		// Can now update the health bars to dynamically update based on the Battler's health
 		let p1perc = 300 as f32 * player1.get_health_percent();
 		let p2perc = 300 as f32 * player2.get_health_percent();
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (790,520))?;
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (200,190))?;
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p1perc as u32,20), (790+(300-p1perc as i32),520))?; //player health bar
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.health,(p2perc as u32,20), (200,190))?; //enemy health bar
 
-		//add health text
-		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 150, 0),
-			&player2.get_curr_health().to_string(), (200,190+25));
-		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 150, 0),
-			&player1.get_curr_health().to_string(), (790,520-25));
+		let mut draw_color = Color::RGB(81, 71, 71);
+		crate::video::gfx::draw_rect(&mut wincan, draw_color,(300,20), (790,520));
+		crate::video::gfx::draw_rect(&mut wincan, draw_color,(300,20), (200,190));
+		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (790,520))?;
+		//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.behind_health,(300,20), (200,190))?;
+
+		if p1perc<=75.0{
+			draw_color = Color::RGB(210, 27, 27);
+		}else if p1perc<=150.0{
+			draw_color = Color::RGB(225, 235, 60);
+		}else{
+			draw_color = Color::RGB(60, 220, 30);
+		}
+
+		crate::video::gfx::draw_rect(&mut wincan, draw_color,(p1perc as u32,20), (790+(300-p1perc as i32),520))?; //player health bar
+		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, draw_color,
+			&player1.get_curr_health().to_string(), (790,520-25));//text
+
+		if p2perc<=75.0{
+			draw_color = Color::RGB(210, 27, 27);
+		}else if p2perc<=150.0{
+			draw_color = Color::RGB(225, 235, 60);
+		}else{
+			draw_color = Color::RGB(60, 220, 30);
+		}
+
+		crate::video::gfx::draw_rect(&mut wincan, draw_color,(p2perc as u32,20), (200,190))?; //enemy health bar
+		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, draw_color,
+			&player2.get_curr_health().to_string(), (200,190+25)); //text
+
+
 
 		//add mana text
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 15, Color::RGB(95, 95, 0),
@@ -620,13 +642,13 @@ impl Scene for Battle<'_> {
 		    BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (50, 330)),
 		    BattleOutcome::Tie => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DRAW...", (50, 330)),
 		    _ => {
-		    
+
 		        // if the battle is ongoing and it's the enemy's turn, say so
 		        if self.turn == TurnPhase::PreTurnP2 || self.turn == TurnPhase::TurnP2 || self.turn == TurnPhase::PostTurnP2 {
                     fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "Opponent's Turn...", (50, 330));
                 }
                 Ok(())
-		    
+
 		    },
 		};
 
