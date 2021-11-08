@@ -1,0 +1,38 @@
+{
+    {
+        "npcName": "temp name1",
+    	"deckID": 1,
+    	"dialog": {
+    			"dialog1": "first of dialog 1",
+    			"dialog2": "second line of dialog 1",
+                "..."
+    	},
+    },
+    {
+        "npcName": "temp name 2",
+    	"deckID": 2,
+    	"dialog": {
+    			"dialog1": "first of dialog 2",
+    			"dialog2": "second line of dialog 2",
+                "..."
+    	},
+    },
+    {
+        "npcName": "temp name 3",
+    	"deckID": 3,
+    	"dialog": {
+    			"dialog1": "first of dialog 3",
+    			"dialog2": "second line of dialog 3",
+                "..."
+    	},
+    },
+    {
+        "npcName": "temp name 4",
+    	"deckID": 4,
+    	"dialog": {
+    			"first of dialog 4",
+    			"second line of dialog 4",
+                "..."
+    	},
+    },
+}

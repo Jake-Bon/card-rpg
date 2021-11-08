@@ -2,6 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::BufReader;
+use std::num::*;
 use std::io::prelude::*;
 
 use rand::{thread_rng,Rng};
@@ -28,6 +29,7 @@ const FullH: u32 = 1800;
 const TileW: u32 = FullW/TILE_SIZE;
 const TileH: u32 = FullH/TILE_SIZE;
 const SpriteTILE_SIZE: u32 = 40;
+const enemyNum: f32 = 7.0;
 
 const SPEED_LIMIT: f32 = 6.0;
 const ACCEL_RATE: f32 = 0.3;
@@ -70,7 +72,7 @@ pub struct Overworld<'a> {
 	tile_set: Rc<Texture<'a>>,
 	enemy_sprite: Rc<Texture<'a>>,
 	player: Player<'a>,
-	enemy: Enemy<'a>,
+	enemy: Vec<Enemy<'a>>,
 	anim_water: u32,
 	frames: u32,
 	map_rep: Vec<u8>,
@@ -103,16 +105,31 @@ impl<'a> Overworld<'a> {
 			is_flipped: false,
 		};
 
-		let enemy = Enemy {
-			ABSx_pos: 300.0, //160.0,
-			ABSy_pos: 400.0, //240.0,
-			Box_x_pos: (FullW/2 - CAM_W/2  - TILE_SIZE) as f32,
-			Box_y_pos: (FullH/2 - CAM_H/2 - TILE_SIZE) as f32,
-			x_vel: 0.0,
-			y_vel: 0.0,
-			sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
-		};
-
+		let mut i=0;
+		let enemy: Vec<Enemy> =  Vec::new();
+		while (i as f32) < enemyNum
+		{
+			let mut rngx = thread_rng();
+			let mut rngy = thread_rng();
+			let mut random_x: f32 = rngx.gen_range(0.0..FullW as f32);
+			let mut random_y: f32 =rngy.gen_range(0.0..FullH as f32);
+			while (random_x<(player.Box_x_pos+CAM_W as f32)) && (random_y<(player.Box_y_pos+CAM_H as f32)) &&  (random_x>(player.Box_x_pos as f32)) && (random_y>(player.Box_y_pos as f32)) {
+				let mut rngx = thread_rng();
+				let mut rngy = thread_rng();
+				let mut random_x: f32 = rngx.gen_range(0.0..FullW as f32);
+				let mut random_y: f32 =rngy.gen_range(0.0..FullH as f32);
+			}
+			enemy.push( Enemy {
+				ABSx_pos: random_x, //160.0,
+				ABSy_pos: random_y, //240.0,
+				Box_x_pos: (FullW/2 - CAM_W/2  - TILE_SIZE) as f32,
+				Box_y_pos: (FullH/2 - CAM_H/2 - TILE_SIZE) as f32,
+				x_vel: 0.0,
+				y_vel: 0.0,
+				sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
+			});
+			i=i+1;
+		}
 
 		let frames = 0;
 		let anim_water = 0;
@@ -159,7 +176,7 @@ impl Scene for Overworld<'_> {
 	fn render(&mut self) -> Result<(), String> {
 		let mut wincan = self.wincan.borrow_mut();
 		self.player.update_movement();
-		self.enemy.update_movement();
+
 
 
 		self.frames = if (self.frames) > 9 {
@@ -173,14 +190,19 @@ impl Scene for Overworld<'_> {
 
 
 		// hard coded enemy collision
-		if (self.player.ABSx_pos > self.enemy.ABSx_pos && self.player.ABSx_pos < self.enemy.ABSx_pos + 40.0
-			&& self.player.ABSy_pos > self.enemy.ABSy_pos && self.player.ABSy_pos < self.enemy.ABSy_pos+40.0) {
-			self.player.x_vel=0.0;
-			self.player.y_vel=0.0;
-			self.player.delta_x=0.0;
-			self.player.delta_y=0.0;
-
-			self.event_system.borrow().change_scene(2).unwrap();
+		let i = 0;
+		while (i as f32) < enemyNum
+		{
+			self.enemy[i].update_movement();
+			if (f32::powf((self.enemy[i].ABSx_pos+self.player.ABSx_pos),2.0) + f32::powf((self.enemy[i].ABSy_pos+self.player.ABSy_pos),2.0)).sqrt() < 10.0
+			{
+				self.player.x_vel=0.0;
+				self.player.y_vel=0.0;
+				self.player.delta_x=0.0;
+				self.player.delta_y=0.0;
+				self.enemy.retain(|e| !factors.contains(self.enemy[i]))
+				self.event_system.borrow().change_scene(2).unwrap();
+			}
 		}
 
 
@@ -217,8 +239,9 @@ impl Scene for Overworld<'_> {
 		}
 
 		// draw enemy
-		crate::video::gfx::draw_sprite(&mut wincan, &self.enemy_sprite, (self.enemy.ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy.ABSy_pos as i32-self.player.Box_y_pos as i32))?;
-
+		for i in 0..enemyNum as i32	{
+			crate::video::gfx::draw_sprite(&mut wincan, &self.enemy_sprite, (self.enemy[i].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i].ABSy_pos as i32-self.player.Box_y_pos as i32))?;
+		}
 
 		// Draw player
 		self.player.is_flipped = if self.player.x_vel>0.0{true}else if self.player.x_vel<0.0{false}else{self.player.is_flipped};
@@ -411,6 +434,7 @@ impl<'a> Player<'a> {
 		{
 			self.Box_y_pos = (self.Box_y_pos + self.y_vel).clamp(0.0, (FullH-CAM_H) as f32);
 		}
+
 
 		self.ABSx_pos = (self.ABSx_pos + self.x_vel).clamp(0.0, FullW as f32 - (TILE_SIZE as f32));
 		self.ABSy_pos = (self.ABSy_pos + self.y_vel).clamp(0.0, FullH as f32 - (TILE_SIZE as f32));
