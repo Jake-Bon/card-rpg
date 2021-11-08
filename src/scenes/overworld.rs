@@ -125,19 +125,7 @@ impl<'a> Overworld<'a> {
 				println!("p:{}", (random_y<(player.Box_y_pos+CAM_H as f32)) );
 				println!("p:{}", (random_x>(player.Box_x_pos as f32)));
 				println!("p:{}", random_y>(player.Box_y_pos as f32));
-				if !(random_x<(player.Box_x_pos+CAM_W as f32))
-				{
-					break;
-				}
-				else if !(random_y<(player.Box_y_pos+CAM_H as f32))
-				{
-					break;
-				}
-				else if !(random_x>(player.Box_x_pos as f32))
-				{
-					break;
-				}
-				else if !(random_y>(player.Box_y_pos as f32))
+				if (!(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32)))&&(map_rep[(random_x/TILE_SIZE as f32 + TileW as f32*(random_y/TILE_SIZE as f32)) as usize])==0
 				{
 					break;
 				}
@@ -512,6 +500,39 @@ impl<'a> Enemy<'a> {
 			self.x_vel = rngx.gen_range(-2.0..2.0);
 			self.y_vel = rngy.gen_range(-2.0..2.0);
 		}
+
+		let map_x = (self.ABSx_pos/TILE_SIZE as f32) as usize;
+		let map_y = (self.ABSy_pos/TILE_SIZE as f32) as usize;
+		let map_x_left = if map_x==0{map_x}else{map_x-1};
+		let map_x_right = if map_x>=(TileW-1) as usize{map_x}else{map_x+1};
+		let map_y_up = if map_y==0{map_y}else{map_y-1};
+		let map_y_down = if map_y>=(TileH-1) as usize{map_y}else{map_y+1};
+
+		let border_checks = self.ABSx_pos<=4.0||self.ABSy_pos<=4.0||self.ABSx_pos>=FullW as f32-24.0||self.ABSy_pos>=FullH as f32-24.0;
+		let up_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y)]!=0;
+		let down_checks = self.map_copy[map_x+TileW as usize*(map_y_down)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
+		let left_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x+TileW as usize*(map_y_down)]!=0;
+		let right_checks = self.map_copy[map_x_right+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
+
+		if up_checks||down_checks||left_checks||right_checks||border_checks{ //If any collision detected
+			self.timer = Instant::now();
+
+			let mut rngx = thread_rng();
+			let mut rngy = thread_rng();
+
+			self.x_vel = rngx.gen_range(-2.0..2.0);
+			self.y_vel = rngy.gen_range(-2.0..2.0);
+
+			self.ABSx_pos = self.last_safe_x;
+			self.ABSy_pos = self.last_safe_y;
+
+		}else{
+			self.last_safe_x=self.ABSx_pos; //If unsafe position, revert
+			self.last_safe_y=self.ABSy_pos;
+		}
+
+
+
 		self.ABSx_pos = (self.ABSx_pos + self.x_vel).clamp(0.0, FullW as f32 - (TILE_SIZE as f32));
 		self.ABSy_pos = (self.ABSy_pos + self.y_vel).clamp(0.0, FullH as f32 - (TILE_SIZE as f32));
 	}
