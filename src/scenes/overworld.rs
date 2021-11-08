@@ -106,7 +106,7 @@ impl<'a> Overworld<'a> {
 		};
 
 		let mut i=0;
-		let enemy: Vec<Enemy> =  Vec::new();
+		let mut enemy: Vec<Enemy> =  Vec::new();
 		while (i as f32) < enemyNum
 		{
 			let mut rngx = thread_rng();
@@ -193,14 +193,14 @@ impl Scene for Overworld<'_> {
 		let i = 0;
 		while (i as f32) < enemyNum
 		{
-			self.enemy[i].update_movement();
-			if (f32::powf((self.enemy[i].ABSx_pos+self.player.ABSx_pos),2.0) + f32::powf((self.enemy[i].ABSy_pos+self.player.ABSy_pos),2.0)).sqrt() < 10.0
+			self.enemy[i as usize].update_movement();
+			if (f32::powf((self.enemy[i as usize].ABSx_pos+self.player.ABSx_pos),2.0) + f32::powf((self.enemy[i as usize].ABSy_pos+self.player.ABSy_pos),2.0)).sqrt() < 10.0
 			{
 				self.player.x_vel=0.0;
 				self.player.y_vel=0.0;
 				self.player.delta_x=0.0;
 				self.player.delta_y=0.0;
-				self.enemy.retain(|e| !factors.contains(self.enemy[i]))
+				self.enemy.remove(i as usize);
 				self.event_system.borrow().change_scene(2).unwrap();
 			}
 		}
@@ -240,7 +240,7 @@ impl Scene for Overworld<'_> {
 
 		// draw enemy
 		for i in 0..enemyNum as i32	{
-			crate::video::gfx::draw_sprite(&mut wincan, &self.enemy_sprite, (self.enemy[i].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i].ABSy_pos as i32-self.player.Box_y_pos as i32))?;
+			crate::video::gfx::draw_sprite(&mut wincan, &self.enemy_sprite, (self.enemy[i as usize].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i as usize].ABSy_pos as i32-self.player.Box_y_pos as i32))?;
 		}
 
 		// Draw player
