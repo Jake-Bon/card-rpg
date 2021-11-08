@@ -148,12 +148,15 @@ impl<'a> Overworld<'a> {
 			enemy.push( Enemy {
 				ABSx_pos: random_x, //160.0,
 				ABSy_pos: random_y, //240.0,
-				Box_x_pos: (FullW/2 - CAM_W/2  - TILE_SIZE) as f32,
-				Box_y_pos: (FullH/2 - CAM_H/2 - TILE_SIZE) as f32,
 				x_vel: rngxv.gen_range(0.0..2.0 as f32),
 				y_vel: rngyv.gen_range(0.0..2.0 as f32),
 				timer: Instant::now(),
 				sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
+				map_copy: map_rep.clone(),
+				last_safe_x: random_x,
+				last_safe_y: random_y,
+				is_flipped: false,
+
 			});
 			println!("outer");
 			i=i+1;
@@ -275,7 +278,8 @@ impl Scene for Overworld<'_> {
 
 		// draw enemy
 		for i in 0..self.enemy.len() as i32	{
-			crate::video::gfx::draw_sprite(&mut wincan, &self.enemy_sprite, (self.enemy[i as usize].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i as usize].ABSy_pos as i32-self.player.Box_y_pos as i32))?;
+			self.enemy[i as usize].is_flipped = if self.enemy[i as usize].x_vel<0.0{false}else if self.enemy[i as usize].x_vel>0.0{true}else{self.enemy[i as usize].is_flipped};
+			crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.enemy_sprite, (self.enemy[i as usize].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i as usize].ABSy_pos as i32-self.player.Box_y_pos as i32),self.enemy[i as usize].is_flipped,false)?;
 		}
 
 		// Draw player
@@ -486,12 +490,14 @@ struct Enemy<'a> {
 	//src: Rect,
 	ABSx_pos: f32,
 	ABSy_pos: f32,
-	Box_x_pos: f32,
-	Box_y_pos: f32,
 	x_vel: f32,
 	y_vel: f32,
 	sprite: Rc<Texture<'a>>,
 	timer: Instant,
+	map_copy: Vec<u8>,
+	last_safe_x: f32,
+	last_safe_y: f32,
+	is_flipped: bool,
 }
 
 impl<'a> Enemy<'a> {
