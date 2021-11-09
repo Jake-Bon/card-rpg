@@ -75,6 +75,7 @@ pub struct Battler{
     hand: Vec<u32>, //Current held cards
     deck: Vec<u32>, //Deck to draw from - treat as queue
     discard: Vec<u32>, //Discarded deck
+    draw_num: u32, // number of cards to draw
     poison: u32,
     energy_regen: Vec<i32>,
     health_regen: Vec<i32>,
@@ -86,13 +87,14 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let hand_size = 7 as usize;
         let deck = Vec::new();
         let discard = Vec::new();
+        let draw_num = 0;
         let mult=1;
         let def = 0;
         let mana_delta = 3;
         let poison = 0;
         let energy_regen = Vec::new();
         let health_regen = Vec::new();
-        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,poison,energy_regen,health_regen}
+        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,draw_num,poison,energy_regen,health_regen}
     }
 
     pub fn shuffle_deck(&mut self){
@@ -256,11 +258,31 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
     }
 
+    // add cards to be drawn
+    // self.draw_num is decremented in draw card
+    pub fn add_draw_num(&mut self, change: u32){
+        self.draw_num = self.draw_num + change;
+        println!("add_draw_num is now {}", self.draw_num);
+    }
+    
+    pub fn set_draw_num(&mut self, new_num: u32){
+        self.draw_num = new_num;
+    }
+    
+    pub fn get_draw_num(&self)->u32 {
+        self.draw_num
+    }
+
     pub fn draw_card(&mut self,is_safe: bool){ //Deck => Hand
         if self.deck.len()>0 && (is_safe||self.hand.len()<self.hand_size){
             self.add_card_to_hand(self.deck[0]);
             self.deck_del_card();
         }
+        // this is to skip the draw animations at the start of battle
+        if(self.draw_num > 0){
+            self.draw_num = self.draw_num - 1;
+        }
+
     }
 
     pub fn select_hand(&self,index:usize)->Option<u32>{

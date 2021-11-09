@@ -53,9 +53,7 @@ pub struct Battle<'a> {
 
 	tmp_enemy_played_card: usize,
 	
-	dummy_drawn_card: DrawnCard<'a>,
-	draw_state: DrawAnimState,
-	draw_num: u8,
+	dummy_drawn_card: DrawnCard,
 	frames_elapsed: u32,
 	
 
@@ -76,7 +74,7 @@ impl<'a> Battle<'a> {
 		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let mana = texture_manager.borrow_mut().load("assets/temp_energy.png")?;
-		let behind_mana = texture_manager.borrow_mut().load("assets/behind_health.png")?;
+		let behind_mana = texture_manager.borrow_mut().load("assets/behind_health.png")?;   // can be removed?
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let e_pip_unfilled = texture_manager.borrow_mut().load("assets/energyPipEmpty.png")?;
@@ -88,7 +86,7 @@ impl<'a> Battle<'a> {
 		let mana_drain = texture_manager.borrow_mut().load("assets/effects/mana_drain.png")?;
 		let accepting_input = true;
 		let tmp_enemy_played_card = 100;
-		let dummy_drawn_card = DrawnCard::new(0.0, 800.0, deck.clone()).unwrap();
+		let dummy_drawn_card = DrawnCard::new(0.0, 800.0).unwrap();
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
@@ -127,8 +125,6 @@ impl<'a> Battle<'a> {
 			drop,
 			tmp_enemy_played_card,
 			dummy_drawn_card,
-			draw_state: DrawAnimState::NoDraw,
-			draw_num: 0,
 			frames_elapsed: 0,
 			e_pip_unfilled,
 			e_pip_filled,
@@ -238,7 +234,6 @@ impl<'a> Battle<'a> {
 
 	                // draw a card at the start of the turn
                     
-                    //if(self.draw_state != DrawingAnimState::DrawingCardP1){
 		            let mut _p =battle_stat.get_active_player();
 		            let mut player = _p.borrow_mut();
 		            print!("{}\n",player.to_string());
@@ -250,30 +245,21 @@ impl<'a> Battle<'a> {
 		            }else{
 		            
 			            //player.draw_card(false);  // p1 is player
+			            
 			            // delaying card draw until after animation finishes
                         if player.get_deck_size() > 0  && player.get_curr_hand_size() < 7 {
-                            self.draw_state = DrawAnimState::DrawingCardP1;
-                            self.draw_num = 1;
+                            player.add_draw_num(1);
                             self.dummy_drawn_card.x_pos = 1140.0;
                             self.dummy_drawn_card.y_pos = 560.0;
                             self.frames_elapsed = 0;
                             println!("set self.frames_elapsed to 0");
                         }
                         
-                        // if hand is full, draw the card anyway, but there's no auto discard animation (yet)
-                        else if player.get_deck_size() > 0 && player.get_curr_hand_size() == 7 {
-                            player.draw_card(false);
-                        }
                         // Move to the next phase of the turn
                         println!("End of PreTurnP1");
                         self.turn = TurnPhase::TurnP1;
 		            }
-				    //}
-				    // Use something like below if turn should wait for card to be drawn to start
-				    //else if self.draw_state == DrawingAnimState::DrawFinishP1 {
-				    //    println!("End of PreTurnP1");
-		            //    self.turn = TurnPhase::TurnP1;
-				    //}
+
 
 	            }
 	            else if self.turn == TurnPhase::PostTurnP1 {
@@ -362,9 +348,15 @@ impl<'a> Battle<'a> {
 					    println!("Skipping p2 turn!");
 					    self.turn = TurnPhase::PostTurnP2;
 				    }else{
-					    player.draw_card(false);  // p2 is player
+					    //player.draw_card(false);  // p2 is player
 
-
+                        if player.get_deck_size() > 0  && player.get_curr_hand_size() < 7 {
+                            player.add_draw_num(1);
+                            self.dummy_drawn_card.x_pos = 40.0;
+                            self.dummy_drawn_card.y_pos = 20.0;
+                            self.frames_elapsed = 0;
+                            println!("set self.frames_elapsed to 0");
+                        }
 
 	                    // give the opponent 3 energy per turn
                         //player.adjust_curr_energy(3);  // p2 is opponent
@@ -480,9 +472,9 @@ impl Scene for Battle<'_> {
 								    let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
 								    let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
 								    let curr_card_cost = curr_card.get_cost() as i32;
-								    println!("card cost is {}", curr_card_cost);
+								    //println!("card cost is {}", curr_card_cost);
 								    let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
-								    println!("current energy is {}", curr_energy);
+								    //println!("current energy is {}", curr_energy);
 								    // only play if player has enough energy
 								    if (curr_energy >= curr_card_cost){
 
@@ -536,47 +528,42 @@ impl Scene for Battle<'_> {
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(100,148), ((260 + (i * 120)) as i32,560))?;
 		}
 
-        // Card Draw Animation
-        if self.draw_state == DrawAnimState::DrawingCardP1 && self.draw_num > 0 {
+        // Card Draw Animation P1
+        if player1.get_draw_num() > 0 {
             
-            //println!("\nIn the card draw animation!");
-            
-            let target_pos = (260 + (p1_hand_size) * 120) as f32;
-            //println!("  Trying to draw!");
-            
-            if self.dummy_drawn_card.x_pos != target_pos {
+            if player1.get_deck_size() == 0 {
+                //println!("but there's no more cards in the deck! setting draw_num to 0");
+                player1.set_draw_num(0);
+            }
+            else{
+                let target_pos = (260 + (p1_hand_size) * 120) as f32;
+                //println!("  Trying to draw!");
                 
-                // increment the position over time
-                self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, (self.frames_elapsed as f32 / 60.0));
-                // increase the frames elapsed in the animation
-                self.frames_elapsed = self.frames_elapsed + 1;
-                
-                //println!("self.dummy_drawn_card.x_pos: {} | self.frames_elapsed: {}", self.dummy_drawn_card.x_pos, self.frames_elapsed);
-                // get the correct sprite for the card being drawn
-                let top_card = player1.get_deck_card().unwrap();
-                crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(top_card as usize).unwrap()),(100,148), ((self.dummy_drawn_card.x_pos) as i32, 560))?;
-                
-                // check if card has reached the destination
-                if self.dummy_drawn_card.x_pos == target_pos {
+                // if the dummy card isn't in the 
+                if self.dummy_drawn_card.x_pos != target_pos {
                     
-                    self.draw_num = self.draw_num - 1;
+                    // increment the position over time
+                    self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, (self.frames_elapsed as f32 / 60.0));
+                    // increase the frames elapsed in the animation
+                    self.frames_elapsed = self.frames_elapsed + 1;
                     
-                    // actually draw the card
-                    player1.draw_card(false);
+                    //println!("self.dummy_drawn_card.x_pos: {} | self.frames_elapsed: {}", self.dummy_drawn_card.x_pos, self.frames_elapsed);
+                    // get the correct sprite for the card being drawn
                     
-                    // check if more cards need to be drawn
-                    if self.draw_num > 0 {
+                    let top_card = player1.get_deck_card().unwrap();
+                    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(top_card as usize).unwrap()),(100,148), ((self.dummy_drawn_card.x_pos) as i32, 560))?;
+                    
+                    // check if card has reached the destination
+                    if self.dummy_drawn_card.x_pos == target_pos {
+                        
+                        // actually draw the card
+                        player1.draw_card(false);
+                        
                         self.frames_elapsed = 0;
                         self.dummy_drawn_card.x_pos = 1140.0;
-                    }
-                    else {
-                        self.draw_state = DrawAnimState::DrawFinishP1;
-                    }
-                    
+                        
+                    }                    
                 }
-                
-                
-                
             }
             
         }
@@ -584,7 +571,7 @@ impl Scene for Battle<'_> {
         if player1.get_deck_size()>0 {
 			
 			// make it seem like the last card moves over by removing the deck card once the animation starts
-			if !(player1.get_deck_size() == 1 && self.draw_state == DrawAnimState::DrawingCardP1) {
+			if !(player1.get_deck_size() == 1 && player1.get_draw_num() > 0) {
 			    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
 			}
 		}
@@ -625,8 +612,54 @@ impl Scene for Battle<'_> {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
 		}
 
-		if player2.get_deck_size()>0{
-			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
+        // Card Draw Animation P2
+        if player2.get_draw_num() > 0 {
+            
+            if player2.get_deck_size() == 0 {
+                //println!("but there's no more cards in the deck! setting draw_num to 0");
+                player2.set_draw_num(0);
+            }
+            else{
+                let target_pos = (920 - (p2_hand_size) * 120) as f32;
+                //println!("  Trying to draw!");
+                
+                // if the dummy card isn't in the 
+                if self.dummy_drawn_card.x_pos != target_pos {
+                    
+                    // increment the position over time
+                    self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, (self.frames_elapsed as f32 / 50.0));
+                    // increase the frames elapsed in the animation
+                    self.frames_elapsed = self.frames_elapsed + 1;
+                    
+                    //println!("self.dummy_drawn_card.x_pos: {} | self.frames_elapsed: {}", self.dummy_drawn_card.x_pos, self.frames_elapsed);
+                    
+                    // don't need to get the correct sprite for the card, as enemy cards are hidden
+                    
+                    // although if you copy this line and the one from the P1 function, it does show the card the enemy is drawing, might be a neat card effect
+                    //let top_card = player2.get_deck_card().unwrap();
+                    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck, (100,148), ((self.dummy_drawn_card.x_pos) as i32, 20))?;
+                    
+                    // check if card has reached the destination
+                    if self.dummy_drawn_card.x_pos == target_pos {
+                        
+                        // actually draw the card
+                        player2.draw_card(false);
+                        
+                        self.frames_elapsed = 0;
+                        self.dummy_drawn_card.x_pos = 1140.0;
+                        
+                    }                    
+                }
+            }
+            
+        }
+
+        if player2.get_deck_size()>0 {
+			
+			// make it seem like the last card moves over by removing the deck card once the animation starts
+			if !(player2.get_deck_size() == 1 && player2.get_draw_num() > 0) {
+			    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
+			}
 		}
 
 		let mut fontm = self.font_manager.borrow_mut();
@@ -750,25 +783,25 @@ impl<'a>card<'a>{
 	}
 }
 
-struct DrawnCard<'a> {
+struct DrawnCard {
 	x_pos: f32,
 	y_pos: f32,
-	sprite: Rc<Texture<'a>>,
 }
 
-impl <'a> DrawnCard<'a> {
-    pub fn new(x_pos: f32, y_pos: f32, sprite: Rc<Texture<'a>>) -> Result<Self, String> {
-        Ok(DrawnCard { x_pos, y_pos, sprite })
-    }
-    
-    pub fn update_texture(&mut self, new_sprite: Rc<Texture<'a>>){
-        self.sprite = new_sprite;
+// essentially just keeps track of where the "drawn" card should be
+impl <'a> DrawnCard {
+    pub fn new(x_pos: f32, y_pos: f32) -> Result<Self, String> {
+        Ok(DrawnCard { x_pos, y_pos })
     }
 }
 
 // animation helper functions
 
 // for more info look up "linear interpolation"
+
+// essentially, progress can be thought of as progress through the animation length
+// for the card draw, the animation length is 60 frames, meaning no matter where the card has to go, it will
+// always finish in 60 frames due to how linear interpolation works, allowing us to have a relatively constant time animation
 
 // smoothly move from start_pos to end_pos (one dimension, so either x or y) based on the current progress
 // will return start_pos when progress == 0
