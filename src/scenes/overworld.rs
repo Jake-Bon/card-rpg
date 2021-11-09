@@ -30,7 +30,7 @@ const FullH: u32 = 1800;
 const TileW: u32 = FullW/TILE_SIZE;
 const TileH: u32 = FullH/TILE_SIZE;
 const SpriteTILE_SIZE: u32 = 40;
-const enemyNum: f32 = 7.0;
+const enemyNum: f32 = 20.0;
 
 const SPEED_LIMIT: f32 = 6.0;
 const ACCEL_RATE: f32 = 0.3;
@@ -121,15 +121,30 @@ impl<'a> Overworld<'a> {
 			 	let mut rngy = thread_rng();
 			 	let mut random_x: f32 = rngx.gen_range(0.0..FullW as f32);
 			 	let mut random_y: f32 = rngy.gen_range(0.0..FullH as f32);
-			 	println!("p:{}", (random_x<(player.Box_x_pos+CAM_W as f32)));
-				println!("p:{}", (random_y<(player.Box_y_pos+CAM_H as f32)) );
-				println!("p:{}", (random_x>(player.Box_x_pos as f32)));
-				println!("p:{}", random_y>(player.Box_y_pos as f32));
-				if (!(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32)))&&(map_rep[(random_x/TILE_SIZE as f32 + TileW as f32*(random_y/TILE_SIZE as f32)) as usize])==0
+
+				let map_x = (random_x/TILE_SIZE as f32) as usize;
+				let map_y = (random_y/TILE_SIZE as f32) as usize;
+				let map_x_right = if map_x>=(TileW-1) as usize{map_x}else{map_x+1};
+				let map_y_down = if map_y>=(TileH-1) as usize{map_y}else{map_y+1};
+
+				let orig = map_rep[map_x as usize + TileW as usize*map_y as usize]==0; //2x2 area needed for safe gen
+				let right = map_rep[map_x_right as usize + TileW as usize*map_y as usize]==0;
+				let down = map_rep[map_x as usize + TileW as usize*map_y_down as usize]==0;
+				let diag = map_rep[map_x_right as usize + TileW as usize*map_y_down as usize]==0;
+
+				//ensure enemy is generated in a safe area
+				if (!(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32)))
 				{
-					break;
+					if !(random_x<=4.0||random_y<=4.0||random_x>=FullW as f32-24.0||random_y>=FullH as f32-24.0){
+						if orig&&right&&down&&diag{
+							print!("Chosen: {} {} {} {} {} {}\n",map_x,map_y,map_rep[map_x as usize + TileW as usize*map_y as usize],map_rep[map_x_right as usize + TileW as usize*map_y as usize],map_rep[map_x as usize + TileW as usize*map_y_down as usize],map_rep[map_x_right as usize + TileW as usize*map_y_down as usize]);
+							break;
+						}else{
+							print!("Not Chosen\n");
+						}
+					}
+
 				}
-				let test = (random_x<(player.Box_x_pos+CAM_W as f32)) && (random_y<(player.Box_y_pos+CAM_H as f32)) && (random_x>(player.Box_x_pos as f32)) && (random_y>(player.Box_y_pos as f32));
 			 }
 			 let mut rngxv = thread_rng();
 			 let mut rngyv = thread_rng();
