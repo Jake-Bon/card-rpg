@@ -87,6 +87,17 @@ impl<'a> Overworld<'a> {
 		let enemy_sprite = texture_manager.borrow_mut().load("assets/simple_enemy_sprite.png")?;
 		let map_rep = map_reader("src/scenes/world-1.bmp")?;
 
+		let mut n: usize = 0;
+
+		while n<map_rep.len(){
+			print!("{},",map_rep[n]);
+			if (n+1 as usize)%TileW as usize==0{
+				print!("\n");
+			}
+			n+=1 as usize;
+		}
+		print!("\n");
+
 		let player = Player {
 			x_pos: (CAM_W/2) as f32,
 			y_pos: (CAM_H/2) as f32,
@@ -112,35 +123,48 @@ impl<'a> Overworld<'a> {
 		{
 			let mut rngx = thread_rng();
 			let mut rngy = thread_rng();
-			let mut random_x: f32 = rngx.gen_range(0.0..FullW as f32);
-			let mut random_y: f32 =rngy.gen_range(0.0..FullH as f32);
+			let mut random_x: f32 = rngx.gen_range(0.0..(FullW - TILE_SIZE) as f32);
+			let mut random_y: f32 =rngy.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 
 			 while true
 			 {
 			 	let mut rngx = thread_rng();
 			 	let mut rngy = thread_rng();
-			 	let mut random_x: f32 = rngx.gen_range(0.0..FullW as f32);
-			 	let mut random_y: f32 = rngy.gen_range(0.0..FullH as f32);
-
-				let map_x = (random_x/TILE_SIZE as f32) as usize;
-				let map_y = (random_y/TILE_SIZE as f32) as usize;
-				let map_x_right = if map_x>=(TileW-1) as usize{map_x}else{map_x+1};
-				let map_y_down = if map_y>=(TileH-1) as usize{map_y}else{map_y+1};
-
-				let orig = map_rep[map_x as usize + TileW as usize*map_y as usize]==0; //2x2 area needed for safe gen
-				let right = map_rep[map_x_right as usize + TileW as usize*map_y as usize]==0;
-				let down = map_rep[map_x as usize + TileW as usize*map_y_down as usize]==0;
-				let diag = map_rep[map_x_right as usize + TileW as usize*map_y_down as usize]==0;
+			 	let mut random_x: f32 = rngx.gen_range(0.0..(FullW-TILE_SIZE) as f32);
+				random_x -= random_x%TILE_SIZE as f32;
+			 	let mut random_y: f32 = rngy.gen_range(0.0..(FullH-TILE_SIZE) as f32);
+				random_y -= random_y%TILE_SIZE as f32;
+				print!("{} {} {} {} {} {}\n",random_x,player.Box_x_pos,player.Box_x_pos+CAM_W as f32,random_y,player.Box_y_pos,player.Box_y_pos+CAM_H as f32);
 
 				//ensure enemy is generated in a safe area
-				if (!(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32)))
+				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
 				{
-					if !(random_x<=4.0||random_y<=4.0||random_x>=FullW as f32-24.0||random_y>=FullH as f32-24.0){
-						if orig&&right&&down&&diag{
+					let map_x = (random_x/TILE_SIZE as f32) as usize;
+					let map_y = (random_y/TILE_SIZE as f32) as usize;
+					let map_x_right = if map_x>=(TileW-1) as usize{map_x}else{map_x+1};
+					let map_x_left = if map_x<=1 as usize{map_x}else{map_x-1};
+					let map_y_up = if map_y<=1 as usize{map_y}else{map_y-1};
+					let map_y_down = if map_y>=(TileH-1) as usize{map_y}else{map_y+1};
+
+					print!("The Maps: Orig {} {} {}\n",map_x,map_y,map_x + TileW as usize*map_y);
+					let up_left = map_rep[map_x_left + TileW as usize*map_y_up]==0;
+					let up = map_rep[map_x + TileW as usize*map_y_up]==0;
+					let left = map_rep[map_x_left + TileW as usize*map_y]==0;
+					let down_left = map_rep[map_x_left + TileW as usize*map_y_down]==0;
+					let orig = map_rep[map_x + TileW as usize*map_y]==0; //2x2 area needed for safe gen
+					let up_right =  map_rep[map_x_right + TileW as usize*map_y_up]==0;
+					let right = map_rep[map_x_right + TileW as usize*map_y]==0;
+					let down = map_rep[map_x + TileW as usize*map_y_down]==0;
+					let down_right = map_rep[map_x_right + TileW as usize*map_y_down]==0;
+
+					let three_squared_check = up_left&&up&&up_right&&left&&orig&&right&&down_left&&down&&down_right;
+
+					if !(random_x<=4.0||random_y<=4.0||random_x>=FullW as f32-TILE_SIZE as f32||random_y>=FullH as f32-TILE_SIZE as f32){
+						if three_squared_check{
 							print!("Chosen: {} {} {} {} {} {}\n",map_x,map_y,map_rep[map_x as usize + TileW as usize*map_y as usize],map_rep[map_x_right as usize + TileW as usize*map_y as usize],map_rep[map_x as usize + TileW as usize*map_y_down as usize],map_rep[map_x_right as usize + TileW as usize*map_y_down as usize]);
 							break;
 						}else{
-							print!("Not Chosen\n");
+							print!("Not Chosen: {} {} {} {} {} {}\n",map_x,map_y,map_rep[map_x as usize + TileW as usize*map_y as usize],map_rep[map_x_right as usize + TileW as usize*map_y as usize],map_rep[map_x as usize + TileW as usize*map_y_down as usize],map_rep[map_x_right as usize + TileW as usize*map_y_down as usize]);
 						}
 					}
 
@@ -523,7 +547,7 @@ impl<'a> Enemy<'a> {
 		let map_y_up = if map_y==0{map_y}else{map_y-1};
 		let map_y_down = if map_y>=(TileH-1) as usize{map_y}else{map_y+1};
 
-		let border_checks = self.ABSx_pos<=4.0||self.ABSy_pos<=4.0||self.ABSx_pos>=FullW as f32-24.0||self.ABSy_pos>=FullH as f32-24.0;
+		let border_checks = self.ABSx_pos<=4.0||self.ABSy_pos<=4.0||self.ABSx_pos>=FullW as f32-TILE_SIZE as f32||self.ABSy_pos>=FullH as f32-TILE_SIZE as f32;
 		let up_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y)]!=0;
 		let down_checks = self.map_copy[map_x+TileW as usize*(map_y_down)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
 		let left_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x+TileW as usize*(map_y_down)]!=0;
