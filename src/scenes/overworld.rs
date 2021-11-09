@@ -71,7 +71,6 @@ pub struct Overworld<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	tile_set: Rc<Texture<'a>>,
-	enemy_sprite: Rc<Texture<'a>>,
 	player: Player<'a>,
 	enemy: Vec<Enemy<'a>>,
 	anim_water: u32,
@@ -84,19 +83,7 @@ impl<'a> Overworld<'a> {
 		//let tile_map = [0; 144];
 		//let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
-		let enemy_sprite = texture_manager.borrow_mut().load("assets/simple_enemy_sprite.png")?;
 		let map_rep = map_reader("src/scenes/world-1.bmp")?;
-
-		let mut n: usize = 0;
-
-		while n<map_rep.len(){
-			print!("{},",map_rep[n]);
-			if (n+1 as usize)%TileW as usize==0{
-				print!("\n");
-			}
-			n+=1 as usize;
-		}
-		print!("\n");
 
 		let player = Player {
 			x_pos: (CAM_W/2) as f32,
@@ -119,22 +106,19 @@ impl<'a> Overworld<'a> {
 
 		let mut i=0;
 		let mut enemy: Vec<Enemy> =  Vec::new();
+		let mut rng = thread_rng();
 		while (i as f32) < enemyNum
 		{
-			let mut rngx = thread_rng();
-			let mut rngy = thread_rng();
-			let mut random_x: f32 = rngx.gen_range(0.0..(FullW - TILE_SIZE) as f32);
-			let mut random_y: f32 =rngy.gen_range(0.0..(FullH-TILE_SIZE) as f32);
+
+			let mut random_x: f32 = rng.gen_range(0.0..(FullW - TILE_SIZE) as f32);
+			let mut random_y: f32 =rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 
 			 while true
 			 {
-			 	let mut rngx = thread_rng();
-			 	let mut rngy = thread_rng();
-			 	let mut random_x: f32 = rngx.gen_range(0.0..(FullW-TILE_SIZE) as f32);
+			 	let mut random_x: f32 = rng.gen_range(0.0..(FullW-TILE_SIZE) as f32);
 				random_x -= random_x%TILE_SIZE as f32;
-			 	let mut random_y: f32 = rngy.gen_range(0.0..(FullH-TILE_SIZE) as f32);
+			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
-				print!("{} {} {} {} {} {}\n",random_x,player.Box_x_pos,player.Box_x_pos+CAM_W as f32,random_y,player.Box_y_pos,player.Box_y_pos+CAM_H as f32);
 
 				//ensure enemy is generated in a safe area
 				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
@@ -142,50 +126,33 @@ impl<'a> Overworld<'a> {
 					let map_x = (random_x/TILE_SIZE as f32) as usize;
 					let map_y = (random_y/TILE_SIZE as f32) as usize;
 					let map_x_right = if map_x>=(TileW-1) as usize{map_x}else{map_x+1};
-					let map_x_left = if map_x<=1 as usize{map_x}else{map_x-1};
-					let map_y_up = if map_y<=1 as usize{map_y}else{map_y-1};
 					let map_y_down = if map_y>=(TileH-1) as usize{map_y}else{map_y+1};
 
-					print!("The Maps: Orig {} {} {}\n",map_x,map_y,map_x + TileW as usize*map_y);
-					let up_left = map_rep[map_x_left + TileW as usize*map_y_up]==0;
-					let up = map_rep[map_x + TileW as usize*map_y_up]==0;
-					let left = map_rep[map_x_left + TileW as usize*map_y]==0;
-					let down_left = map_rep[map_x_left + TileW as usize*map_y_down]==0;
 					let orig = map_rep[map_x + TileW as usize*map_y]==0; //2x2 area needed for safe gen
-					let up_right =  map_rep[map_x_right + TileW as usize*map_y_up]==0;
 					let right = map_rep[map_x_right + TileW as usize*map_y]==0;
 					let down = map_rep[map_x + TileW as usize*map_y_down]==0;
-					let down_right = map_rep[map_x_right + TileW as usize*map_y_down]==0;
-
-					let three_squared_check = up_left&&up&&up_right&&left&&orig&&right&&down_left&&down&&down_right;
+					let diag = map_rep[map_x_right + TileW as usize*map_y_down]==0;
 
 					if !(random_x<=4.0||random_y<=4.0||random_x>=FullW as f32-TILE_SIZE as f32||random_y>=FullH as f32-TILE_SIZE as f32){
-						if three_squared_check{
-							print!("Chosen: {} {} {} {} {} {}\n",map_x,map_y,map_rep[map_x as usize + TileW as usize*map_y as usize],map_rep[map_x_right as usize + TileW as usize*map_y as usize],map_rep[map_x as usize + TileW as usize*map_y_down as usize],map_rep[map_x_right as usize + TileW as usize*map_y_down as usize]);
+						if orig&&right&&down&&diag{ //Create enemy if: OUTSIDE player camera,
+							enemy.push( Enemy {		//NOT TOO CLOSE TO border, NO land collisions
+								ABSx_pos: random_x,
+								ABSy_pos: random_y,
+								x_vel: rng.gen_range(0.0..2.0 as f32),
+								y_vel: rng.gen_range(0.0..2.0 as f32),
+								timer: Instant::now(),
+								sprite: texture_manager.borrow_mut().load("assets/simple_enemy_sprite.png")?,
+								map_copy: map_rep.clone(),
+								last_safe_x: random_x,
+								last_safe_y: random_y,
+								is_flipped: false,
+							});
 							break;
-						}else{
-							print!("Not Chosen: {} {} {} {} {} {}\n",map_x,map_y,map_rep[map_x as usize + TileW as usize*map_y as usize],map_rep[map_x_right as usize + TileW as usize*map_y as usize],map_rep[map_x as usize + TileW as usize*map_y_down as usize],map_rep[map_x_right as usize + TileW as usize*map_y_down as usize]);
 						}
 					}
 
 				}
 			 }
-			 let mut rngxv = thread_rng();
-			 let mut rngyv = thread_rng();
-			enemy.push( Enemy {
-				ABSx_pos: random_x, //160.0,
-				ABSy_pos: random_y, //240.0,
-				x_vel: rngxv.gen_range(0.0..2.0 as f32),
-				y_vel: rngyv.gen_range(0.0..2.0 as f32),
-				timer: Instant::now(),
-				sprite: texture_manager.borrow_mut().load("assets/player4x.png")?,
-				map_copy: map_rep.clone(),
-				last_safe_x: random_x,
-				last_safe_y: random_y,
-				is_flipped: false,
-
-			});
-			println!("outer");
 			i=i+1;
 		}
 
@@ -196,7 +163,6 @@ impl<'a> Overworld<'a> {
 			wincan,
 			event_system,
 			tile_set,
-			enemy_sprite,
 			player,
 			enemy,
 			frames,
@@ -304,9 +270,9 @@ impl Scene for Overworld<'_> {
 		}
 
 		// draw enemy
-		for i in 0..self.enemy.len() as i32	{
-			self.enemy[i as usize].is_flipped = if self.enemy[i as usize].x_vel<0.0{false}else if self.enemy[i as usize].x_vel>0.0{true}else{self.enemy[i as usize].is_flipped};
-			crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.enemy_sprite, (self.enemy[i as usize].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i as usize].ABSy_pos as i32-self.player.Box_y_pos as i32),self.enemy[i as usize].is_flipped,false)?;
+		for i in 0 as usize..self.enemy.len(){
+			self.enemy[i].is_flipped = if self.enemy[i].x_vel<0.0{false}else if self.enemy[i].x_vel>0.0{true}else{self.enemy[i].is_flipped};
+			crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.enemy[i].sprite, (self.enemy[i].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i].ABSy_pos as i32-self.player.Box_y_pos as i32),self.enemy[i].is_flipped,false)?;
 		}
 
 		// Draw player
