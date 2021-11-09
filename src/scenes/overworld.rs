@@ -2,9 +2,9 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::BufReader;
-use std::num::*;
+//use std::num::*;
 use std::io::prelude::*;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use rand::{thread_rng,Rng};
 
@@ -113,9 +113,9 @@ impl<'a> Overworld<'a> {
 			let mut random_x: f32 = rng.gen_range(0.0..(FullW - TILE_SIZE) as f32);
 			let mut random_y: f32 =rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 
-			 while true
-			 {
-			 	let mut random_x: f32 = rng.gen_range(0.0..(FullW-TILE_SIZE) as f32);
+			loop
+			{
+				let mut random_x: f32 = rng.gen_range(0.0..(FullW-TILE_SIZE) as f32);
 				random_x -= random_x%TILE_SIZE as f32;
 			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
@@ -204,7 +204,7 @@ impl Scene for Overworld<'_> {
 
 
 		self.frames = if (self.frames) > 9 {
-			self.anim_water = ((self.anim_water+1)%9);
+			self.anim_water = (self.anim_water+1)%9;
 			0
 		}
 		else {
@@ -218,7 +218,7 @@ impl Scene for Overworld<'_> {
 		while (i as usize) < self.enemy.len()
 		{
 			self.enemy[i as usize].update_movement();
-			if ((f32::powf((self.enemy[i as usize].ABSx_pos - self.player.ABSx_pos),2.0) + f32::powf((self.enemy[i as usize].ABSy_pos - self.player.ABSy_pos),2.0)).sqrt()) < 40.0
+			if (f32::powf(self.enemy[i as usize].ABSx_pos - self.player.ABSx_pos,2.0) + f32::powf(self.enemy[i as usize].ABSy_pos - self.player.ABSy_pos,2.0).sqrt()) < 40.0
 			{
 				self.player.x_vel=0.0;
 				self.player.y_vel=0.0;
@@ -311,37 +311,37 @@ impl<'a> Player<'a> {
 		// Check if player will go beyond the bounds of the camera
 		// - If yes, set their velocity to 0
 
-		if(self.keyPress[0])//w
+		if self.keyPress[0]//w
 		{
 			self.delta_y -= ACCEL_RATE;
 			self.y_vel = (self.y_vel + self.delta_y)
 				.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 		}
-		else if(self.keyPress[1])//s
+		else if self.keyPress[1]//s
 		{
 			self.delta_y += ACCEL_RATE;
 			self.y_vel = (self.y_vel + self.delta_y)
 				.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 		}
-		else //niether
+		else //neither
 		{
-			if(self.y_vel>0.0)
+			if self.y_vel>0.0
 			{
 				self.delta_y -= ACCEL_RATE;
 				self.y_vel = (self.y_vel + self.delta_y)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
-				if(self.y_vel<0.0)
+				if self.y_vel<0.0
 				{
 					self.delta_y = 0.0;
 					self.y_vel = 0.0;
 				}
 			}
-			else if(self.y_vel<0.0)
+			else if self.y_vel<0.0
 			{
 				self.delta_y += ACCEL_RATE;
 				self.y_vel = (self.y_vel + self.delta_y)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
-				if(self.y_vel>0.0)
+				if self.y_vel>0.0
 				{
 					self.delta_y = 0.0;
 					self.y_vel = 0.0;
@@ -350,13 +350,13 @@ impl<'a> Player<'a> {
 		}
 
 
-		if(self.keyPress[2])//a
+		if self.keyPress[2]//a
 		{
 			self.delta_x -= ACCEL_RATE;
 			self.x_vel = (self.x_vel + self.delta_x)
 				.clamp(-SPEED_LIMIT, SPEED_LIMIT);
 		}
-		else if(self.keyPress[3])//d
+		else if self.keyPress[3]//d
 		{
 			self.delta_x += ACCEL_RATE;
 			self.x_vel = (self.x_vel + self.delta_x)
@@ -364,23 +364,23 @@ impl<'a> Player<'a> {
 		}
 		else
 		{
-			if(self.x_vel>0.0)
+			if self.x_vel>0.0
 			{
 				self.delta_x -= ACCEL_RATE;
 				self.x_vel = (self.x_vel + self.delta_x)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
-				if(self.x_vel< 0.0)
+				if self.x_vel< 0.0
 				{
 					self.x_vel = 0.0;
 					self.delta_x=0.0;
 				}
 			}
-			else if(self.x_vel<0.0)
+			else if self.x_vel<0.0
 			{
 				self.delta_x += ACCEL_RATE;
 				self.x_vel = (self.x_vel + self.delta_x)
 					.clamp(-SPEED_LIMIT, SPEED_LIMIT);
-				if(self.x_vel>0.0)
+				if self.x_vel>0.0
 				{
 					self.x_vel = 0.0;
 					self.delta_x = 0.0
@@ -390,11 +390,11 @@ impl<'a> Player<'a> {
 		}
 
 		//check the ACCEL_RATE
-		if(self.x_vel==-SPEED_LIMIT||self.x_vel==SPEED_LIMIT)
+		if self.x_vel==-SPEED_LIMIT||self.x_vel==SPEED_LIMIT
 		{
 			self.delta_x = 0.0;
 		}
-		if(self.y_vel==-SPEED_LIMIT||self.y_vel==SPEED_LIMIT)
+		if self.y_vel==-SPEED_LIMIT||self.y_vel==SPEED_LIMIT
 		{
 			self.delta_y = 0.0;
 		}
@@ -458,11 +458,11 @@ impl<'a> Player<'a> {
 		// Add velocity to position, clamp to ensure bounds are never exceeded.
 		// TILE_SIZE * 4 because the TILE_SIZE are scaled x4
 
-		if((self.ABSx_pos-self.Box_x_pos <= (CAM_W/2+5) as f32) && (self.ABSx_pos-self.Box_x_pos >= (CAM_W/2-5) as f32))
+		if(self.ABSx_pos-self.Box_x_pos <= (CAM_W/2+5) as f32) && (self.ABSx_pos-self.Box_x_pos >= (CAM_W/2-5) as f32)
 		{
 			self.Box_x_pos = (self.Box_x_pos + self.x_vel).clamp(0.0, (FullW-CAM_W) as f32);
 		}
-		if((self.ABSy_pos-self.Box_y_pos <= (CAM_H/2+5) as f32) && (self.ABSy_pos-self.Box_y_pos >= (CAM_H/2-5) as f32))
+		if(self.ABSy_pos-self.Box_y_pos <= (CAM_H/2+5) as f32) && (self.ABSy_pos-self.Box_y_pos >= (CAM_H/2-5) as f32)
 		{
 			self.Box_y_pos = (self.Box_y_pos + self.y_vel).clamp(0.0, (FullH-CAM_H) as f32);
 		}

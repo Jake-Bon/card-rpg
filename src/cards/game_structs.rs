@@ -1,5 +1,5 @@
 extern crate rand;
-use rand::{Rng,thread_rng};
+use rand::thread_rng;
 use rand::prelude::SliceRandom;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -279,7 +279,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             self.deck_del_card();
         }
         // this is to skip the draw animations at the start of battle
-        if(self.draw_num > 0){
+        if self.draw_num > 0 {
             self.draw_num = self.draw_num - 1;
         }
 
@@ -485,13 +485,13 @@ impl BattleStatus{
         let p1_health = self.p1.borrow().get_curr_health();
         let p2_health = self.p2.borrow().get_curr_health();
 
-        if(p1_health > 0 && p2_health <= 0){
+        if p1_health > 0 && p2_health <= 0 {
             return BattleOutcome::VictoryP1;
         }
-        else if(p1_health <= 0 && p2_health > 0){
+        else if p1_health <= 0 && p2_health > 0 {
             return BattleOutcome::VictoryP2;
         }
-        else if(p1_health <= 0 && p2_health <= 0){
+        else if p1_health <= 0 && p2_health <= 0 {
             return BattleOutcome::Tie;
         }
         // else if both players have health above 0, battle isn't over yet

@@ -1,12 +1,10 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::fs;
 
 use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
 use crate::video::sdl_core::SDLCore;
 use crate::game_manager::GameManager;
-use crate::cards::battle_system;
 use crate::video::text::FontManager;
 
 mod game_manager;
@@ -14,6 +12,8 @@ mod video;
 mod events;
 mod scenes;
 mod cards;
+//ai: import
+mod ai;
 
 fn main() -> Result<(), String>{
     let mut sdl_core = SDLCore::init()?;

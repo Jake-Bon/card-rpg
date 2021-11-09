@@ -3,13 +3,10 @@ use std::cell::RefCell;
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
-use sdl2::ttf::Sdl2TtfContext;
 
 use crate::scenes::Scene;
 use crate::scenes::GameEvent;
 use crate::game_manager::TextureManager;
-use crate::game_manager::GameManager;
-use crate::game_manager::GameState;
 
 use crate::video::text::FontManager;
 

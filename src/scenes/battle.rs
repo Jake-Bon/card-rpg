@@ -1,8 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::fs;
 use std::collections::HashMap;
-use std::time::{Instant, Duration};
+use std::time::Instant;
 //use std::thread::sleep; // sleep should only be used for testing, sleep will lock the entire program until sleeping is done
 
 use sdl2::pixels::Color;
@@ -14,6 +13,9 @@ use crate::scenes::GameEvent;
 use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
+
+//ai: import
+use crate::ai::node::build_tree;
 
 use crate::cards::game_structs::*;
 
@@ -238,7 +240,7 @@ impl<'a> Battle<'a> {
 		            let mut player = _p.borrow_mut();
 		            print!("{}\n",player.to_string());
 
-		            if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+		            if player.get_deck_size()==0&&player.get_curr_hand_size()==0{
 			            player.restore_deck();
 			            println!("Skipping p1 turn!");
 			            self.turn = TurnPhase::PostTurnP1;
@@ -259,7 +261,6 @@ impl<'a> Battle<'a> {
                         println!("End of PreTurnP1");
                         self.turn = TurnPhase::TurnP1;
 		            }
-
 
 	            }
 	            else if self.turn == TurnPhase::PostTurnP1 {
@@ -289,11 +290,14 @@ impl<'a> Battle<'a> {
 
                 // self.enemy_delay_inst is updated in the PreTurnP2 phase. After 1 second, the code below runs
 	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
+					
+					//ai: build tree based on current game state
+					build_tree();
 
 	                // Enemy AI should be called from here
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
-					if (!card_rslt.is_none()){
+					if !card_rslt.is_none(){
 						let card_ID = card_rslt.unwrap();//self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();
 						let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
 						print!("{}\n",curr_card.to_string());
@@ -302,7 +306,7 @@ impl<'a> Battle<'a> {
 						let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
 						println!("current energy is {}", curr_energy);
 						// only play if player has enough energy
-						if (curr_energy >= curr_card_cost){
+						if curr_energy >= curr_card_cost{
 
 							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
@@ -343,7 +347,7 @@ impl<'a> Battle<'a> {
 
 				    let mut _p =self.battle_handler.borrow_mut().get_active_player();
 				    let mut player = _p.borrow_mut();
-				    if(player.get_deck_size()==0&&player.get_curr_hand_size()==0){
+				    if player.get_deck_size()==0&&player.get_curr_hand_size()==0{
 					    player.restore_deck();
 					    println!("Skipping p2 turn!");
 					    self.turn = TurnPhase::PostTurnP2;
@@ -456,7 +460,7 @@ impl Scene for Battle<'_> {
 				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
 				        //let curr_turn = self.battle_handler.borrow_mut().get_turn();
 
-						if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+						if self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708){
 							let i = ((x_pos-260)/120) as usize;
 							//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
 							//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
@@ -468,7 +472,7 @@ impl Scene for Battle<'_> {
 							    // play the card
 							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
 							    //let card_cost = card_rslt.unwrap().get_cost();
-							    if (!card_rslt.is_none()){
+							    if !card_rslt.is_none(){
 								    let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
 								    let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
 								    let curr_card_cost = curr_card.get_cost() as i32;
@@ -476,7 +480,7 @@ impl Scene for Battle<'_> {
 								    let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
 								    //println!("current energy is {}", curr_energy);
 								    // only play if player has enough energy
-								    if (curr_energy >= curr_card_cost){
+								    if curr_energy >= curr_card_cost{
 
 								        //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
@@ -543,7 +547,7 @@ impl Scene for Battle<'_> {
                 if self.dummy_drawn_card.x_pos != target_pos {
                     
                     // increment the position over time
-                    self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, (self.frames_elapsed as f32 / 60.0));
+                    self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, self.frames_elapsed as f32 / 60.0);
                     // increase the frames elapsed in the animation
                     self.frames_elapsed = self.frames_elapsed + 1;
                     
@@ -627,7 +631,7 @@ impl Scene for Battle<'_> {
                 if self.dummy_drawn_card.x_pos != target_pos {
                     
                     // increment the position over time
-                    self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, (self.frames_elapsed as f32 / 50.0));
+                    self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, self.frames_elapsed as f32 / 50.0);
                     // increase the frames elapsed in the animation
                     self.frames_elapsed = self.frames_elapsed + 1;
                     
@@ -769,7 +773,7 @@ impl Scene for Battle<'_> {
 }
 
 //card size and position
-struct card<'a>{
+struct Card<'a>{
 	x_size: u32,
 	y_size: u32,
 	x_pos: u32,
@@ -777,7 +781,7 @@ struct card<'a>{
 	sprite: Rc<Texture<'a>>,
 }
 
-impl<'a>card<'a>{
+impl<'a>Card<'a>{
 	fn update_size(&mut self){
 
 	}
@@ -810,7 +814,7 @@ impl <'a> DrawnCard {
 // if start_pos == end_pos, returns start_pos
 pub fn lerp(start_pos: f32, end_pos: f32, progress: f32) -> f32 {
     
-    if(progress > 1.0 || progress < 0.0){ return -1 as f32 }
+    if progress > 1.0 || progress < 0.0{ return -1 as f32 }
     
     //println!("lerp was given start_pos: {} | end_pos: {} | progress: {}, calculated: {}", start_pos, end_pos, progress, start_pos + progress * (end_pos - start_pos));
     
