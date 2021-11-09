@@ -18,3 +18,12 @@ pub enum BattleOutcome {
     VictoryP2,
     Tie,
 }
+
+#[derive(PartialEq, Eq)]
+pub enum DrawAnimState {
+    NoDraw,
+    DrawingCardP1,
+    DrawFinishP1,
+    DrawingCardP2,
+    DrawFinishP2,
+}
