@@ -64,6 +64,12 @@ pub struct Battle<'a> {
 	outcome: BattleOutcome,
 	battle_handler: Rc<RefCell<BattleStatus>>,
 	enemy_delay_inst: Instant,
+	
+	//enlarge
+	enlarged_card: card_size,
+	playCard: Rc<Texture<'a>>,
+	retCard: Rc<Texture<'a>>,
+	backDrop: Rc<Texture<'a>>,
 
 }
 
@@ -109,6 +115,19 @@ impl<'a> Battle<'a> {
 			let texture = texture_manager.borrow_mut().load(path)?;
 			card_textures.push(texture);
 		}
+		
+		let enlarged_card = card_size{
+		    	card_pos: 0,
+			x_size: 400,
+			y_size: 592,
+			x_pos: 450,
+			y_pos: 50,
+			larger: false,
+		    };
+		    
+		let playCard = texture_manager.borrow_mut().load("assets/play_card.png")?;
+		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
+		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
 
 		Ok(Battle {
 			wincan,
@@ -140,6 +159,10 @@ impl<'a> Battle<'a> {
 			outcome: BattleOutcome::Undetermined,
 			battle_handler,
 			enemy_delay_inst: Instant::now(),
+			enlarged_card,
+			playCard,
+			retCard,
+			backDrop,
 		})
 	}
 
@@ -441,15 +464,51 @@ impl Scene for Battle<'_> {
 				    //println!("{}", k);
 				    if k.eq(&Keycode::Escape) {
 				        self.turn = TurnPhase::BattleOver;  // Changing to BattleOver instead of NotInitialized
-				        self.event_system.borrow().change_scene(1).unwrap();}
+				        self.event_system.borrow().change_scene(1).unwrap();
+				        self.enlarged_card.set_larger(false);
+				        }
 			        },
 			    GameEvent::MouseClick(x_pos,y_pos) => {
-			        if (x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
+			        if (self.enlarged_card.get_larger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
 					    self.turn = TurnPhase::PostTurnP1;
 
-				    }
-				    else{
+				}
+				else if(self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 250 && y_pos < 310) && self.turn == TurnPhase::TurnP1){
+
+							    // play the card
+							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(self.enlarged_card.get_cardpos());
+							    //let card_cost = card_rslt.unwrap().get_cost();
+							    if (!card_rslt.is_none()){
+								    let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
+								    let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+								    let curr_card_cost = curr_card.get_cost() as i32;
+								    //println!("card cost is {}", curr_card_cost);
+								    let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
+								    //println!("current energy is {}", curr_energy);
+								    // only play if player has enough energy
+								    if (curr_energy >= curr_card_cost){
+
+								        //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+								        // if the player has enough energy to cover the cost of playing the card:
+								        crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+								        // add card to discard pile after playing
+								        self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+								        self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+									self.enlarged_card.set_larger(false);
+								    }
+								    // otherwise, don't
+			                        else {
+			                            println!("Not enough energy!");
+			                        }
+
+							    }
+							}
+				else if(self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1){
+					self.enlarged_card.set_larger(false);
+				} 
+				else{
 				        // check if the player is clicking on any of the cards in their hand
 				        //let mut battle_stat = self.battle_handler.borrow_mut();
 
@@ -469,28 +528,9 @@ impl Scene for Battle<'_> {
 							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
 							    //let card_cost = card_rslt.unwrap().get_cost();
 							    if (!card_rslt.is_none()){
-								    let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
-								    let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
-								    let curr_card_cost = curr_card.get_cost() as i32;
-								    //println!("card cost is {}", curr_card_cost);
-								    let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
-								    //println!("current energy is {}", curr_energy);
-								    // only play if player has enough energy
-								    if (curr_energy >= curr_card_cost){
-
-								        //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
-
-								        // if the player has enough energy to cover the cost of playing the card:
-								        crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-								        // add card to discard pile after playing
-								        self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(i);
-								        self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-
-								    }
-								    // otherwise, don't
-			                        else {
-			                            println!("Not enough energy!");
-			                        }
+								    //enlarge the picked card
+							    	    self.enlarged_card.set_cardpos(i as usize);
+							    	    self.enlarged_card.set_larger(true);
 
 							    }
 							}
@@ -747,6 +787,14 @@ impl Scene for Battle<'_> {
 		// End Turn button text
 		//let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
+		
+		if(self.enlarged_card.get_larger() == true){
+			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
+			let curr_hand = player1.select_hand(self.enlarged_card.get_cardpos() as usize).unwrap();
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(400,592), (450,50))?;
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
+		}
 
 		match self.outcome {
 		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (50, 330)),
@@ -769,17 +817,33 @@ impl Scene for Battle<'_> {
 }
 
 //card size and position
-struct card<'a>{
-	x_size: u32,
-	y_size: u32,
-	x_pos: u32,
-	y_pos: u32,
-	sprite: Rc<Texture<'a>>,
+//note: Don't need to delete the original card when enlarging it. Makes life easier
+struct card_size{
+	card_pos: usize, //where it is in the player's hand
+	x_size: u32, //size of the card width-wise (will just multiply it by some number)
+	y_size: u32, //size of the card height-wise (will just multiply it by some number)
+	x_pos: u32, //when enlarged, x position = 
+	y_pos: u32, //when enlarged, y position = 
+	larger: bool,
 }
 
-impl<'a>card<'a>{
-	fn update_size(&mut self){
+impl card_size{
 
+	fn get_cardpos(&mut self)->usize{
+        	self.card_pos
+	}
+		
+	
+	fn get_larger(&mut self)->bool{
+		self.larger
+	}
+	
+	fn set_cardpos(&mut self, h: usize){
+		self.card_pos = h;
+	}
+	
+	fn set_larger(&mut self, h: bool){
+		self.larger = h;
 	}
 }
 
