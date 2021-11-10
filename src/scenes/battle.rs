@@ -292,9 +292,12 @@ impl<'a> Battle<'a> {
 	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 					
 					//ai: build tree based on current game state
-					build_tree();
+					//get the two players to pass in
+					let player1 = self.battle_handler.borrow_mut().get_p1();
+					let player2 = self.battle_handler.borrow_mut().get_p2();
+					build_tree(player1, player2);
 
-	                // Enemy AI should be called from here
+					// Enemy AI should be called from here
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
 					if !card_rslt.is_none(){
@@ -345,7 +348,7 @@ impl<'a> Battle<'a> {
 
                     // draw a card at the start of the turn
 
-				    let mut _p =self.battle_handler.borrow_mut().get_active_player();
+					let mut _p =self.battle_handler.borrow_mut().get_active_player();
 				    let mut player = _p.borrow_mut();
 				    if player.get_deck_size()==0&&player.get_curr_hand_size()==0{
 					    player.restore_deck();
