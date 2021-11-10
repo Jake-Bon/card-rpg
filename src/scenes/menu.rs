@@ -23,6 +23,7 @@ pub struct Menu<'a> {
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
 	play_button: Rc<Texture<'a>>,
+	online_button: Rc<Texture<'a>>,
 	quit_button: Rc<Texture<'a>>,
 	logo: Rc<Texture<'a>>,
 	tile_set: Rc<Texture<'a>>,
@@ -31,6 +32,7 @@ pub struct Menu<'a> {
 impl<'a> Menu<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
 		let play_button = texture_manager.borrow_mut().load("assets/play.png")?;
+		let online_button = texture_manager.borrow_mut().load("assets/online.png")?;
 		let quit_button = texture_manager.borrow_mut().load("assets/quit.png")?;
 		let logo = texture_manager.borrow_mut().load("assets/logo.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
@@ -41,6 +43,7 @@ impl<'a> Menu<'a> {
 			event_system,
 			font_manager,
 			play_button,
+			online_button,
 			quit_button,
 			logo,
 			tile_set,
@@ -50,33 +53,29 @@ impl<'a> Menu<'a> {
 
 impl Scene for Menu<'_> {
 
-	/*let play_x = 50;
-	let play_y = 450;
-	let quit_x = 50;
-	let quit_y = 550;*/
-
 	fn handle_input(&mut self, event: GameEvent) {
 
 		match event {
 			GameEvent::MouseClick(x_pos,y_pos) => {
 
-				if (x_pos > 50 && x_pos < 300) && (y_pos > 450 && y_pos < 550) {
+				if (x_pos > 50 && x_pos < 300) && (y_pos > 400 && y_pos < 500) {
 					println!("PLAY");
 					println!("X {}, Y: {}", x_pos, y_pos);
 					self.event_system.borrow().change_scene(1).unwrap();
 				}
 
-				if (x_pos > 50 && x_pos < 300) && (y_pos > 550 && y_pos < 650) {
+				if (x_pos > 50 && x_pos < 300) && (y_pos > 500 && y_pos < 600) {
 					println!("ONLINE");
 					self.event_system.borrow().change_scene(3).unwrap();
 				}
 
-				if (x_pos > 50 && x_pos < 300) && (y_pos > 650 && y_pos < 750) {
+				if (x_pos > 50 && x_pos < 300) && (y_pos > 600 && y_pos < 700) {
 					println!("QUIT");
 
 					//GameEvent::WindowClose;
 					//GameManager::game_state = GameState::Quit;
 					//event = GameEvent::WindowClose;
+					self.event_system.borrow().change_scene(4).unwrap();
 				
 				}
 				
@@ -106,9 +105,9 @@ impl Scene for Menu<'_> {
         //crate::video::text::draw_text(&mut wincan, self.texture)?;
         
 
-		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (50, 450))?;
-		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (50, 550))?; // Replace with online button
-		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (50, 650))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (50, 400))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.online_button, (50, 500))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (50, 600))?;
 
 		crate::video::gfx::draw_sprite(&mut wincan, &self.logo, (340, 100))?;
 		
