@@ -65,6 +65,11 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         13 => shuffle_deck(stat.get_inactive_player()), // shuffle caster's opponent's deck
         14 => {let mult = stat.get_inactive_player().borrow_mut().get_mult();
             attack(val, mult, stat.get_active_player())},    // attack self (use this instead of healing for negative values to account for dmg multipliers)
+        15 => remove_card_variant(val as u32,stat.get_active_player()), //Remove  one val card from self
+        16 => remove_card_variant(val as u32,stat.get_inactive_player()), //Remove one val card from enemy
+        17 => remove_all_card_variant(val as u32,stat.get_active_player()), //Remove all val cards from self
+        18 => remove_all_card_variant(val as u32,stat.get_inactive_player()), //Remove all val cards from enemy
+        19 => dup_card(val as u32,stat.get_active_player()), //Dupe own card
         _ => unreachable_action(),
     }
 }
@@ -143,6 +148,21 @@ fn insert_into_deck(card_ID: u32, target: Rc<RefCell<Battler>>){
 fn shuffle_deck(target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     target.shuffle_deck();
+}
+
+fn remove_card_variant(card_ID: u32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.remove_sel_card(card_ID);
+}
+
+fn remove_all_card_variant(card_ID: u32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.remove_all_sel_card(card_ID);
+}
+
+fn dup_card(card_ID: u32,target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.dup_card(card_ID);
 }
 
 fn unreachable_action(){

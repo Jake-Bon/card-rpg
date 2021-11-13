@@ -50,6 +50,10 @@ impl Card{
         &self.img_file.trim()
     }
 
+    pub fn get_actions(&self)->Vec<i32>{
+        self.action_list.clone()
+    }
+
     pub fn get_lists(&self)->Zip<std::slice::Iter<'_, i32>, std::slice::Iter<'_, i32>>{
         let a = &self.action_list;
         let v = &self.value_list;
@@ -264,11 +268,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.draw_num = self.draw_num + change;
         println!("add_draw_num is now {}", self.draw_num);
     }
-    
+
     pub fn set_draw_num(&mut self, new_num: u32){
         self.draw_num = new_num;
     }
-    
+
     pub fn get_draw_num(&self)->u32 {
         self.draw_num
     }
@@ -292,6 +296,53 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             None
         }
 
+    }
+
+    pub fn remove_sel_card(&mut self, id: u32){
+        for i in 0..self.deck.len(){
+            if self.deck[i]==id{
+                self.deck.remove(i);
+                return;
+            }
+        }
+        for i in 0..self.discard.len(){
+            if self.discard[i]==id{
+                self.discard.remove(i);
+                return;
+            }
+        }
+        for i in 0..self.hand.len(){
+            if self.hand[i]==id{
+                self.hand.remove(i);
+                return;
+            }
+        }
+    }
+
+    pub fn remove_all_sel_card(&mut self, id: u32){
+        let mut copy: Vec<u32> = Vec::new();
+        for i in 0..self.deck.len(){
+            if self.deck[i]!=id{
+                copy.push(self.deck[i]);
+            }
+        }
+        self.deck = copy;
+
+        let mut copy: Vec<u32> = Vec::new();
+        for i in 0..self.discard.len(){
+            if self.discard[i]!=id{
+                copy.push(self.discard[i]);
+            }
+        }
+        self.discard = copy;
+
+        let mut copy: Vec<u32> = Vec::new();
+        for i in 0..self.hand.len(){
+            if self.hand[i]!=id{
+                copy.push(self.hand[i]);
+            }
+        }
+        self.hand = copy;
     }
 
     //EFFECTS
@@ -348,20 +399,24 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         rslt
     }
 
+    pub fn dup_card(&mut self, id:u32){
+        self.deck.push(id);
+    }
+
     pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
         if self.poison>0{
             self.curr_health = self.curr_health-self.poison as i32;
             if self.curr_health < 0 { self.curr_health = 0; }
             self.poison = self.poison - 1;
         }
-        
+
         self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
-        
+
         // stop overflow via base regen
         if self.curr_energy>self.full_energy{
             self.curr_energy = self.full_energy;
         }
-        
+
         if self.energy_regen.len()>0{
             for i in 0..(self.energy_regen.len())/2{ //Go through every value/turn pair
                 self.curr_energy = self.curr_energy+self.energy_regen[i*2+1];

@@ -52,10 +52,10 @@ pub struct Battle<'a> {
 	accepting_input: bool,
 
 	tmp_enemy_played_card: usize,
-	
+
 	dummy_drawn_card: DrawnCard,
 	frames_elapsed: u32,
-	
+
 
 	// BATTLE DATA
 	battler_map: HashMap<u32, Battler>,
@@ -64,7 +64,7 @@ pub struct Battle<'a> {
 	outcome: BattleOutcome,
 	battle_handler: Rc<RefCell<BattleStatus>>,
 	enemy_delay_inst: Instant,
-	
+
 	//enlarge
 	enlarged_card: card_size,
 	playCard: Rc<Texture<'a>>,
@@ -115,7 +115,7 @@ impl<'a> Battle<'a> {
 			let texture = texture_manager.borrow_mut().load(path)?;
 			card_textures.push(texture);
 		}
-		
+
 		let enlarged_card = card_size{
 		    	card_pos: 0,
 			x_size: 400,
@@ -124,7 +124,7 @@ impl<'a> Battle<'a> {
 			y_pos: 50,
 			larger: false,
 		    };
-		    
+
 		let playCard = texture_manager.borrow_mut().load("assets/play_card.png")?;
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
@@ -229,9 +229,9 @@ impl<'a> Battle<'a> {
 
 	        self.turn = TurnPhase::PreTurnP1;
 	        self.outcome = BattleOutcome::Undetermined;
-	        
+
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
-	        
+
 
 	    }
 
@@ -259,7 +259,7 @@ impl<'a> Battle<'a> {
 	                // Can add drawing a card in here and checking handsize/remaining cards
 
 	                // draw a card at the start of the turn
-                    
+
 		            let mut _p =battle_stat.get_active_player();
 		            let mut player = _p.borrow_mut();
 		            print!("{}\n",player.to_string());
@@ -269,9 +269,9 @@ impl<'a> Battle<'a> {
 			            println!("Skipping p1 turn!");
 			            self.turn = TurnPhase::PostTurnP1;
 		            }else{
-		            
+
 			            //player.draw_card(false);  // p1 is player
-			            
+
 			            // delaying card draw until after animation finishes
                         if player.get_deck_size() > 0  && player.get_curr_hand_size() < 7 {
                             player.add_draw_num(1);
@@ -280,7 +280,7 @@ impl<'a> Battle<'a> {
                             self.frames_elapsed = 0;
                             println!("set self.frames_elapsed to 0");
                         }
-                        
+
                         // Move to the next phase of the turn
                         println!("End of PreTurnP1");
                         self.turn = TurnPhase::TurnP1;
@@ -399,7 +399,7 @@ impl<'a> Battle<'a> {
 
                         // Update the delay instant so we can reuse one over and over again
 		                self.enemy_delay_inst = Instant::now();
-		                
+
 		                // replace the last played card so it's clearer when the enemy plays duplicates
 		                self.tmp_enemy_played_card = 100;
 
@@ -464,7 +464,7 @@ impl<'a> Battle<'a> {
 
         //  This isn't urgent to fix since we're only doing one battle for the midterm, but this may become
         //  more of an issue in the future.
-        
+
         // if the outcome of the battle has changed, show prepare to show the result on screen
         /*if self.outcome != BattleOutcome::Undetermined {
             println!("Updating the enemy_delay_inst to show battle result on screen");
@@ -519,11 +519,12 @@ impl Scene for Battle<'_> {
 
 								        //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
-								        // if the player has enough energy to cover the cost of playing the card:
-								        crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-								        // add card to discard pile after playing
+										// add card to discard pile
 								        self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
 								        self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+								        // if the player has enough energy to cover the cost of playing the card:
+								        crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+
 									self.enlarged_card.set_larger(false);
 								    }
 								    // otherwise, don't
@@ -535,7 +536,7 @@ impl Scene for Battle<'_> {
 							}
 				else if(self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1){
 					self.enlarged_card.set_larger(false);
-				} 
+				}
 				else{
 				        // check if the player is clicking on any of the cards in their hand
 				        //let mut battle_stat = self.battle_handler.borrow_mut();
@@ -598,7 +599,7 @@ impl Scene for Battle<'_> {
 
         // Card Draw Animation P1
         if player1.get_draw_num() > 0 {
-            
+
             if player1.get_deck_size() == 0 {
                 //println!("but there's no more cards in the deck! setting draw_num to 0");
                 player1.set_draw_num(0);
@@ -606,38 +607,38 @@ impl Scene for Battle<'_> {
             else{
                 let target_pos = (260 + (p1_hand_size) * 120) as f32;
                 //println!("  Trying to draw!");
-                
-                // if the dummy card isn't in the 
+
+                // if the dummy card isn't in the
                 if self.dummy_drawn_card.x_pos != target_pos {
-                    
+
                     // increment the position over time
                     self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, (self.frames_elapsed as f32 / 60.0));
                     // increase the frames elapsed in the animation
                     self.frames_elapsed = self.frames_elapsed + 1;
-                    
+
                     //println!("self.dummy_drawn_card.x_pos: {} | self.frames_elapsed: {}", self.dummy_drawn_card.x_pos, self.frames_elapsed);
                     // get the correct sprite for the card being drawn
-                    
+
                     let top_card = player1.get_deck_card().unwrap();
                     crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(top_card as usize).unwrap()),(100,148), ((self.dummy_drawn_card.x_pos) as i32, 560))?;
-                    
+
                     // check if card has reached the destination
                     if self.dummy_drawn_card.x_pos == target_pos {
-                        
+
                         // actually draw the card
                         player1.draw_card(false);
-                        
+
                         self.frames_elapsed = 0;
                         self.dummy_drawn_card.x_pos = 1140.0;
-                        
-                    }                    
+
+                    }
                 }
             }
-            
+
         }
 
         if player1.get_deck_size()>0 {
-			
+
 			// make it seem like the last card moves over by removing the deck card once the animation starts
 			if !(player1.get_deck_size() == 1 && player1.get_draw_num() > 0) {
 			    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (1140,560))?;
@@ -682,7 +683,7 @@ impl Scene for Battle<'_> {
 
         // Card Draw Animation P2
         if player2.get_draw_num() > 0 {
-            
+
             if player2.get_deck_size() == 0 {
                 //println!("but there's no more cards in the deck! setting draw_num to 0");
                 player2.set_draw_num(0);
@@ -690,40 +691,40 @@ impl Scene for Battle<'_> {
             else{
                 let target_pos = (920 - (p2_hand_size) * 120) as f32;
                 //println!("  Trying to draw!");
-                
-                // if the dummy card isn't in the 
+
+                // if the dummy card isn't in the
                 if self.dummy_drawn_card.x_pos != target_pos {
-                    
+
                     // increment the position over time
                     self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, (self.frames_elapsed as f32 / 50.0));
                     // increase the frames elapsed in the animation
                     self.frames_elapsed = self.frames_elapsed + 1;
-                    
+
                     //println!("self.dummy_drawn_card.x_pos: {} | self.frames_elapsed: {}", self.dummy_drawn_card.x_pos, self.frames_elapsed);
-                    
+
                     // don't need to get the correct sprite for the card, as enemy cards are hidden
-                    
+
                     // although if you copy this line and the one from the P1 function, it does show the card the enemy is drawing, might be a neat card effect
                     //let top_card = player2.get_deck_card().unwrap();
                     crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck, (100,148), ((self.dummy_drawn_card.x_pos) as i32, 20))?;
-                    
+
                     // check if card has reached the destination
                     if self.dummy_drawn_card.x_pos == target_pos {
-                        
+
                         // actually draw the card
                         player2.draw_card(false);
-                        
+
                         self.frames_elapsed = 0;
                         self.dummy_drawn_card.x_pos = 1140.0;
-                        
-                    }                    
+
+                    }
                 }
             }
-            
+
         }
 
         if player2.get_deck_size()>0 {
-			
+
 			// make it seem like the last card moves over by removing the deck card once the animation starts
 			if !(player2.get_deck_size() == 1 && player2.get_draw_num() > 0) {
 			    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), (40,20))?;
@@ -815,13 +816,37 @@ impl Scene for Battle<'_> {
 		// End Turn button text
 		//let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
-		
+
+		//SEARCH HERE
+		let curr_sel = player1.select_hand(self.enlarged_card.get_cardpos() as usize).unwrap();
+		let curr_card = battle_stat.get_card(curr_sel);
 		if(self.enlarged_card.get_larger() == true){
-			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
-			let curr_hand = player1.select_hand(self.enlarged_card.get_cardpos() as usize).unwrap();
-			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(400,592), (450,50))?;
-			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
-			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
+			if curr_card.get_actions().contains(&19){
+				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
+				let mut num = 0;
+				for i in 0..p1_hand_size {
+					let curr_hand = player1.select_hand(i as usize).unwrap();
+					if curr_hand!=curr_sel{
+						match num{
+							0=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (50,50))?,
+							1=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (250,200))?,
+							2=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (50,350))?,
+							3=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (850,200))?,
+							4=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (1050,50))?,
+							5=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (1050,350))?,
+							_=>()//unreachable
+						};
+						num+=1;
+					}
+				}
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,600))?;
+			}else{
+				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
+			}
 		}
 
 		match self.outcome {
@@ -850,8 +875,8 @@ struct card_size{
 	card_pos: usize, //where it is in the player's hand
 	x_size: u32, //size of the card width-wise (will just multiply it by some number)
 	y_size: u32, //size of the card height-wise (will just multiply it by some number)
-	x_pos: u32, //when enlarged, x position = 
-	y_pos: u32, //when enlarged, y position = 
+	x_pos: u32, //when enlarged, x position =
+	y_pos: u32, //when enlarged, y position =
 	larger: bool,
 }
 
@@ -860,16 +885,16 @@ impl card_size{
 	fn get_cardpos(&mut self)->usize{
         	self.card_pos
 	}
-		
-	
+
+
 	fn get_larger(&mut self)->bool{
 		self.larger
 	}
-	
+
 	fn set_cardpos(&mut self, h: usize){
 		self.card_pos = h;
 	}
-	
+
 	fn set_larger(&mut self, h: bool){
 		self.larger = h;
 	}
@@ -901,12 +926,12 @@ impl <'a> DrawnCard {
 // will return -1 if progress < 0 or progress > 1
 // if start_pos == end_pos, returns start_pos
 pub fn lerp(start_pos: f32, end_pos: f32, progress: f32) -> f32 {
-    
+
     if(progress > 1.0 || progress < 0.0){ return -1 as f32 }
-    
+
     //println!("lerp was given start_pos: {} | end_pos: {} | progress: {}, calculated: {}", start_pos, end_pos, progress, start_pos + progress * (end_pos - start_pos));
-    
+
     start_pos + progress * (end_pos - start_pos)
 
-    
+
 }
