@@ -351,6 +351,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
         if self.poison>0{
             self.curr_health = self.curr_health-self.poison as i32;
+            if self.curr_health < 0 { self.curr_health = 0; }
             self.poison = self.poison - 1;
         }
         

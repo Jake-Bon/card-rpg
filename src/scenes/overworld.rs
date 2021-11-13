@@ -224,7 +224,7 @@ impl Scene for Overworld<'_> {
 				self.player.y_vel=0.0;
 				self.player.delta_x=0.0;
 				self.player.delta_y=0.0;
-				self.enemy.remove(i as usize);
+				self.enemy.remove(i as usize);  // remove the enemy 
 				self.player.keyPress[0]=false;
 				self.player.keyPress[1]=false;
 				self.player.keyPress[2]=false;

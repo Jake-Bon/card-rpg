@@ -229,6 +229,9 @@ impl<'a> Battle<'a> {
 
 	        self.turn = TurnPhase::PreTurnP1;
 	        self.outcome = BattleOutcome::Undetermined;
+	        
+	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
+	        
 
 	    }
 
@@ -396,6 +399,9 @@ impl<'a> Battle<'a> {
 
                         // Update the delay instant so we can reuse one over and over again
 		                self.enemy_delay_inst = Instant::now();
+		                
+		                // replace the last played card so it's clearer when the enemy plays duplicates
+		                self.tmp_enemy_played_card = 100;
 
 				    }
 
@@ -420,6 +426,24 @@ impl<'a> Battle<'a> {
 	            }
 	        }
 
+            // if the outcome of the battle has changed, show prepare to show the result on screen
+            if self.outcome != BattleOutcome::Undetermined {
+                println!("Updating the enemy_delay_inst to show battle result on screen");
+
+                // reusing enemy_delay to show battle result for a few seconds before moving back to overworld
+                self.enemy_delay_inst = Instant::now();
+            }
+
+	    }
+	    // Else if battle is over (self.outcome != BattleOutcome::Undetermined)
+	    // Show the result for 5 seconds, then go back to the overworld
+	    else {
+	        if self.enemy_delay_inst.elapsed().as_secs() >= 5 {
+	            println!("Moving away from the battle scene");
+                self.turn = TurnPhase::NotInitialized;
+                self.event_system.borrow().change_scene(1).unwrap();
+                return Ok(());
+	        }
 	    }
 
         if self.turn == TurnPhase::RoundOver {
@@ -440,10 +464,14 @@ impl<'a> Battle<'a> {
 
         //  This isn't urgent to fix since we're only doing one battle for the midterm, but this may become
         //  more of an issue in the future.
-        else if self.turn == TurnPhase::BattleOver {
-            println!("Moving away from the battle scene");
-            self.turn = TurnPhase::NotInitialized;
-        }
+        
+        // if the outcome of the battle has changed, show prepare to show the result on screen
+        /*if self.outcome != BattleOutcome::Undetermined {
+            println!("Updating the enemy_delay_inst to show battle result on screen");
+
+            // reusing enemy_delay to show battle result for a few seconds before moving back to overworld
+            self.enemy_delay_inst = Instant::now();
+        }*/
 
 	    return Ok(());
 
