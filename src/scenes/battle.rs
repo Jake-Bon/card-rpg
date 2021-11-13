@@ -318,7 +318,7 @@ impl<'a> Battle<'a> {
 					//get the two players to pass in
 					let player1 = self.battle_handler.borrow_mut().get_p1();
 					let player2 = self.battle_handler.borrow_mut().get_p2();
-					build_tree(player1, player2);
+					build_tree(player1, player2, Rc::clone(&self.battle_handler));
 
 					// Enemy AI should be called from here
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
