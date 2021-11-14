@@ -68,7 +68,7 @@ pub struct Battle<'a> {
 	enemy_delay_inst: Instant,
 	
 	//enlarge
-	enlarged_card: card_size,
+	enlarged_card: CardSize,
 	playCard: Rc<Texture<'a>>,
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
@@ -118,7 +118,7 @@ impl<'a> Battle<'a> {
 			card_textures.push(texture);
 		}
 		
-		let enlarged_card = card_size{
+		let enlarged_card = CardSize{
 		    	card_pos: 0,
 			x_size: 400,
 			y_size: 592,
@@ -481,7 +481,7 @@ impl Scene for Battle<'_> {
 					    self.turn = TurnPhase::PostTurnP1;
 
 				}
-				else if(self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 250 && y_pos < 310) && self.turn == TurnPhase::TurnP1){
+				else if self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 250 && y_pos < 310) && self.turn == TurnPhase::TurnP1{
 
 							    // play the card
 							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(self.enlarged_card.get_cardpos());
@@ -512,7 +512,7 @@ impl Scene for Battle<'_> {
 
 							    }
 							}
-				else if(self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1){
+				else if self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1{
 					self.enlarged_card.set_larger(false);
 				} 
 				else{
@@ -522,7 +522,7 @@ impl Scene for Battle<'_> {
 				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
 				        //let curr_turn = self.battle_handler.borrow_mut().get_turn();
 
-						if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+						if self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708){
 							let i = ((x_pos-260)/120) as usize;
 							//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
 							//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
@@ -534,7 +534,7 @@ impl Scene for Battle<'_> {
 							    // play the card
 							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
 							    //let card_cost = card_rslt.unwrap().get_cost();
-							    if (!card_rslt.is_none()){
+							    if !card_rslt.is_none(){
 								    //enlarge the picked card
 							    	    self.enlarged_card.set_cardpos(i as usize);
 							    	    self.enlarged_card.set_larger(true);
@@ -795,7 +795,7 @@ impl Scene for Battle<'_> {
 		//let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
 		
-		if(self.enlarged_card.get_larger() == true){
+		if self.enlarged_card.get_larger() == true{
 			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 			let curr_hand = player1.select_hand(self.enlarged_card.get_cardpos() as usize).unwrap();
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(400,592), (450,50))?;
@@ -825,7 +825,7 @@ impl Scene for Battle<'_> {
 
 //card size and position
 //note: Don't need to delete the original card when enlarging it. Makes life easier
-struct card_size{
+struct CardSize{
 	card_pos: usize, //where it is in the player's hand
 	x_size: u32, //size of the card width-wise (will just multiply it by some number)
 	y_size: u32, //size of the card height-wise (will just multiply it by some number)
@@ -834,7 +834,7 @@ struct card_size{
 	larger: bool,
 }
 
-impl card_size{
+impl CardSize{
 
 	fn get_cardpos(&mut self)->usize{
         	self.card_pos
