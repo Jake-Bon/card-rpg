@@ -477,7 +477,22 @@ impl<'a> Battle<'a> {
 
 	}
 
+	fn dup_screen(&mut self,mut curr_card: Card,curr_card_cost:i32,hand:usize){
+		let sz = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_hand_size();
+		if sz<2||hand>sz-2{
+			print!("???");
+			return;
+		}
+		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 
+		let to_dupe = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(hand);
+
+		curr_card.set_values(19,to_dupe.unwrap() as i32);
+		crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+		self.enlarged_card.set_larger(false);
+		self.battle_handler.borrow_mut().get_p1().borrow_mut().shuffle_deck();
+	}
 
 }
 
@@ -501,41 +516,67 @@ impl Scene for Battle<'_> {
 					    println!("End Turn button was pressed");
 					    self.turn = TurnPhase::PostTurnP1;
 
-				}
-				else if(self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 250 && y_pos < 310) && self.turn == TurnPhase::TurnP1){
+					}
+					else if self.enlarged_card.get_larger() == true{
 
-							    // play the card
-							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(self.enlarged_card.get_cardpos());
-							    //let card_cost = card_rslt.unwrap().get_cost();
-							    if (!card_rslt.is_none()){
-								    let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
-								    let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
-								    let curr_card_cost = curr_card.get_cost() as i32;
-								    //println!("card cost is {}", curr_card_cost);
-								    let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
-								    //println!("current energy is {}", curr_energy);
-								    // only play if player has enough energy
-								    if (curr_energy >= curr_card_cost){
+						// play the card
+						let sel_card = self.enlarged_card.get_cardpos();
+						let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(sel_card);
+						//let card_cost = card_rslt.unwrap().get_cost();
+						let card_ID = card_rslt.unwrap();//battle_stat.get_p1().borrow().select_hand(i).unwrap();
+						let mut curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
+						let curr_card_cost = curr_card.get_cost() as i32;
+						//println!("card cost is {}", curr_card_cost);
+						let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
+						if (!card_rslt.is_none()){
 
-								        //println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
-
-										// add card to discard pile
-								        self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
-								        self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-								        // if the player has enough energy to cover the cost of playing the card:
-								        crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-
-									self.enlarged_card.set_larger(false);
-								    }
-								    // otherwise, don't
-			                        else {
-			                            println!("Not enough energy!");
-			                        }
-
-							    }
+						if !curr_card.get_actions().contains(&19){
+							if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
+								self.enlarged_card.set_larger(false);
 							}
-				else if(self.enlarged_card.get_larger() == true && (x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1){
-					self.enlarged_card.set_larger(false);
+
+							if((x_pos > 900 && x_pos < 1100) && (y_pos > 250 && y_pos < 310) && self.turn == TurnPhase::TurnP1){
+								//println!("current energy is {}", curr_energy);
+								// only play if player has enough energy
+								if (curr_energy >= curr_card_cost){
+
+					    		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+								// add card to discard pile
+					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+					    		// if the player has enough energy to cover the cost of playing the card:
+					    		crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+
+								self.enlarged_card.set_larger(false);
+								}
+								// otherwise, don't
+                    			else {
+                        			println!("Not enough energy!");
+                    			}
+
+							}
+							}else if curr_card.get_actions().contains(&19){
+								if curr_energy >= curr_card_cost{
+									if(x_pos>50&&x_pos<250)&&(y_pos>50&&y_pos<346){
+										self.dup_screen(curr_card,curr_card_cost,0);
+									}else if(x_pos>250&&x_pos<450)&&(y_pos>200&&y_pos<496){
+										self.dup_screen(curr_card,curr_card_cost,2);
+									}else if(x_pos>50&&x_pos<250)&&(y_pos>350&&y_pos<646){
+										self.dup_screen(curr_card,curr_card_cost,1);
+									}else if(x_pos>850&&x_pos<1050)&&(y_pos>200&&y_pos<496){
+										self.dup_screen(curr_card,curr_card_cost,3);
+									}else if(x_pos>1050&&x_pos<1250)&&(y_pos>50&&y_pos<346){
+										self.dup_screen(curr_card,curr_card_cost,4);
+									}else if(x_pos>1050&&x_pos<1250)&&(y_pos>350&&y_pos<646){
+										self.dup_screen(curr_card,curr_card_cost,5);
+									}
+								}
+								if(x_pos>550&&x_pos<750&&y_pos>640&&y_pos<700){
+									self.enlarged_card.set_larger(false);
+								}
+						}
+					}
 				}
 				else{
 				        // check if the player is clicking on any of the cards in their hand
@@ -544,7 +585,7 @@ impl Scene for Battle<'_> {
 				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
 				        //let curr_turn = self.battle_handler.borrow_mut().get_turn();
 
-						if (self.battle_handler.borrow_mut().get_turn()==0&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+						if (self.battle_handler.borrow_mut().get_turn()==0&&self.enlarged_card.get_larger()==false&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
 							let i = ((x_pos-260)/120) as usize;
 							//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
 							//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
@@ -658,15 +699,22 @@ impl Scene for Battle<'_> {
 		    }
 		}
 
+		let mut fontm = self.font_manager.borrow_mut();
+
 		// draw the player's status effects
 		let mut p1_status_effects = Vec::new();
-		if player1.get_defense() > 0 {p1_status_effects.push(&self.armor);}
-		if player1.get_health_regen() > 0 {p1_status_effects.push(&self.healing);}
-		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion)};
-		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);}
-		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);}
+		let mut p1_status_duration = Vec::new();
+		if player1.get_defense() > 0 {p1_status_effects.push(&self.armor);p1_status_duration.push(0);}
+		if player1.get_health_regen() > 0 {p1_status_effects.push(&self.healing);p1_status_duration.push(player1.get_health_regen_duration());}
+		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion);p1_status_duration.push(player1.get_poison() as i32);};
+		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);p1_status_duration.push(player1.get_energy_regen_duration());}
+		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);p1_status_duration.push(player1.get_energy_regen_duration());}
 
 		for i in 0..p1_status_effects.len() {
+			if p1_status_duration[i]>0{
+				fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
+					&p1_status_duration[i].to_string(), (790+285-(i*30) as i32, 460));
+			}
 			crate::video::gfx::draw_sprite(&mut wincan, p1_status_effects[i], (790+280-(i*30) as i32, 480));
 		}
 
@@ -731,7 +779,7 @@ impl Scene for Battle<'_> {
 			}
 		}
 
-		let mut fontm = self.font_manager.borrow_mut();
+
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(150, 0, 0),
 			"Enemy Played:", (600,300-25));
 		if self.tmp_enemy_played_card<100{
@@ -753,13 +801,18 @@ impl Scene for Battle<'_> {
 		}
 
 		let mut p2_status_effects = Vec::new();
-		if player2.get_defense() > 0 {p2_status_effects.push(&self.armor);}
-		if player2.get_health_regen() > 0 {p2_status_effects.push(&self.healing);}
-		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion)};
-		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);}
-		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);}
+		let mut p2_status_duration = Vec::new();
+		if player2.get_defense() > 0 {p2_status_effects.push(&self.armor);p2_status_duration.push(0);}
+		if player2.get_health_regen() > 0 {p2_status_effects.push(&self.healing);p2_status_duration.push(player2.get_health_regen_duration());}
+		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion);p2_status_duration.push(player2.get_poison() as i32);};
+		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);p2_status_duration.push(player2.get_energy_regen_duration());}
+		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);p2_status_duration.push(player2.get_energy_regen_duration());}
 
 		for i in 0..p2_status_effects.len() {
+			if p2_status_duration[i]>0{
+				fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
+					&p2_status_duration[i].to_string(), (200+285-(i*30) as i32, 250));
+			}
 			crate::video::gfx::draw_sprite(&mut wincan, p2_status_effects[i], (200+280-(i*30) as i32, 230));
 		}
 
@@ -817,10 +870,12 @@ impl Scene for Battle<'_> {
 		//let mut fontm = self.font_manager.borrow_mut();
 		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
 
-		//SEARCH HERE
-		let curr_sel = player1.select_hand(self.enlarged_card.get_cardpos() as usize).unwrap();
-		let curr_card = battle_stat.get_card(curr_sel);
+
 		if(self.enlarged_card.get_larger() == true){
+			let curr_selection = player1.select_hand(self.enlarged_card.get_cardpos() as usize);
+			if !curr_selection.is_none(){
+			let curr_sel = curr_selection.unwrap();
+			let curr_card = battle_stat.get_card(curr_sel);
 			if curr_card.get_actions().contains(&19){
 				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
@@ -830,8 +885,8 @@ impl Scene for Battle<'_> {
 					if curr_hand!=curr_sel{
 						match num{
 							0=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (50,50))?,
-							1=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (250,200))?,
-							2=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (50,350))?,
+							2=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (250,200))?,
+							1=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (50,350))?,
 							3=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (850,200))?,
 							4=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (1050,50))?,
 							5=>crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(200,296), (1050,350))?,
@@ -840,13 +895,14 @@ impl Scene for Battle<'_> {
 						num+=1;
 					}
 				}
-				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,600))?;
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(550,640))?;
 			}else{
 				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
 			}
+		}
 		}
 
 		match self.outcome {

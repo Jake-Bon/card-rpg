@@ -54,6 +54,12 @@ impl Card{
         self.action_list.clone()
     }
 
+    pub fn set_values(&mut self,act: i32, val:i32){
+        for i in 0..self.action_list.len(){
+            self.value_list[i] = val;
+        }
+    }
+
     pub fn get_lists(&self)->Zip<std::slice::Iter<'_, i32>, std::slice::Iter<'_, i32>>{
         let a = &self.action_list;
         let v = &self.value_list;
@@ -364,14 +370,29 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.energy_regen.push(val);
     }
 
+    pub fn get_energy_regen_duration(& self)->i32{
+        let mut rslt = 0 as i32;
+        if self.energy_regen.len()==0{
+            return rslt;
+        }
+        for i in 0..self.energy_regen.len()/2{ //First get amount of regen
+            rslt = if self.energy_regen[i*2]>rslt{
+                self.energy_regen[i*2]
+            }else{
+                rslt
+            };
+        }
+        rslt
+    }
+
     pub fn get_energy_regen(& self)->i32{
         let mut rslt = 0 as i32;
         if self.energy_regen.len()==0{
             return rslt;
         }
         for i in 0..self.energy_regen.len()/2{ //First get amount of regen
-            rslt = if self.energy_regen[i*2]>0{
-                self.energy_regen[i*2+1]
+            rslt += if self.energy_regen[i*2]>0{
+                self.energy_regen[i*2]
             }else{
                 0
             };
@@ -384,13 +405,28 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.health_regen.push(val);
     }
 
+    pub fn get_health_regen_duration(& self)->i32{
+        let mut rslt = 0 as i32;
+        if self.health_regen.len()==0{
+            return rslt;
+        }
+        for i in 0..self.health_regen.len()/2{ //First get amount of regen
+            rslt = if self.health_regen[i*2]>rslt{
+                self.health_regen[i*2]
+            }else{
+                rslt
+            };
+        }
+        rslt
+    }
+
     pub fn get_health_regen(& self)->i32{ //for display purposes
         let mut rslt = 0 as i32;
         if self.health_regen.len()==0{
             return rslt;
         }
         for i in 0..self.health_regen.len()/2{
-            rslt = if self.health_regen[i*2]>0{
+            rslt += if self.health_regen[i*2]>0{
                 self.health_regen[i*2+1]
             }else{
                 0
