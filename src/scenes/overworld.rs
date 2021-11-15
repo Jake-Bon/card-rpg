@@ -229,6 +229,11 @@ impl Scene for Overworld<'_> {
 				self.player.keyPress[1]=false;
 				self.player.keyPress[2]=false;
 				self.player.keyPress[3]=false;
+				
+				// set the enemy's deck here. could randomize/set it here or set it during enemy creation
+				// the number passed into the function corresponds to the deck with the same number in battler-library.txt
+				self.event_system.borrow().set_battler_npc_deck(3).unwrap();
+				//println!("about to change scene now...");
 				self.event_system.borrow().change_scene(2).unwrap();
 			}
 			//println!("p:{}", self.player.ABSx_pos);

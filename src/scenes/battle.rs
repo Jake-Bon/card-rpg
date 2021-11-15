@@ -64,6 +64,7 @@ pub struct Battle<'a> {
 	outcome: BattleOutcome,
 	battle_handler: Rc<RefCell<BattleStatus>>,
 	enemy_delay_inst: Instant,
+	battler_npc_deck_id: u32,
 
 	//enlarge
 	enlarged_card: card_size,
@@ -159,6 +160,7 @@ impl<'a> Battle<'a> {
 			outcome: BattleOutcome::Undetermined,
 			battle_handler,
 			enemy_delay_inst: Instant::now(),
+			battler_npc_deck_id: 1,
 			enlarged_card,
 			playCard,
 			retCard,
@@ -191,7 +193,9 @@ impl<'a> Battle<'a> {
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
             let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
             // change the number in self.battler_map.get(&X) to change battler ID
-            let _p2 = Rc::new(RefCell::new(self.battler_map.get(&2).unwrap().clone()));
+            //      Now done through the set_battler_npc_deck event
+            let _p2 = Rc::new(RefCell::new(self.battler_map.get(&self.battler_npc_deck_id).unwrap().clone()));
+            println!("set opponent's deck to the deck with deck_id: {}", self.battler_npc_deck_id);
 
 			_p1.borrow_mut().shuffle_deck();
 			_p2.borrow_mut().shuffle_deck();
@@ -503,6 +507,10 @@ impl Scene for Battle<'_> {
 		// Some input should be restricted if it isn't the player's turn
 
 		    match event {
+			    GameEvent::SetBattlerNPCDeck(deck_id) => {
+			        self.battler_npc_deck_id = deck_id;
+			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
+			    },
 			    GameEvent::KeyPress(k) => {
 				    //println!("{}", k);
 				    if k.eq(&Keycode::Escape) {
