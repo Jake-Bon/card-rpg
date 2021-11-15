@@ -173,7 +173,6 @@ impl<'a> Battle<'a> {
 
 	pub fn start_battle(&'a mut self, p1: Rc<RefCell<Battler>>, p2: Rc<RefCell<Battler>>){
 		self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&p1),Rc::clone(&p2))));
-
 	}
 
 	// Step should be called via the GameManager

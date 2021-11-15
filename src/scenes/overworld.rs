@@ -146,6 +146,7 @@ impl<'a> Overworld<'a> {
 								last_safe_x: random_x,
 								last_safe_y: random_y,
 								is_flipped: false,
+								deck_id: rng.gen_range(1..6),//eventually get range from NPC
 							});
 							break;
 						}
@@ -224,15 +225,17 @@ impl Scene for Overworld<'_> {
 				self.player.y_vel=0.0;
 				self.player.delta_x=0.0;
 				self.player.delta_y=0.0;
-				self.enemy.remove(i as usize);  // remove the enemy 
+				let id = self.enemy[i].deck_id;
+				self.enemy.remove(i as usize);  // remove the enemy
 				self.player.keyPress[0]=false;
 				self.player.keyPress[1]=false;
 				self.player.keyPress[2]=false;
 				self.player.keyPress[3]=false;
-				
+
 				// set the enemy's deck here. could randomize/set it here or set it during enemy creation
 				// the number passed into the function corresponds to the deck with the same number in battler-library.txt
-				self.event_system.borrow().set_battler_npc_deck(3).unwrap();
+				println!("ID: {}",id);
+				self.event_system.borrow().set_battler_npc_deck(id).unwrap();
 				//println!("about to change scene now...");
 				self.event_system.borrow().change_scene(2).unwrap();
 			}
@@ -496,6 +499,7 @@ struct Enemy<'a> {
 	last_safe_x: f32,
 	last_safe_y: f32,
 	is_flipped: bool,
+	deck_id: u32,
 }
 
 impl<'a> Enemy<'a> {
