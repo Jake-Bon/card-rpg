@@ -797,11 +797,11 @@ impl Scene for Battle<'_> {
 
 
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(150, 0, 0),
-			"Enemy Played:", (600,300-25));
+			"Enemy Played:", (550,250-40));
 		if self.tmp_enemy_played_card<100{
-			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.tmp_enemy_played_card)).unwrap(),(100,148),(600,300))?;
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.tmp_enemy_played_card)).unwrap(),(200,296),(550,230))?;
 		}else{
-			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148),(600,300))?;
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(200,296),(550,230))?;
 		}
 
         // draw the enemy's energy pips
