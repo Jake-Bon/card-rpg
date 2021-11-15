@@ -240,6 +240,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.hand.len()
     }
 
+    pub fn get_discard_size(&self)->usize{
+        self.discard.len()
+    }
+
     pub fn deck_del_card(&mut self){
         if self.deck.len()>0{
             self.deck.remove(0);

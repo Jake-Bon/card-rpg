@@ -142,6 +142,7 @@ fn draw_cards(val: i32, target: Rc<RefCell<Battler>>){
 fn insert_into_deck(card_ID: u32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     target.add_card_to_deck(card_ID);
+    target.shuffle_deck();
 }
 
 // shuffles the deck of the given target player

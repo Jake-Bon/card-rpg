@@ -480,7 +480,6 @@ impl<'a> Battle<'a> {
 	fn dup_screen(&mut self,mut curr_card: Card,curr_card_cost:i32,hand:usize){
 		let sz = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_hand_size();
 		if sz<2||hand>sz-2{
-			print!("???");
 			return;
 		}
 		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
@@ -573,6 +572,11 @@ impl Scene for Battle<'_> {
 									}
 								}
 								if(x_pos>550&&x_pos<750&&y_pos>640&&y_pos<700){
+									let sz = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_hand_size();
+									if sz<2{
+										self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+										self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+									}
 									self.enlarged_card.set_larger(false);
 								}
 						}
@@ -895,7 +899,11 @@ impl Scene for Battle<'_> {
 						num+=1;
 					}
 				}
-				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(550,640))?;
+				if player1.get_curr_hand_size()>=2{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(550,640))?;
+				}else{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(550,640))?;
+				}
 			}else{
 				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
