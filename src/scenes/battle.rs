@@ -49,6 +49,7 @@ pub struct Battle<'a> {
 	posion: Rc<Texture<'a>>,
 	mana_boost: Rc<Texture<'a>>,
 	mana_drain: Rc<Texture<'a>>,
+	multi: Rc<Texture<'a>>,
 	accepting_input: bool,
 
 	tmp_enemy_played_card: usize,
@@ -90,6 +91,7 @@ impl<'a> Battle<'a> {
 		let posion = texture_manager.borrow_mut().load("assets/effects/posion.png")?;
 		let mana_boost = texture_manager.borrow_mut().load("assets/effects/mana_boost.png")?;
 		let mana_drain = texture_manager.borrow_mut().load("assets/effects/mana_drain.png")?;
+		let multi = texture_manager.borrow_mut().load("assets/effects/mult.png")?;
 		let accepting_input = true;
 		let tmp_enemy_played_card = 100;
 		let dummy_drawn_card = DrawnCard::new(0.0, 800.0).unwrap();
@@ -152,6 +154,7 @@ impl<'a> Battle<'a> {
 			posion,
 			mana_boost,
 			mana_drain,
+			multi,
 			accepting_input,
 			battler_map,
 			active_player: 1,
@@ -637,6 +640,11 @@ impl Scene for Battle<'_> {
 		let mut _p1 = battle_stat.get_p1();
 		let mut player1 = _p1.borrow_mut();
 		let mut p1_hand_size = player1.get_curr_hand_size();
+
+		let mut _p2 = battle_stat.get_p2();
+		let mut player2 = _p2.borrow_mut();
+		let mut p2_hand_size = player2.get_curr_hand_size();
+
 		for i in 0..p1_hand_size {
 			let curr_hand = player1.select_hand(i as usize).unwrap();
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()),(100,148), ((260 + (i * 120)) as i32,560))?;
@@ -708,6 +716,7 @@ impl Scene for Battle<'_> {
 		// draw the player's status effects
 		let mut p1_status_effects = Vec::new();
 		let mut p1_status_duration = Vec::new();
+		if player2.get_mult() != 1.0 {p1_status_effects.push(&self.multi);p1_status_duration.push(0);}
 		if player1.get_defense() > 0 {p1_status_effects.push(&self.armor);p1_status_duration.push(0);}
 		if player1.get_health_regen() > 0 {p1_status_effects.push(&self.healing);p1_status_duration.push(player1.get_health_regen_duration());}
 		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion);p1_status_duration.push(player1.get_poison() as i32);};
@@ -724,10 +733,6 @@ impl Scene for Battle<'_> {
 
 
 		//enemy side
-
-		let mut _p2 = battle_stat.get_p2();
-		let mut player2 = _p2.borrow_mut();
-		let mut p2_hand_size = player2.get_curr_hand_size();
 
 		for i in 0..p2_hand_size {
 		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
@@ -806,6 +811,7 @@ impl Scene for Battle<'_> {
 
 		let mut p2_status_effects = Vec::new();
 		let mut p2_status_duration = Vec::new();
+		if player1.get_mult() != 1.0 {p1_status_effects.push(&self.multi);p1_status_duration.push(0);}
 		if player2.get_defense() > 0 {p2_status_effects.push(&self.armor);p2_status_duration.push(0);}
 		if player2.get_health_regen() > 0 {p2_status_effects.push(&self.healing);p2_status_duration.push(player2.get_health_regen_duration());}
 		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion);p2_status_duration.push(player2.get_poison() as i32);};
