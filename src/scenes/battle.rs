@@ -15,6 +15,9 @@ use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
 
+use crate::ai::ai_structs::*;
+use crate::ai::minimax::*;
+
 use crate::cards::game_structs::*;
 
 use crate::cards::battle_enums::*;
@@ -71,6 +74,8 @@ pub struct Battle<'a> {
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
 
+	//AI
+	gametree: GameTree,
 }
 
 impl<'a> Battle<'a> {
@@ -129,6 +134,9 @@ impl<'a> Battle<'a> {
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
 
+		let mut gametree = GameTree::new(_p2.borrow().clone(), _p1.borrow().clone());
+		gametree.populate();
+		gametree.print();
 		Ok(Battle {
 			wincan,
 			event_system,
@@ -163,6 +171,7 @@ impl<'a> Battle<'a> {
 			playCard,
 			retCard,
 			backDrop,
+			gametree,
 		})
 	}
 

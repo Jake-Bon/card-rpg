@@ -14,6 +14,7 @@ mod video;
 mod events;
 mod scenes;
 mod cards;
+mod ai;
 
 fn main() -> Result<(), String>{
     let mut sdl_core = SDLCore::init()?;

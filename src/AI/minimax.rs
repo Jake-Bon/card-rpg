@@ -1,4 +1,4 @@
-use crate::AI::ai_structs;
+use crate::ai::ai_structs;
 
 /*
 // For reference: 
