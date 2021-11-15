@@ -146,7 +146,7 @@ impl<'a> Overworld<'a> {
 								last_safe_x: random_x,
 								last_safe_y: random_y,
 								is_flipped: false,
-								deck_id: rng.gen_range(1..6),//eventually get range from NPC
+								npc_id: rng.gen_range(1..6),//eventually get range from NPC
 							});
 							break;
 						}
@@ -225,7 +225,7 @@ impl Scene for Overworld<'_> {
 				self.player.y_vel=0.0;
 				self.player.delta_x=0.0;
 				self.player.delta_y=0.0;
-				let id = self.enemy[i].deck_id;
+				let id = self.enemy[i].npc_id;
 				self.enemy.remove(i as usize);  // remove the enemy
 				self.player.keyPress[0]=false;
 				self.player.keyPress[1]=false;
@@ -499,7 +499,7 @@ struct Enemy<'a> {
 	last_safe_x: f32,
 	last_safe_y: f32,
 	is_flipped: bool,
-	deck_id: u32,
+	npc_id: u32,
 }
 
 impl<'a> Enemy<'a> {
