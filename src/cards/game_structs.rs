@@ -147,12 +147,12 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         &self.name
     }
 
-    pub fn get_mult(&mut self)->f64{
+    pub fn get_mult(&mut self)->f32{
         let m = self.mult;
         if m<0{
-            (1 as f64)/(m.abs() as f64)
+            (1 as f32)/(m.abs() as f32)
         }else{
-            m as f64
+            m as f32
         }
     }
 
@@ -396,7 +396,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
         for i in 0..self.energy_regen.len()/2{ //First get amount of regen
             rslt += if self.energy_regen[i*2]>0{
-                self.energy_regen[i*2]
+                self.energy_regen[i*2+1]
             }else{
                 0
             };

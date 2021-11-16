@@ -723,14 +723,17 @@ impl Scene for Battle<'_> {
 		// draw the player's status effects
 		let mut p1_status_effects = Vec::new();
 		let mut p1_status_duration = Vec::new();
-		if player2.get_mult() != 1.0 {p1_status_effects.push(&self.multi);p1_status_duration.push(0);}
-		if player1.get_defense() > 0 {p1_status_effects.push(&self.armor);p1_status_duration.push(0);}
-		if player1.get_health_regen() > 0 {p1_status_effects.push(&self.healing);p1_status_duration.push(player1.get_health_regen_duration());}
-		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion);p1_status_duration.push(player1.get_poison() as i32);};
-		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);p1_status_duration.push(player1.get_energy_regen_duration());}
-		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);p1_status_duration.push(player1.get_energy_regen_duration());}
+		let mut p1_status_amount = Vec::new();
+		if player2.get_mult() != 1.0 {p1_status_effects.push(&self.multi);p1_status_duration.push(0);p1_status_amount.push(player2.get_mult());}
+		if player1.get_defense() > 0 {p1_status_effects.push(&self.armor);p1_status_duration.push(0);p1_status_amount.push(player1.get_defense() as f32);}
+		if player1.get_health_regen() > 0 {p1_status_effects.push(&self.healing);p1_status_duration.push(player1.get_health_regen_duration());p1_status_amount.push(player1.get_health_regen() as f32);}
+		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion);p1_status_duration.push(player1.get_poison() as i32);p1_status_amount.push(player1.get_poison() as f32);};
+		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);p1_status_duration.push(player1.get_energy_regen_duration());p1_status_amount.push(player1.get_energy_regen() as f32);}
+		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);p1_status_duration.push(player1.get_energy_regen_duration());p1_status_amount.push(player1.get_energy_regen() as f32);}
 
 		for i in 0..p1_status_effects.len() {
+			fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
+				&p1_status_amount[i].to_string(), (790+285-(i*30) as i32, 440));
 			if p1_status_duration[i]>0{
 				fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
 					&p1_status_duration[i].to_string(), (790+285-(i*30) as i32, 460));
@@ -818,14 +821,17 @@ impl Scene for Battle<'_> {
 
 		let mut p2_status_effects = Vec::new();
 		let mut p2_status_duration = Vec::new();
-		if player1.get_mult() != 1.0 {p1_status_effects.push(&self.multi);p1_status_duration.push(0);}
-		if player2.get_defense() > 0 {p2_status_effects.push(&self.armor);p2_status_duration.push(0);}
-		if player2.get_health_regen() > 0 {p2_status_effects.push(&self.healing);p2_status_duration.push(player2.get_health_regen_duration());}
-		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion);p2_status_duration.push(player2.get_poison() as i32);};
-		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);p2_status_duration.push(player2.get_energy_regen_duration());}
-		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);p2_status_duration.push(player2.get_energy_regen_duration());}
+		let mut p2_status_amount = Vec::new();
+		if player1.get_mult() != 1.0 {p2_status_effects.push(&self.multi);p2_status_duration.push(0);p2_status_amount.push(player1.get_mult());}
+		if player2.get_defense() > 0 {p2_status_effects.push(&self.armor);p2_status_duration.push(0);p2_status_amount.push(player2.get_defense() as f32);}
+		if player2.get_health_regen() > 0 {p2_status_effects.push(&self.healing);p2_status_duration.push(player2.get_health_regen_duration());p2_status_amount.push(player2.get_health_regen() as f32);}
+		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion);p2_status_duration.push(player2.get_poison() as i32);p2_status_amount.push(player2.get_poison() as f32);};
+		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);p2_status_duration.push(player2.get_energy_regen_duration());p2_status_amount.push(player2.get_energy_regen() as f32);}
+		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);p2_status_duration.push(player2.get_energy_regen_duration());p2_status_amount.push(player2.get_energy_regen() as f32);}
 
 		for i in 0..p2_status_effects.len() {
+			fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
+				&p2_status_amount[i].to_string(), (200+285-(i*30) as i32, 270));
 			if p2_status_duration[i]>0{
 				fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
 					&p2_status_duration[i].to_string(), (200+285-(i*30) as i32, 250));
