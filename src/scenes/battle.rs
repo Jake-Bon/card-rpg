@@ -136,7 +136,7 @@ impl<'a> Battle<'a> {
 
 		let mut gametree = GameTree::new(_p2.borrow().clone(), _p1.borrow().clone());
 		gametree.populate();
-		gametree.print();
+		//gametree.print();
 		Ok(Battle {
 			wincan,
 			event_system,
