@@ -27,7 +27,7 @@ pub struct GameManager<'a> {
 	overworld: Box<dyn Scene + 'a>,
 	battle: Box<dyn Scene + 'a>,
 	menu: Box<dyn Scene + 'a>,
-	online: Box<dyn Scene>,
+	online: Box<dyn Scene + 'a>,
 	credits: Box<dyn Scene + 'a>,
 	game_state: GameState,
 	wincan: Rc<RefCell<WindowCanvas>>,
@@ -107,7 +107,7 @@ impl<'a> GameManager<'a> {
 		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
-		let online = Box::new(Online::init(Rc::clone(&wincan), Rc::clone(&event_system)));
+		let online = Box::new(Online::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager)));
 		let credits = Box::new(Credits::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 
 		Ok(GameManager {
