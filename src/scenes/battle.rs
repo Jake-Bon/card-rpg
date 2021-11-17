@@ -43,6 +43,7 @@ pub struct Battle<'a> {
 	mana_drain: Rc<Texture<'a>>,
 	multi: Rc<Texture<'a>>,
 	accepting_input: bool,
+	not_enough_mana: bool,
 
 	tmp_enemy_played_card: usize,
 
@@ -120,7 +121,7 @@ impl<'a> Battle<'a> {
 			y_pos: 50,
 			larger: false,
 		    };
-		    
+
 		let enemy_card = e_card_size{
 			ex_size: 400,
 			ey_size: 592,
@@ -158,6 +159,7 @@ impl<'a> Battle<'a> {
 			mana_drain,
 			multi,
 			accepting_input,
+			not_enough_mana: false,
 			battler_map,
 			active_player: 1,
 			turn: TurnPhase::NotInitialized,
@@ -322,7 +324,7 @@ impl<'a> Battle<'a> {
 
                 // self.enemy_delay_inst is updated in the PreTurnP2 phase. After 1 second, the code below runs
 	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
-					
+
 					//ai: build tree based on current game state
 					//get the two players to pass in
 					let player1 = self.battle_handler.borrow_mut().get_p1();
@@ -529,6 +531,7 @@ impl Scene for Battle<'_> {
 			        },
 			    GameEvent::MouseClick(x_pos,y_pos) => {
 			    	println!("{},{}", x_pos,y_pos);
+					self.not_enough_mana = false;
 			        if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
 					    self.turn = TurnPhase::PostTurnP1;
@@ -568,6 +571,7 @@ impl Scene for Battle<'_> {
 								}
 								// otherwise, don'
                     			else {
+									self.not_enough_mana = true;
                         			println!("Not enough energy!");
                     			}
 
@@ -587,6 +591,8 @@ impl Scene for Battle<'_> {
 									}else if(x_pos>1050&&x_pos<1250)&&(y_pos>350&&y_pos<646){
 										self.dup_screen(curr_card,curr_card_cost,5);
 									}
+								}else{
+									self.not_enough_mana = true;
 								}
 								if(x_pos>550&&x_pos<750&&y_pos>640&&y_pos<700){
 									let sz = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_hand_size();
@@ -608,7 +614,7 @@ impl Scene for Battle<'_> {
 						//do nothing
 						else{
 						}
-						
+
 					}
 					else if (self.enemy_card.get_elarger() == true){
 						if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
@@ -953,11 +959,16 @@ impl Scene for Battle<'_> {
 			}
 		}
 		}
-		
+
+		if self.not_enough_mana==true{
+			fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 40, Color::RGB(200, 200, 0),
+				"Not enough mana!", (500, 10));
+		}
+
 		//see the enemy's card
 		if(self.enemy_card.get_elarger() == true){
 			let curr_card = player2.get_discard_card().unwrap();
-			
+
 			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_card as usize).unwrap()),(400,592), (450,50))?;
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
@@ -1062,9 +1073,9 @@ impl <'a> DrawnCard {
 // will return -1 if progress < 0 or progress > 1
 // if start_pos == end_pos, returns start_pos
 pub fn lerp(start_pos: f32, end_pos: f32, progress: f32) -> f32 {
-    
+
     if progress > 1.0 || progress < 0.0{ return -1 as f32 }
-    
+
 
     //println!("lerp was given start_pos: {} | end_pos: {} | progress: {}, calculated: {}", start_pos, end_pos, progress, start_pos + progress * (end_pos - start_pos));
 
