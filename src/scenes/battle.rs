@@ -985,7 +985,7 @@ impl Scene for Battle<'_> {
 
 //card size and position
 //note: Don't need to delete the original card when enlarging it. Makes life easier
-struct CardSize{
+struct card_size{
 	card_pos: usize, //where it is in the player's hand
 	x_size: u32, //size of the card width-wise (will just multiply it by some number)
 	y_size: u32, //size of the card height-wise (will just multiply it by some number)
@@ -994,7 +994,7 @@ struct CardSize{
 	larger: bool,
 }
 
-impl CardSize{
+impl card_size{
 
 	fn get_cardpos(&mut self)->usize{
         	self.card_pos
