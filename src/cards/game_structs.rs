@@ -50,6 +50,16 @@ impl Card{
         &self.img_file.trim()
     }
 
+    pub fn get_actions(&self)->Vec<i32>{
+        self.action_list.clone()
+    }
+
+    pub fn set_values(&mut self,act: i32, val:i32){
+        for i in 0..self.action_list.len(){
+            self.value_list[i] = val;
+        }
+    }
+
     pub fn get_lists(&self)->Zip<std::slice::Iter<'_, i32>, std::slice::Iter<'_, i32>>{
         let a = &self.action_list;
         let v = &self.value_list;
@@ -137,12 +147,12 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         &self.name
     }
 
-    pub fn get_mult(&mut self)->f64{
+    pub fn get_mult(&mut self)->f32{
         let m = self.mult;
         if m<0{
-            (1 as f64)/(m.abs() as f64)
+            (1 as f32)/(m.abs() as f32)
         }else{
-            m as f64
+            m as f32
         }
     }
 
@@ -230,6 +240,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.hand.len()
     }
 
+    pub fn get_discard_size(&self)->usize{
+        self.discard.len()
+    }
+
     pub fn deck_del_card(&mut self){
         if self.deck.len()>0{
             self.deck.remove(0);
@@ -257,6 +271,15 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             None
         }
     }
+    
+    // gets the card from the top of the discard pile
+    pub fn get_discard_card(&self)->Option<u32>{
+        if self.discard.len()>0{
+            Some(self.discard[self.discard.len() - 1])
+        }else{
+            None
+        }
+    }
 
     // add cards to be drawn
     // self.draw_num is decremented in draw card
@@ -264,11 +287,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.draw_num = self.draw_num + change;
         println!("add_draw_num is now {}", self.draw_num);
     }
-    
+
     pub fn set_draw_num(&mut self, new_num: u32){
         self.draw_num = new_num;
     }
-    
+
     pub fn get_draw_num(&self)->u32 {
         self.draw_num
     }
@@ -294,6 +317,53 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     }
 
+    pub fn remove_sel_card(&mut self, id: u32){
+        for i in 0..self.deck.len(){
+            if self.deck[i]==id{
+                self.deck.remove(i);
+                return;
+            }
+        }
+        for i in 0..self.discard.len(){
+            if self.discard[i]==id{
+                self.discard.remove(i);
+                return;
+            }
+        }
+        for i in 0..self.hand.len(){
+            if self.hand[i]==id{
+                self.hand.remove(i);
+                return;
+            }
+        }
+    }
+
+    pub fn remove_all_sel_card(&mut self, id: u32){
+        let mut copy: Vec<u32> = Vec::new();
+        for i in 0..self.deck.len(){
+            if self.deck[i]!=id{
+                copy.push(self.deck[i]);
+            }
+        }
+        self.deck = copy;
+
+        let mut copy: Vec<u32> = Vec::new();
+        for i in 0..self.discard.len(){
+            if self.discard[i]!=id{
+                copy.push(self.discard[i]);
+            }
+        }
+        self.discard = copy;
+
+        let mut copy: Vec<u32> = Vec::new();
+        for i in 0..self.hand.len(){
+            if self.hand[i]!=id{
+                copy.push(self.hand[i]);
+            }
+        }
+        self.hand = copy;
+    }
+
     //EFFECTS
 
     pub fn add_poison(&mut self,amt: u32){
@@ -313,13 +383,28 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.energy_regen.push(val);
     }
 
+    pub fn get_energy_regen_duration(& self)->i32{
+        let mut rslt = 0 as i32;
+        if self.energy_regen.len()==0{
+            return rslt;
+        }
+        for i in 0..self.energy_regen.len()/2{ //First get amount of regen
+            rslt = if self.energy_regen[i*2]>rslt{
+                self.energy_regen[i*2]
+            }else{
+                rslt
+            };
+        }
+        rslt
+    }
+
     pub fn get_energy_regen(& self)->i32{
         let mut rslt = 0 as i32;
         if self.energy_regen.len()==0{
             return rslt;
         }
         for i in 0..self.energy_regen.len()/2{ //First get amount of regen
-            rslt = if self.energy_regen[i*2]>0{
+            rslt += if self.energy_regen[i*2]>0{
                 self.energy_regen[i*2+1]
             }else{
                 0
@@ -333,13 +418,28 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.health_regen.push(val);
     }
 
+    pub fn get_health_regen_duration(& self)->i32{
+        let mut rslt = 0 as i32;
+        if self.health_regen.len()==0{
+            return rslt;
+        }
+        for i in 0..self.health_regen.len()/2{ //First get amount of regen
+            rslt = if self.health_regen[i*2]>rslt{
+                self.health_regen[i*2]
+            }else{
+                rslt
+            };
+        }
+        rslt
+    }
+
     pub fn get_health_regen(& self)->i32{ //for display purposes
         let mut rslt = 0 as i32;
         if self.health_regen.len()==0{
             return rslt;
         }
         for i in 0..self.health_regen.len()/2{
-            rslt = if self.health_regen[i*2]>0{
+            rslt += if self.health_regen[i*2]>0{
                 self.health_regen[i*2+1]
             }else{
                 0
@@ -348,19 +448,24 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         rslt
     }
 
+    pub fn dup_card(&mut self, id:u32){
+        self.deck.push(id);
+    }
+
     pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
         if self.poison>0{
             self.curr_health = self.curr_health-self.poison as i32;
+            if self.curr_health < 0 { self.curr_health = 0; }
             self.poison = self.poison - 1;
         }
-        
+
         self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
-        
+
         // stop overflow via base regen
         if self.curr_energy>self.full_energy{
             self.curr_energy = self.full_energy;
         }
-        
+
         if self.energy_regen.len()>0{
             for i in 0..(self.energy_regen.len())/2{ //Go through every value/turn pair
                 self.curr_energy = self.curr_energy+self.energy_regen[i*2+1];

@@ -1,6 +1,13 @@
 ###How to build a battler (enemy,player)
 ###All battlers must have ALL VALUES SHOWN.
 ###[ID]::[Name]::[Base Health]::[Base Energy]::[List of Card IDs]
-0::Player::20::10::0,1,2,3,4,5,5,8,8,7,6,9,9,9,15,16,16,18,18,18,18,17,24,18,22,20
+0::Player::20::10::0,1,2,3,4,5,5,8,8,7,6,9,9,9,15,16,16,18,18,18,18,17,24,18,22,20,25
+###0::Player::20::10::0,2,4,6,8,10,25
+### Enemy decks are in the range of 1-5
 1::Basic Enemy::20::10::0,1,16,18,12
 2::Stall Enemy::20::10::21,21,21,21,21,20,20,4,4,4,6,6,6,7,18,18,18,18,19,19
+3::Healing Enemy::20::10::19,19,19,19,19,19,19,19,19,19,23,23,23,16,16,16,16,16,16,16
+4::Aggressive Enemy::20::10::24,24,24,3,3,3,3,3,3,3,16,16,16,16,2,21,21,21,21,21
+5::Defensive Enemy::20::10::9,9,9,9,0,0,0,0,17,17,17,24,24,24,18,18,18,11,11,11
+### Use this one to test the static enemy\/
+6::Time Bomb Enemy::20::10::7
