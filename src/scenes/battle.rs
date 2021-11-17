@@ -19,16 +19,6 @@ use crate::cards::game_structs::*;
 
 use crate::cards::battle_enums::*;
 
-//orig_posx = u32;
-//orig_posy = u32;
-//const orig_sizew: u32 = 120;
-//const orig_sizeh: u32 = 178;
-//const new_posx: u32;
-//const new_posy: u32;
-//const new_sizew: u32;
-//const new_sizeh: u32;
-
-
 pub struct Battle<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
@@ -69,6 +59,7 @@ pub struct Battle<'a> {
 
 	//enlarge
 	enlarged_card: card_size,
+	enemy_card: e_card_size,
 	playCard: Rc<Texture<'a>>,
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
@@ -127,6 +118,14 @@ impl<'a> Battle<'a> {
 			y_pos: 50,
 			larger: false,
 		    };
+		    
+		let enemy_card = e_card_size{
+			ex_size: 400,
+			ey_size: 592,
+			ex_pos: 450,
+			ey_pos: 50,
+			elarger: false,
+		    };
 
 		let playCard = texture_manager.borrow_mut().load("assets/play_card.png")?;
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
@@ -165,6 +164,7 @@ impl<'a> Battle<'a> {
 			enemy_delay_inst: Instant::now(),
 			battler_npc_deck_id: 1,
 			enlarged_card,
+			enemy_card,
 			playCard,
 			retCard,
 			backDrop,
@@ -521,7 +521,8 @@ impl Scene for Battle<'_> {
 				        }
 			        },
 			    GameEvent::MouseClick(x_pos,y_pos) => {
-			        if (self.enlarged_card.get_larger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
+			    	println!("{},{}", x_pos,y_pos);
+			        if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
 					    self.turn = TurnPhase::PostTurnP1;
 
@@ -559,7 +560,7 @@ impl Scene for Battle<'_> {
 
 								self.enlarged_card.set_larger(false);
 								}
-								// otherwise, don't
+								// otherwise, don'
                     			else {
                         			println!("Not enough energy!");
                     			}
@@ -592,6 +593,22 @@ impl Scene for Battle<'_> {
 						}
 					}
 				}
+				//see the enemy's last played card
+					else if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 550 && x_pos < 750) && (y_pos > 230 && y_pos < 526){
+						//if there are cards in the discard pile
+						if(self.battle_handler.borrow_mut().get_p2().borrow().get_discard_size() > 0){
+							self.enemy_card.set_elarger(true);
+						}
+						//do nothing
+						else{
+						}
+						
+					}
+					else if (self.enemy_card.get_elarger() == true){
+						if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
+								self.enemy_card.set_elarger(false);
+							}
+					}
 				else{
 				        // check if the player is clicking on any of the cards in their hand
 				        //let mut battle_stat = self.battle_handler.borrow_mut();
@@ -931,6 +948,15 @@ impl Scene for Battle<'_> {
 			}
 		}
 		}
+		
+		//see the enemy's card
+		if(self.enemy_card.get_elarger() == true){
+			let curr_card = player2.get_discard_card().unwrap();
+			
+			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_card as usize).unwrap()),(400,592), (450,50))?;
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
+		}
 
 		match self.outcome {
 		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (50, 330)),
@@ -980,6 +1006,28 @@ impl card_size{
 
 	fn set_larger(&mut self, h: bool){
 		self.larger = h;
+	}
+}
+
+
+//card size and position
+//note: Don't need to delete the original card when enlarging it. Makes life easier
+struct e_card_size{
+	ex_size: u32, //size of the card width-wise (will just multiply it by some number)
+	ey_size: u32, //size of the card height-wise (will just multiply it by some number)
+	ex_pos: u32, //when enlarged, x position =
+	ey_pos: u32, //when enlarged, y position =
+	elarger: bool,
+}
+
+impl e_card_size{
+
+	fn get_elarger(&mut self)->bool{
+		self.elarger
+	}
+
+	fn set_elarger(&mut self, h: bool){
+		self.elarger = h;
 	}
 }
 
