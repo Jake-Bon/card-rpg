@@ -8,8 +8,8 @@ fn main() -> Result<()>{
     
     loop {
     
-        //let (mut player_1_stream, mut player_2_stream) = accept_clients("127.0.0.1:7878").unwrap(); // localhost
-        let (mut player_1_stream, mut player_2_stream) = accept_clients("34.227.148.203:76567").unwrap();
+        let (mut player_1_stream, mut player_2_stream) = accept_clients("127.0.0.1:7878").unwrap(); // localhost
+        //let (mut player_1_stream, mut player_2_stream) = accept_clients("34.227.148.203:54345").unwrap();
         
         player_1_stream.set_nonblocking(true);
         player_2_stream.set_nonblocking(true);
@@ -40,8 +40,6 @@ fn main() -> Result<()>{
                     Ok(T) => {
                         if T > 0 {
                             println!("Received '{}' from player 1", String::from_utf8_lossy(&p1_buffer));
-                            println!("String::from_utf8_lossy(&p1_buffer) != 'Quit': {}", String::from_utf8_lossy(&p1_buffer) != "Quit");
-                            println!("'{}' VS '{}'", String::from_utf8_lossy(&p1_buffer), "Quit");
                             player_2_stream.write_all(&p1_buffer);
                             player_2_stream.flush()?;
                             // clear the buffer

@@ -5,8 +5,8 @@ use std::io;
 use std::io::prelude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::net::SocketAddr;
-use std::net::TcpStream;
+//use std::net::SocketAddr;
+use std::net::{TcpStream, Shutdown, SocketAddr};
 use std::fs::{read, write};
 use std::future::Future;
 use std::time::{Duration, Instant};
@@ -30,6 +30,7 @@ pub struct Online<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
+	return_button: Rc<Texture<'a>>,
 }
 
 impl Scene for Online<'_> {
@@ -40,7 +41,18 @@ impl Scene for Online<'_> {
                 GameEvent::MouseClick(x_pos,y_pos) => {
                     if self.connected {
                         
-                        let send_str = format!("MouseClick at x: {}, y: {}", x_pos, y_pos);
+                        let mut send_str = format!("MouseClick at x: {}, y: {}", x_pos, y_pos);
+                        
+                        if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
+                            //send_str = "Quit".to_string();
+                            self.tcp_connection.as_ref().unwrap().shutdown(Shutdown::Both);
+                            self.tcp_connection = None;
+                            self.event_system.borrow().change_scene(0).unwrap();
+                            return;
+                        }
+                        //else { 
+                        //    let send_str = format!("MouseClick at x: {}, y: {}", x_pos, y_pos);
+                        //}
                         
                         let mut tcp_con = self.tcp_connection.as_ref().unwrap();
                         tcp_con.write_all(send_str.as_bytes());
@@ -66,10 +78,16 @@ impl Scene for Online<'_> {
 			            let mut stream = T;
 			            match stream.read(&mut buffer) {
 			                Ok(T) => { 
-			                    if T != 0 { // use this to ignore duplicate data-> && String::from_utf8_lossy(&self.buffer) != String::from_utf8_lossy(&buffer) {
+			                    if T > 0 { // use this to ignore duplicate data-> && String::from_utf8_lossy(&self.buffer) != String::from_utf8_lossy(&buffer) {
 			                        self.buffer = buffer;
 			                        println!("Received data: '{}'", String::from_utf8_lossy(&self.buffer));
 			                        
+			                    }
+			                    // if T (the number of bytes read) is equal to 0, this means that the stream has reached the end of file marker, and the stream was closed. Need to reconnect
+			                    else {
+			                        println!("Connection lost or closed!");
+			                        self.connected = false;
+			                        self.tcp_connection = None;
 			                    }
 			                },
 			                Err(ref e) => { /*println!("No data to receive! Would have blocked!");*/ },
@@ -91,6 +109,8 @@ impl Scene for Online<'_> {
             
             crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 120, 150))?;
             
+            crate::video::gfx::draw_sprite(&mut wincan, &self.return_button, (10, 580));
+            
             let mut fontm = self.font_manager.borrow_mut();
             fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
 					"Client->Server->Client Demo", (550, 10));
@@ -102,8 +122,10 @@ impl Scene for Online<'_> {
 			    fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
 					    "Try clicking around once both clients are connected.", (10, 160));
 				fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
-					    "Then, see terminal for more!", (10, 220));
+					    "Then, see terminals for more!", (10, 220));
 		    }
+            
+            
             
             wincan.present();
 
@@ -118,7 +140,8 @@ impl <'a> Online<'a> {
 
 		let buffer = [0; 1024];
 		let raw_waker = RawWaker::new(&(), &VTABLE);
-		let waker = unsafe {Waker::from_raw(raw_waker)}; 
+		let waker = unsafe {Waker::from_raw(raw_waker)};
+		let return_button = texture_manager.borrow_mut().load("assets/return.png").unwrap();
 
 		Online {
 			waker,
@@ -130,13 +153,15 @@ impl <'a> Online<'a> {
 			wincan,
 			event_system,
 			font_manager,
+			return_button,
 		}
 	}
 }
 
 fn attempt_connection() -> Option<TcpStream> {
-    //let tcp_stream = TcpStream::connect_timeout(&SocketAddr::from(([127, 0, 0, 1], 7878)), Duration::from_secs(5)).unwrap();
-    match TcpStream::connect_timeout(&SocketAddr::from(([127, 0, 0, 1], 7878)), Duration::from_secs(5)) {
+
+    match TcpStream::connect_timeout(&SocketAddr::from(([127, 0, 0, 1], 7878)), Duration::from_secs(5)) { // localhost
+    //match TcpStream::connect_timeout(&socketAddr::from(([34, 227, 148, 203], 76567)), Duration::from_secs(5)) {
         Ok(T) => { T.set_nonblocking(true).expect("couldn't set stream T as nonblocking"); println!("there's a connection"); return Some(T); }, // setting the stream as nonblocking means calls to read() won't block, allowing us to check however often we want without multithreading
         Err(E) => { println!("Failed to connect! Error: {}", E); return None; },
     }
