@@ -1,13 +1,9 @@
 //extern crate sdl_rust;
 
 use sdl2::pixels::Color;
-use sdl2::image::LoadTexture;
-use sdl2::render::TextureQuery;
 use sdl2::render::Texture;
 use sdl2::rect::Rect;
 use sdl2::render::WindowCanvas;
-
-use crate::game_manager::TextureManager;
 
 pub const CAM_W: u32 = 1280;
 pub const CAM_H: u32 = 720;

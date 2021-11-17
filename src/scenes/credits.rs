@@ -1,8 +1,6 @@
 //Credits
-use std::time::Duration;
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::thread;
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};

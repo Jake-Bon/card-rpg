@@ -3,7 +3,6 @@ use std::fs;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::iter::Zip;
 
 pub fn populate_battler_map ()->HashMap<u32,Battler>{
     let mut battlers = HashMap::new();
@@ -32,7 +31,7 @@ pub fn play_card(stat: Rc<RefCell<BattleStatus>>,card:Card){
     let types_iter = card.get_lists();
     let mut is_attack = false;
     for (action,value) in types_iter{
-        if(*action==0){
+        if *action==0 {
             is_attack = true;
         }
         parse_card(*action,*value,Rc::clone(&stat));
