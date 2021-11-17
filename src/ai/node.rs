@@ -34,7 +34,7 @@ impl Node{
 //build the decision tree based off the current game state
 //called at the start of player 2's turn in src/battle.rs::step()
 pub fn build_tree(player1: Rc<RefCell<Battler>>, player2: Rc<RefCell<Battler>>, battle_handler: Rc<RefCell<BattleStatus>>){
-    println!("\nhello there i'm going to start building the tree now\n");
+    println!("\nai: hello there i'm going to start building the tree now\n");
     
     println!("ai: {}", player1.borrow_mut().to_string());
     println!("ai: {}", player2.borrow_mut().to_string());
@@ -51,7 +51,7 @@ pub fn build_tree(player1: Rc<RefCell<Battler>>, player2: Rc<RefCell<Battler>>, 
         let card_id = player1.borrow_mut().select_hand(i).unwrap();
         let card = battle_handler.borrow_mut().get_card(card_id);
         p1_hand.push(card);
-        println!("ai: p1 card {}: {}", i, p1_hand[i].to_string());
+        //println!("ai: p1 card {}: {}", i, p1_hand[i].to_string());
     }
     //get player 1's energy
     let p1_energy = player1.borrow_mut().get_curr_energy();
@@ -68,7 +68,7 @@ pub fn build_tree(player1: Rc<RefCell<Battler>>, player2: Rc<RefCell<Battler>>, 
         let card_id = player2.borrow_mut().select_hand(i).unwrap();
         let card = battle_handler.borrow_mut().get_card(card_id);
         p2_hand.push(card);
-        println!("ai: p2 card {}: {}", i, p2_hand[i].to_string());
+        //println!("ai: p2 card {}: {}", i, p2_hand[i].to_string());
     }
     //get player 2's energy
     let p2_energy = player1.borrow_mut().get_curr_energy();
@@ -88,7 +88,7 @@ pub fn build_tree(player1: Rc<RefCell<Battler>>, player2: Rc<RefCell<Battler>>, 
     //TODO: check if the player's hand is empty
     //TODO: playing multiple cards: card_to_play becomes a vector?
     let root = build_tree_rec(p1_hand, p2_hand, 2, 0);
-    print_tree(root);
+    //print_tree(root);
 }
 
 //recursively build the decision tree of every possible play the ai has
@@ -175,8 +175,8 @@ fn print_tree_rec(node: Node){
     }
 
     //TODO: fix this,  print_tree_rec can't move out of Vec<Node>
-    let next = node.get_children()[0];
+    //let next = node.get_children()[0];
     for i in 0..node.get_children().len(){
-        print_tree_rec(next);
+        //print_tree_rec(next);
     }
 }
