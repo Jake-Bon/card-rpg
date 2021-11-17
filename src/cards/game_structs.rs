@@ -271,6 +271,15 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             None
         }
     }
+    
+    // gets the card from the top of the discard pile
+    pub fn get_discard_card(&self)->Option<u32>{
+        if self.discard.len()>0{
+            Some(self.discard[self.discard.len() - 1])
+        }else{
+            None
+        }
+    }
 
     // add cards to be drawn
     // self.draw_num is decremented in draw card
