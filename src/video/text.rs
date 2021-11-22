@@ -3,13 +3,9 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use sdl2::pixels::Color;
-use sdl2::image::LoadTexture;
 use sdl2::video::WindowContext;
-use sdl2::render::{Texture, TextureCreator, TextureQuery, WindowCanvas};
+use sdl2::render::{Texture, TextureCreator, WindowCanvas};
 use sdl2::rect::Rect;
-
-
-use crate::game_manager::TextureManager;
 
 use sdl2::ttf::Sdl2TtfContext;
 

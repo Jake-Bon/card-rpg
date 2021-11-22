@@ -15,7 +15,6 @@ use crate::scenes::online::Online;
 use crate::scenes::overworld::Overworld;
 use crate::scenes::menu::Menu; // <-- implement with scene change
 use crate::scenes::credits::Credits;
-use crate::cards::battle_system;
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
 
@@ -28,7 +27,7 @@ pub struct GameManager<'a> {
 	overworld: Box<dyn Scene + 'a>,
 	battle: Box<dyn Scene + 'a>,
 	menu: Box<dyn Scene + 'a>,
-	online: Box<dyn Scene>,
+	online: Box<dyn Scene + 'a>,
 	credits: Box<dyn Scene + 'a>,
 	game_state: GameState,
 	wincan: Rc<RefCell<WindowCanvas>>,
@@ -55,6 +54,10 @@ impl<'a> GameManager<'a> {
 		for event in game_events {
 			match event {
 				Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
+				Some(GameEvent::SetBattlerNPCDeck(deck_id)) => { 
+				    //println!("sending the SetBattlerNPCDeck event to battle, deck_id was {}", deck_id as u32);
+				    self.battle.handle_input(GameEvent::SetBattlerNPCDeck(deck_id)); // only scene that should care about the battler deck id is battle.rs
+				},
 				Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
 				Some(e) => self.handle_input(e),
 				None => {},
@@ -104,7 +107,7 @@ impl<'a> GameManager<'a> {
 		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
-		let online = Box::new(Online::init(Rc::clone(&wincan), Rc::clone(&event_system)));
+		let online = Box::new(Online::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager)));
 		let credits = Box::new(Credits::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 
 		Ok(GameManager {

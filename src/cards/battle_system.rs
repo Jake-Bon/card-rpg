@@ -3,7 +3,6 @@ use std::fs;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::iter::Zip;
 
 pub fn populate_battler_map ()->HashMap<u32,Battler>{
     let mut battlers = HashMap::new();
@@ -32,7 +31,7 @@ pub fn play_card(stat: Rc<RefCell<BattleStatus>>,card:Card){
     let types_iter = card.get_lists();
     let mut is_attack = false;
     for (action,value) in types_iter{
-        if(*action==0){
+        if *action==0 {
             is_attack = true;
         }
         parse_card(*action,*value,Rc::clone(&stat));
@@ -65,6 +64,11 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         13 => shuffle_deck(stat.get_inactive_player()), // shuffle caster's opponent's deck
         14 => {let mult = stat.get_inactive_player().borrow_mut().get_mult();
             attack(val, mult, stat.get_active_player())},    // attack self (use this instead of healing for negative values to account for dmg multipliers)
+        15 => remove_card_variant(val as u32,stat.get_active_player()), //Remove  one val card from self
+        16 => remove_card_variant(val as u32,stat.get_inactive_player()), //Remove one val card from enemy
+        17 => remove_all_card_variant(val as u32,stat.get_active_player()), //Remove all val cards from self
+        18 => remove_all_card_variant(val as u32,stat.get_inactive_player()), //Remove all val cards from enemy
+        19 => dup_card(val as u32,stat.get_active_player()), //Dupe own card
         _ => unreachable_action(),
     }
 }
@@ -72,11 +76,11 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
 //TODO - According to turn apply attack, defend, and heal to correct player. Check if these work properly.
 //TODO - Get CARD from player deck and get card TYPE and VALUE
 
-pub fn attack (val: i32, mult:f64, target: Rc<RefCell<Battler>>){
+fn attack (val: i32, mult:f32, target: Rc<RefCell<Battler>>){ 
     let mut target = target.borrow_mut();
     let def = target.get_defense();
 
-    target.adjust_curr_health(def-((val as f64*mult) as i32));
+    target.adjust_curr_health(def-((val as f32*mult) as i32));
     target.set_defense(0);
 }
 
@@ -137,12 +141,28 @@ fn draw_cards(val: i32, target: Rc<RefCell<Battler>>){
 fn insert_into_deck(card_ID: u32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     target.add_card_to_deck(card_ID);
+    target.shuffle_deck();
 }
 
 // shuffles the deck of the given target player
 fn shuffle_deck(target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     target.shuffle_deck();
+}
+
+fn remove_card_variant(card_ID: u32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.remove_sel_card(card_ID);
+}
+
+fn remove_all_card_variant(card_ID: u32, target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.remove_all_sel_card(card_ID);
+}
+
+fn dup_card(card_ID: u32,target: Rc<RefCell<Battler>>){
+    let mut target = target.borrow_mut();
+    target.dup_card(card_ID);
 }
 
 fn unreachable_action(){

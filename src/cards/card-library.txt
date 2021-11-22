@@ -33,3 +33,5 @@
 22::Mermaid's Temptation::Give into the temptation of the mermaid's beauty. Enemy loses 3 mana for 3 turns.::4::7::-3::assets/cards/merms_temp.png
 23::Deadly Blade::Channel the power of the cursed blade to eliminate the opponent. Deal 8 damage and allow the next attack to do double the damage.::7::0,3::8,2::assets/cards/deadly_blade.png
 24::Melonball FIRE!::Prepare to be bonked by the juiciness of a melon. Deal 7 damage.::4::0::7::assets/cards/melon_ball.png
+###Card to dupe chosen on screen!
+25::Glitch::The world around you glitches. Duplicate a card in your hand.::5::19::-1::assets/cards/Wild_Glitch.png
