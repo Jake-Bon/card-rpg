@@ -73,9 +73,6 @@ pub struct Battle<'a> {
 	playCard: Rc<Texture<'a>>,
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
-
-	//AI
-	gametree: GameTree,
 }
 
 impl<'a> Battle<'a> {
@@ -134,9 +131,6 @@ impl<'a> Battle<'a> {
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
 
-		let mut gametree = GameTree::new(_p2.borrow().clone(), _p1.borrow().clone());
-		gametree.populate();
-		//gametree.print();
 		Ok(Battle {
 			wincan,
 			event_system,
@@ -171,7 +165,6 @@ impl<'a> Battle<'a> {
 			playCard,
 			retCard,
 			backDrop,
-			gametree,
 		})
 	}
 
@@ -323,6 +316,10 @@ impl<'a> Battle<'a> {
 	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 
 	                // Enemy AI should be called from here
+					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
+					gametree.populate(3);
+					gametree.print();
+
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
 					if (!card_rslt.is_none()){
@@ -358,7 +355,7 @@ impl<'a> Battle<'a> {
 
                     // delay the turn phase by 1 second
                     println!("waiting another second...");
-	                self.enemy_delay_inst = Instant::now();
+	                //self.enemy_delay_inst = Instant::now();
 
 	                // eventually, when the enemy learns how to play multiple cards per turn, this will have to wait until all cards are played
 	                self.turn = TurnPhase::PostTurnP2;

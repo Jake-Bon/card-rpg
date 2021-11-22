@@ -1,5 +1,8 @@
 use crate::ai::ai_structs;
 
+// Utility representing a losing game state is currently i32::MIN and winning game state
+// is i32::MAX
+
 /*
 // For reference: 
 // Minimax with alpha-beta pruning pseudocode pulled from https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning/
