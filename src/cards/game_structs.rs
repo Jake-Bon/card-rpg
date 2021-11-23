@@ -232,8 +232,12 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.deck.len()
     }
 
-    pub fn get_deck(&self)->Vec<u32>{//use for debug purposes only
+    pub fn get_deck(&self)->Vec<u32>{//use for ai purposes only
         self.deck.clone()
+    }
+
+    pub fn get_hand(&self)->Vec<u32> {// use for ai purposes only
+        self.hand.clone()
     }
 
     pub fn get_curr_hand_size(&self)->usize{
@@ -253,6 +257,12 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     pub fn hand_del_card(&mut self,index:usize){
         if self.hand.len()>0{
             self.hand.remove(index);
+        }
+    }
+
+    pub fn deck_del_card_specific(&mut self, index: usize) {
+        if self.hand.len() > 0 {
+            self.deck.remove(index);
         }
     }
 
@@ -527,6 +537,7 @@ pub fn populate_card_map()->HashMap<u32,Card>{
     cards
 }
 
+#[derive(Clone)]
 pub struct BattleStatus{
     p1: Rc<RefCell<Battler>>,
     p2: Rc<RefCell<Battler>>,

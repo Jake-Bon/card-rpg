@@ -15,7 +15,6 @@ mod video;
 mod events;
 mod scenes;
 mod cards;
-//ai: import
 mod ai;
 
 fn main() -> Result<(), String>{

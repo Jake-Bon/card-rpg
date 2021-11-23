@@ -14,8 +14,8 @@ use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
 
-//ai: import
-use crate::ai::node::build_tree;
+use crate::ai::ai_structs::*;
+use crate::ai::minimax::*;
 
 use crate::cards::game_structs::*;
 
@@ -66,7 +66,6 @@ pub struct Battle<'a> {
 	playCard: Rc<Texture<'a>>,
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
-
 }
 
 impl<'a> Battle<'a> {
@@ -325,13 +324,10 @@ impl<'a> Battle<'a> {
                 // self.enemy_delay_inst is updated in the PreTurnP2 phase. After 1 second, the code below runs
 	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 
-					//ai: build tree based on current game state
-					//get the two players to pass in
-					let player1 = self.battle_handler.borrow_mut().get_p1();
-					let player2 = self.battle_handler.borrow_mut().get_p2();
-					build_tree(player1, player2, Rc::clone(&self.battle_handler));
-
-					// Enemy AI should be called from here
+	                // Enemy AI should be called from here
+					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
+					gametree.populate(3);
+					gametree.print();
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
 					if !card_rslt.is_none(){
@@ -367,7 +363,7 @@ impl<'a> Battle<'a> {
 
                     // delay the turn phase by 1 second
                     println!("waiting another second...");
-	                self.enemy_delay_inst = Instant::now();
+	                //self.enemy_delay_inst = Instant::now();
 
 	                // eventually, when the enemy learns how to play multiple cards per turn, this will have to wait until all cards are played
 	                self.turn = TurnPhase::PostTurnP2;
