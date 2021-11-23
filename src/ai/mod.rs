@@ -1,2 +1,2 @@
-//ai: import
-pub mod node;
+pub mod minimax;
+pub mod ai_structs;
