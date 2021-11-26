@@ -7,6 +7,11 @@
     			"dialog2": "second line of dialog 1",
                 "..."
     	},
+      "sprites": {
+    			"sprite1": "assets/..",
+    			"sprite2": "assets/..",
+                "..."
+    	},
     },
     {
         "npcName": "temp name 2",
@@ -14,6 +19,11 @@
     	"dialog": {
     			"dialog1": "first of dialog 2",
     			"dialog2": "second line of dialog 2",
+                "..."
+    	},
+      "sprites": {
+    			"sprite1": "assets/..",
+    			"sprite2": "assets/..",
                 "..."
     	},
     },
@@ -25,6 +35,11 @@
     			"dialog2": "second line of dialog 3",
                 "..."
     	},
+      "sprites": {
+    			"sprite1": "assets/..",
+    			"sprite2": "assets/..",
+                "..."
+    	},
     },
     {
         "npcName": "temp name 4",
@@ -32,6 +47,11 @@
     	"dialog": {
     			"first of dialog 4",
     			"second line of dialog 4",
+                "..."
+    	},
+      "sprites": {
+    			"sprite1": "assets/..",
+    			"sprite2": "assets/..",
                 "..."
     	},
     },
