@@ -76,7 +76,7 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
 //TODO - According to turn apply attack, defend, and heal to correct player. Check if these work properly.
 //TODO - Get CARD from player deck and get card TYPE and VALUE
 
-fn attack (val: i32, mult:f32, target: Rc<RefCell<Battler>>){ 
+fn attack (val: i32, mult:f32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     let def = target.get_defense();
 

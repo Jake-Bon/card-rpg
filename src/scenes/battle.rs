@@ -28,12 +28,11 @@ pub struct Battle<'a> {
 	card_textures: Vec<Rc<Texture<'a>>>,
 	play1_i: Rc<Texture<'a>>,
 	play2_i: Rc<Texture<'a>>,
-	health: Rc<Texture<'a>>,
 	behind_health:Rc<Texture<'a>>,
-	mana: Rc<Texture<'a>>,
 	behind_mana:Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
+	discard: Rc<Texture<'a>>,
 	e_pip_unfilled: Rc<Texture<'a>>,
 	e_pip_filled: Rc<Texture<'a>>,
 	armor: Rc<Texture<'a>>,
@@ -72,12 +71,11 @@ impl<'a> Battle<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
 		let play1_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
 		let play2_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummyenemy.png")?;
-		let health = texture_manager.borrow_mut().load("assets/temp_health.png")?;
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
-		let mana = texture_manager.borrow_mut().load("assets/temp_energy.png")?;
 		let behind_mana = texture_manager.borrow_mut().load("assets/behind_health.png")?;   // can be removed?
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
+		let discard = texture_manager.borrow_mut().load("assets/discard.png")?;
 		let e_pip_unfilled = texture_manager.borrow_mut().load("assets/energyPipEmpty.png")?;
 		let e_pip_filled = texture_manager.borrow_mut().load("assets/energyPipFilled.png")?;
 		let armor = texture_manager.borrow_mut().load("assets/effects/shield.png")?;
@@ -140,12 +138,11 @@ impl<'a> Battle<'a> {
 			card_textures,
 			play1_i,
 			play2_i,
-			health,
 			behind_health,
-			mana,
 			behind_mana,
 			deck,
 			drop,
+			discard,
 			tmp_enemy_played_card,
 			dummy_drawn_card,
 			frames_elapsed: 0,
@@ -572,6 +569,27 @@ impl Scene for Battle<'_> {
                     			}
 
 							}
+
+							//Discard implementation
+							if((x_pos > 900 && x_pos < 1100) && (y_pos > 325 && y_pos < 385) && self.turn == TurnPhase::TurnP1){
+								//println!("current energy is {}", curr_energy);
+								// only play if player has enough energy
+								if (curr_energy >= 1){
+
+					    		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+								// add card to discard pile
+					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-1);
+								self.enlarged_card.set_larger(false);
+								}
+								// otherwise, don'
+                    			else {
+									self.not_enough_mana = true;
+                        			println!("Not enough energy!");
+                    			}
+
+							}
 							}else if curr_card.get_actions().contains(&19){
 								if curr_energy >= curr_card_cost{
 									if(x_pos>50&&x_pos<250)&&(y_pos>50&&y_pos<346){
@@ -951,6 +969,7 @@ impl Scene for Battle<'_> {
 				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.discard, (200,60),(900,325))?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
 			}
 		}

@@ -1,7 +1,7 @@
 ###How to build a battler (enemy,player)
 ###All battlers must have ALL VALUES SHOWN.
 ###[ID]::[Name]::[Base Health]::[Base Energy]::[List of Card IDs]
-0::Player::20::10::0,1,2,3,4,5,5,8,8,7,6,9,9,9,15,16,16,18,18,18,18,17,24,18,22,20,25
+0::Player::20::10::0,1,2,3,4,5,5,8,8,7,6,9,9,9,15,16,16,18,18,18,18,17,24,18,22,20,25,26
 ###0::Player::20::10::0,2,4,6,8,10,25
 ### Enemy decks are in the range of 1-5
 1::Basic Enemy::20::10::0,1,16,18,12
