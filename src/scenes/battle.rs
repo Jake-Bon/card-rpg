@@ -7,6 +7,8 @@ use std::time::Instant;
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
 use sdl2::keyboard::Keycode;
+use sdl2::mixer::Music;
+use sdl2::mixer::{InitFlag, AUDIO_S16LSB, DEFAULT_CHANNELS};
 
 use crate::scenes::Scene;
 use crate::scenes::GameEvent;
@@ -65,6 +67,11 @@ pub struct Battle<'a> {
 	playCard: Rc<Texture<'a>>,
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
+
+	//AUDIO
+	music: Music<'a>,
+	is_paused: bool,
+	is_stopped: bool,
 }
 
 impl<'a> Battle<'a> {
@@ -131,6 +138,24 @@ impl<'a> Battle<'a> {
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
 
+		/*let frequency = 44100;
+    	let format = AUDIO_S16LSB;
+    	let channels = DEFAULT_CHANNELS;
+    	let chunk_size = 1024;
+    	sdl2::mixer::open_audio(frequency, format, channels, chunk_size)?;
+    	let _mixer_context = sdl2::mixer::init(InitFlag::OGG)?;*/
+
+		let frequency = 44100;
+    	let format = AUDIO_S16LSB;
+    	let channels = DEFAULT_CHANNELS;
+    	let chunk_size = 1024;
+    	sdl2::mixer::open_audio(frequency, format, channels, chunk_size)?;
+    	let _mixer_context = sdl2::mixer::init(InitFlag::OGG)?;
+
+		let music = Music::from_file("assets/music/BATTLE.ogg")?;
+		let is_paused = false;
+		let is_stopped = true;
+
 		Ok(Battle {
 			wincan,
 			event_system,
@@ -168,6 +193,9 @@ impl<'a> Battle<'a> {
 			playCard,
 			retCard,
 			backDrop,
+			music,
+			is_paused,
+			is_stopped,
 		})
 	}
 
@@ -180,6 +208,14 @@ impl<'a> Battle<'a> {
 	// Because the program is single threaded, we can't use extra loops to wait on conditions
 	//      Instead, we should use the main game loop and check specific conditions at specific times. I've broken a turn/round into phases to do this
 	pub fn step(&'_ mut self) -> Result<(), String> {
+		if(self.is_stopped){
+			self.is_stopped = false;
+			self.music.play(-1);
+		}
+		if(self.is_paused){
+			self.is_paused = false;
+			sdl2::mixer::Music::resume();
+		}
 
         //let mut battle_stat = self.battle_handler.borrow_mut();
 
@@ -449,6 +485,8 @@ impl<'a> Battle<'a> {
 	        if self.enemy_delay_inst.elapsed().as_secs() >= 5 {
 	            println!("Moving away from the battle scene");
                 self.turn = TurnPhase::NotInitialized;
+				self.is_stopped = true;
+				sdl2::mixer::Music::halt();
                 self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
 	        }
