@@ -65,6 +65,7 @@ impl Node {
         if ai_turn {
             // Pick a card from the ai's hand to play, attempting to play one card from the
             // hand at a time and perseving the others.
+            
             for i in 0..ai_cards.len() {
                 // The BattleStatus that we will modify to pass on to the next node
                 let mut next_status = reset_ref(self.status.clone());
@@ -167,6 +168,7 @@ impl Node {
         if self.utility.is_some() {
             util = self.utility.unwrap().to_string();
         }
+        println!("  about to make do the third forloop range in print()");
         for i in 0..tab {
             print!("-");
         }

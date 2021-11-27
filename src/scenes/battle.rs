@@ -47,6 +47,7 @@ pub struct Battle<'a> {
 	tmp_enemy_played_card: usize,
 
 	dummy_drawn_card: DrawnCard,
+	dummy_drawn_card_enemy: DrawnCard,
 	frames_elapsed: u32,
 
 
@@ -87,6 +88,7 @@ impl<'a> Battle<'a> {
 		let accepting_input = true;
 		let tmp_enemy_played_card = 100;
 		let dummy_drawn_card = DrawnCard::new(0.0, 800.0).unwrap();
+		let dummy_drawn_card_enemy = DrawnCard::new(0.0, 800.0).unwrap();
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
@@ -145,6 +147,7 @@ impl<'a> Battle<'a> {
 			discard,
 			tmp_enemy_played_card,
 			dummy_drawn_card,
+			dummy_drawn_card_enemy,
 			frames_elapsed: 0,
 			e_pip_unfilled,
 			e_pip_filled,
@@ -322,9 +325,11 @@ impl<'a> Battle<'a> {
 	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 
 	                // Enemy AI should be called from here
+	                println!("about to construct the game tree for the turn");
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
 					gametree.populate(3);
 					gametree.print();
+					println!("finished making the game tree");
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
 					if !card_rslt.is_none(){
@@ -340,12 +345,12 @@ impl<'a> Battle<'a> {
 
 							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
-							// if the player has enough energy to cover the cost of playing the card:
-							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
 							// add card to discard pile after playing
 							self.tmp_enemy_played_card = card_ID as usize;
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+							// if the player has enough energy to cover the cost of playing the card:
+							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
 
 						}
 						// otherwise, don't
@@ -358,9 +363,9 @@ impl<'a> Battle<'a> {
 						//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 					}
 
-                    // delay the turn phase by 1 second
+                    // delay the turn phase by 1 second NEED THIS FOR CARD DRAW ANIM
                     println!("waiting another second...");
-	                //self.enemy_delay_inst = Instant::now();
+	                self.enemy_delay_inst = Instant::now();
 
 	                // eventually, when the enemy learns how to play multiple cards per turn, this will have to wait until all cards are played
 	                self.turn = TurnPhase::PostTurnP2;
@@ -803,10 +808,10 @@ impl Scene for Battle<'_> {
                 //println!("  Trying to draw!");
 
                 // if the dummy card isn't in the
-                if self.dummy_drawn_card.x_pos != target_pos {
+                if self.dummy_drawn_card_enemy.x_pos != target_pos {
 
                     // increment the position over time
-                    self.dummy_drawn_card.x_pos = lerp(self.dummy_drawn_card.x_pos, target_pos, self.frames_elapsed as f32 / 50.0);
+                    self.dummy_drawn_card_enemy.x_pos = lerp(self.dummy_drawn_card_enemy.x_pos, target_pos, self.frames_elapsed as f32 / 50.0);
                     // increase the frames elapsed in the animation
                     self.frames_elapsed = self.frames_elapsed + 1;
 
@@ -816,16 +821,16 @@ impl Scene for Battle<'_> {
 
                     // although if you copy this line and the one from the P1 function, it does show the card the enemy is drawing, might be a neat card effect
                     //let top_card = player2.get_deck_card().unwrap();
-                    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck, (100,148), ((self.dummy_drawn_card.x_pos) as i32, 20))?;
+                    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck, (100,148), ((self.dummy_drawn_card_enemy.x_pos) as i32, 20))?;
 
                     // check if card has reached the destination
-                    if self.dummy_drawn_card.x_pos == target_pos {
+                    if self.dummy_drawn_card_enemy.x_pos == target_pos {
 
                         // actually draw the card
                         player2.draw_card(false);
 
                         self.frames_elapsed = 0;
-                        self.dummy_drawn_card.x_pos = 1140.0;
+                        self.dummy_drawn_card_enemy.x_pos = 40.0;
 
                     }
                 }

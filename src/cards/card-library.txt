@@ -36,3 +36,4 @@
 ###Card to dupe chosen on screen!
 25::Glitch::The world around you glitches. Duplicate a card in your hand.::5::19::-1::assets/cards/Wild_Glitch.png
 26::Cat::Task your cat with removing those pesky rats from your cards::5::17::21::assets/cards/Remove_Cat.png
+27::Barter::Discard a random card. Restore 8 health.::3::20,2::1,8::assets/cards/barter_Card.png
