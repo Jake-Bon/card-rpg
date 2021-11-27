@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::BufReader;
 //use std::num::*;
 use std::io::prelude::*;
-use std::time::Instant;
+use std::time::{Instant,Duration};
 
 use rand::{thread_rng,Rng};
 
@@ -14,6 +14,8 @@ use rand::{thread_rng,Rng};
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
 use sdl2::keyboard::Keycode;
+use sdl2::mixer::Music;
+use sdl2::mixer::{InitFlag, AUDIO_S16LSB, DEFAULT_CHANNELS};
 
 
 use crate::scenes::Scene;
@@ -76,6 +78,11 @@ pub struct Overworld<'a> {
 	anim_water: u32,
 	frames: u32,
 	map_rep: Vec<u8>,
+	music: Music<'a>,
+	elapsed: Instant,
+	last_time: f64,
+	is_stopped: bool,
+	is_paused: bool,
 }
 
 impl<'a> Overworld<'a> {
@@ -160,6 +167,20 @@ impl<'a> Overworld<'a> {
 		let frames = 0;
 		let anim_water = 0;
 
+		let frequency = 44100;
+    	let format = AUDIO_S16LSB;
+    	let channels = DEFAULT_CHANNELS;
+    	let chunk_size = 1024;
+    	sdl2::mixer::open_audio(frequency, format, channels, chunk_size)?;
+    	let _mixer_context = sdl2::mixer::init(InitFlag::OGG)?;
+
+		let music = Music::from_file("assets/music/MAP.ogg")?;
+		let is_paused = false;
+		let is_stopped = true;
+		let elapsed = Instant::now();
+		let last_time=0.0;
+
+
 		Ok(Overworld{
 			wincan,
 			event_system,
@@ -169,6 +190,11 @@ impl<'a> Overworld<'a> {
 			frames,
 			anim_water,
 			map_rep,
+			music,
+			is_paused,
+			is_stopped,
+			elapsed,
+			last_time
 		})
 	}
 
@@ -199,6 +225,18 @@ impl Scene for Overworld<'_> {
 
 
 	fn render(&mut self) -> Result<(), String> {
+
+		if(self.is_stopped){
+			self.is_stopped = false;
+			self.music.play(-1);
+			self.elapsed = Instant::now() - Duration::from_secs_f64(self.last_time);
+			sdl2::mixer::Music::set_pos(self.last_time);
+		}
+		if(self.is_paused){
+			self.is_paused = false;
+			sdl2::mixer::Music::resume();
+		}
+
 		let mut wincan = self.wincan.borrow_mut();
 		self.player.update_movement();
 
@@ -231,11 +269,14 @@ impl Scene for Overworld<'_> {
 				self.player.keyPress[1]=false;
 				self.player.keyPress[2]=false;
 				self.player.keyPress[3]=false;
+				self.is_stopped = true;
+				sdl2::mixer::Music::halt();
 
 				// set the enemy's deck here. could randomize/set it here or set it during enemy creation
 				// the number passed into the function corresponds to the deck with the same number in battler-library.txt
 				println!("ID: {}",id);
 				self.event_system.borrow().set_battler_npc_deck(id).unwrap();
+				self.last_time = self.elapsed.elapsed().as_secs_f64()%203.0;//song length 3:23
 				//println!("about to change scene now...");
 				self.event_system.borrow().change_scene(2).unwrap();
 			}
