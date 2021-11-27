@@ -168,7 +168,7 @@ impl Node {
         if self.utility.is_some() {
             util = self.utility.unwrap().to_string();
         }
-        println!("  about to make do the third forloop range in print()");
+
         for i in 0..tab {
             print!("-");
         }
