@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use rand::{thread_rng,Rng};
+
 pub fn populate_battler_map ()->HashMap<u32,Battler>{
     let mut battlers = HashMap::new();
     let file_data = fs::read_to_string("src/cards/battler-library.txt").expect("An error occurred whilst attempting to open the library.");
@@ -69,6 +71,8 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         17 => remove_all_card_variant(val as u32,stat.get_active_player()), //Remove all val cards from self
         18 => remove_all_card_variant(val as u32,stat.get_inactive_player()), //Remove all val cards from enemy
         19 => dup_card(val as u32,stat.get_active_player()), //Dupe own card
+        20 => discard_cards_from_hand(stat.get_active_player(), val), // discard val cards from active player's hand
+        21 => discard_cards_from_hand(stat.get_inactive_player(), val), // discard val cards from inactive player's hand
         _ => unreachable_action(),
     }
 }
@@ -163,6 +167,20 @@ fn remove_all_card_variant(card_ID: u32, target: Rc<RefCell<Battler>>){
 fn dup_card(card_ID: u32,target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     target.dup_card(card_ID);
+}
+
+fn discard_cards_from_hand(target: Rc<RefCell<Battler>>, discard_num: i32){
+    let mut target = target.borrow_mut();
+    let mut rng = thread_rng();
+    
+    for i in 0 as i32..discard_num{
+        if target.get_curr_hand_size() > 0 {
+            let discard_index = rng.gen_range(0..target.get_curr_hand_size());
+            target.hand_discard_card(discard_index);
+        }
+    }
+    
+    
 }
 
 fn unreachable_action(){
