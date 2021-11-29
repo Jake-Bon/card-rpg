@@ -213,6 +213,7 @@ impl<'a> Battle<'a> {
 	pub fn step(&'_ mut self) -> Result<(), String> {
 		if(self.is_stopped){
 			self.is_stopped = false;
+			self.music = Music::from_file("assets/music/BATTLE.ogg")?;
 			self.music.play(-1);
 		}
 		if(self.is_paused){
