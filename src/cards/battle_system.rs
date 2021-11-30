@@ -84,8 +84,14 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
 fn attack (val: i32, mult:f32, target: Rc<RefCell<Battler>>){
     let mut target = target.borrow_mut();
     let def = target.get_defense();
+    
+    let total_damage = def - (val as f32*mult) as i32;
+    
+    if total_damage < 0 {
+        target.adjust_curr_health(total_damage);
+    }
 
-    target.adjust_curr_health(def-((val as f32*mult) as i32));
+    //target.adjust_curr_health(def-((val as f32*mult) as i32));
     target.set_defense(0);
 }
 

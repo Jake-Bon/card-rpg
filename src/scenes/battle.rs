@@ -505,7 +505,7 @@ impl<'a> Battle<'a> {
 				self.player_rollover.borrow_mut().set_volley_bonus(0);
 				self.player_rollover.borrow_mut().clear_poison();
 				self.player_rollover.borrow_mut().set_defense(0);
-				self.player_rollover.borrow_mut().set_mult(1.0);
+				self.player_rollover.borrow_mut().set_mult(1);
 				self.player_rollover.borrow_mut().clear_health_regen();
 				self.player_rollover.borrow_mut().clear_energy_regen();
 				
