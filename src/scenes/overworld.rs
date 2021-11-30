@@ -2,6 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::BufReader;
+use std::path::Path;
 //use std::num::*;
 use std::io::prelude::*;
 use std::time::{Instant,Duration};
@@ -121,9 +122,12 @@ impl<'a> Overworld<'a> {
 
 
 		//-----------------------------------------------------------------------------------
-		let file = File::open("npc_loader.json").expect("Some error message");;
-    	let reader = BufReader::new(file);
-		let tempnpc: Vec<npcData> = serde_json::from_reader(reader);
+		let path = Path::new("src/scenes/npc_loader.json");
+
+		let mut s = String::new();
+		let file = File::open(path).unwrap().read_to_string(&mut s).unwrap();
+    	//let reader = BufReader::new(file);
+		let tempnpc: Vec<npcData> = serde_json::from_str(&s).unwrap();
 
 
 		let mut tempsize: Vec<usize> = Vec::new();
@@ -630,6 +634,7 @@ impl<'a> Enemy<'a> {
 
 
 //###########################
+#[derive(Debug, Deserialize)]
 pub struct npcData
 {
 	npcName: String,
@@ -639,6 +644,7 @@ pub struct npcData
 	sprites: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
 pub struct jsonNPC
 {
     inlist: Vec<usize>,
