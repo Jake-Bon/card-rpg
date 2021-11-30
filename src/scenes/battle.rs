@@ -78,6 +78,9 @@ pub struct Battle<'a> {
 	music: Music<'a>,
 	is_paused: bool,
 	is_stopped: bool,
+
+	//CHEAT
+	keyPress: [bool; 3],
 }
 
 impl<'a> Battle<'a> {
@@ -213,6 +216,7 @@ impl<'a> Battle<'a> {
 			music,
 			is_paused,
 			is_stopped,
+			keyPress: [false;3]
 		})
 	}
 
@@ -297,6 +301,10 @@ impl<'a> Battle<'a> {
 	    }
 
         if self.outcome == BattleOutcome::Undetermined {
+			if self.keyPress[0]&&self.keyPress[1]&&self.keyPress[2]{
+				self.battle_handler.borrow_mut().get_inactive_player().borrow_mut().set_curr_health(0);
+				self.turn = TurnPhase::PreTurnP2;
+			}
 
 	        if self.active_player == 1 {
 
@@ -605,10 +613,18 @@ impl Scene for Battle<'_> {
 			        self.battler_npc_deck_id = deck_id;
 			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
 			    },
-			    GameEvent::KeyPress(k) => {
-				    //println!("{}", k);
-
-			        },
+				GameEvent::KeyPress(k) => {
+					//println!("p:{}", k);
+					if k.eq(&Keycode::X) {self.keyPress[0]=true}
+					if k.eq(&Keycode::O) {self.keyPress[1]=true}
+					if k.eq(&Keycode::R) {self.keyPress[2]=true}
+				},
+				GameEvent::KeyRelease(k) => {
+					//println!("r:{}", k);
+					if k.eq(&Keycode::X) {self.keyPress[0]=false}
+					if k.eq(&Keycode::O) {self.keyPress[1]=false}
+					if k.eq(&Keycode::R) {self.keyPress[2]=false}
+				},
 			    GameEvent::MouseClick(x_pos,y_pos) => {
 			    	println!("{},{}", x_pos,y_pos);
 					self.not_enough_mana = false;
