@@ -74,7 +74,7 @@ impl Scene for Menu<'_> {
 
 				if (x_pos > 640 && x_pos < 890) && (y_pos > 550 && y_pos < 650) {
 					println!("OPTIONS");
-					//self.event_system.borrow().change_scene(4).unwrap();
+					self.event_system.borrow().change_scene(5).unwrap();
 				}
 
 				if (x_pos > 890 && x_pos < 1140) && (y_pos > 550 && y_pos < 650) {
@@ -109,7 +109,8 @@ impl Scene for Menu<'_> {
 		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (890, 550))?;
 
 		crate::video::gfx::draw_sprite(&mut wincan, &self.logo, (340, 100))?;
-		
+
+
 
 		wincan.present();
 
