@@ -2,7 +2,12 @@
     {
         "npcName": "temp name1",
     	"deckID": 1,
-    	"dialog": {
+    	"predialog": {
+    			"dialog1": "first of dialog 1",
+    			"dialog2": "second line of dialog 1",
+                "..."
+    	},
+        "postdialog": {
     			"dialog1": "first of dialog 1",
     			"dialog2": "second line of dialog 1",
                 "..."
@@ -16,7 +21,12 @@
     {
         "npcName": "temp name 2",
     	"deckID": 2,
-    	"dialog": {
+    	"predialog": {
+    			"dialog1": "first of dialog 2",
+    			"dialog2": "second line of dialog 2",
+                "..."
+    	},
+        "postdialog": {
     			"dialog1": "first of dialog 2",
     			"dialog2": "second line of dialog 2",
                 "..."
@@ -30,7 +40,12 @@
     {
         "npcName": "temp name 3",
     	"deckID": 3,
-    	"dialog": {
+    	"predialog": {
+    			"dialog1": "first of dialog 3",
+    			"dialog2": "second line of dialog 3",
+                "..."
+    	},
+        "postdialog": {
     			"dialog1": "first of dialog 3",
     			"dialog2": "second line of dialog 3",
                 "..."
@@ -44,7 +59,12 @@
     {
         "npcName": "temp name 4",
     	"deckID": 4,
-    	"dialog": {
+    	"predialog": {
+    			"first of dialog 4",
+    			"second line of dialog 4",
+                "..."
+    	},
+        "postdialog": {
     			"first of dialog 4",
     			"second line of dialog 4",
                 "..."

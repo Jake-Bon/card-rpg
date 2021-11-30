@@ -6,6 +6,7 @@ use std::io::BufReader;
 use std::io::prelude::*;
 use std::time::{Instant,Duration};
 
+use serde::Deserialize;
 use rand::{thread_rng,Rng};
 
 //use image::io::Reader as ImageReader;
@@ -25,6 +26,7 @@ use crate::game_manager::TextureManager;
 use crate::video::gfx::CAM_W;
 use crate::video::gfx::CAM_H;
 use crate::video::gfx::TILE_SIZE;
+
 
 const FullW: u32 = 2400;
 const FullH: u32 = 1800;
@@ -74,6 +76,7 @@ pub struct Overworld<'a> {
 	event_system: Rc<RefCell<EventSystem>>,
 	tile_set: Rc<Texture<'a>>,
 	player: Player<'a>,
+	jsonEnemyLs: jsonNPC,
 	enemy: Vec<Enemy<'a>>,
 	anim_water: u32,
 	frames: u32,
@@ -114,6 +117,35 @@ impl<'a> Overworld<'a> {
 		let mut i=0;
 		let mut enemy: Vec<Enemy> =  Vec::new();
 		let mut rng = thread_rng();
+
+
+
+		//-----------------------------------------------------------------------------------
+		let file = File::open("npc_loader.json").expect("Some error message");;
+    	let reader = BufReader::new(file);
+		let mut tempnpc: npcData = serde_json::from_reader(reader).unwrap();
+
+
+		let mut tempsize: Vec<usize> = Vec::new();
+		let mut i = 0;
+		loop {
+			if (i == tempnpc.Data.len() as i32)
+			{
+				break;
+			}
+			else
+			{
+				tempsize.push(i as usize);
+			}
+			i+=1;
+		}
+
+		let jsonEnemyLs = jsonNPC {
+			npcs: tempnpc,
+			inlist: tempsize,
+		};
+		//-----------------------------------------------------------------------------
+
 		while (i as f32) < enemyNum
 		{
 
@@ -186,6 +218,7 @@ impl<'a> Overworld<'a> {
 			event_system,
 			tile_set,
 			player,
+			jsonEnemyLs,
 			enemy,
 			frames,
 			anim_water,
@@ -593,5 +626,28 @@ impl<'a> Enemy<'a> {
 	}
 }
 
+
+
+
 //###########################
+pub struct npcData
+{
+	Data: Vec<moreIndirectionCauseFuckYou>
+}
+
+pub struct moreIndirectionCauseFuckYou
+{
+	npcName: String,
+	deckID: i32,
+	predialog: Vec<String>,
+	postdialog: Vec<String>,
+	sprites: Vec<String>,
+}
+
+pub struct jsonNPC
+{
+    inlist: Vec<usize>,
+    npcs: Vec<npcData>,
+}
+
 //###########################

@@ -35,7 +35,7 @@ impl EventSystem {
 				_ => game_events.push(None),
 			}
 		}
-		
+
 		return game_events;
 	}
 
@@ -67,9 +67,9 @@ impl EventSystem {
 		self.event_subsystem.push_event(event)?;
 		Ok(())
 	}
-	
+
 	pub fn set_battler_npc_deck(&self, deck_id: u32) -> Result<(), String> {
-	
+
 	    let setBattlerNpcDeckEvent = sdl2::event::Event::User {
 	        timestamp: 0,
 	        window_id: 0,
@@ -78,7 +78,7 @@ impl EventSystem {
 	        data1: deck_id as *mut c_void,
 	        data2: 0x5678 as *mut c_void, // could use this field to set the player's deck as well? To do both at once.
 	    };
-	    
+
 	    //println!("pushed the set_battler_npc_deck event to the event pump. \n{:#?}", setBattlerNpcDeckEvent);
 	    //match self.event_subsystem.push_event(setBattlerNpcDeckEvent) {
 	        //Ok(T) => println!("     the return value of the event subsystem was ()"),
@@ -86,7 +86,7 @@ impl EventSystem {
 	    //}
 	    self.event_subsystem.push_event(setBattlerNpcDeckEvent)?;
 	    Ok(())
-	
+
 	}
 }
 
