@@ -123,13 +123,13 @@ impl<'a> Overworld<'a> {
 		//-----------------------------------------------------------------------------------
 		let file = File::open("npc_loader.json").expect("Some error message");;
     	let reader = BufReader::new(file);
-		let mut tempnpc: npcData = serde_json::from_reader(reader).unwrap();
+		let tempnpc: Vec<npcData> = serde_json::from_reader(reader);
 
 
 		let mut tempsize: Vec<usize> = Vec::new();
 		let mut i = 0;
 		loop {
-			if (i == tempnpc.Data.len() as i32)
+			if (i == tempnpc.len() as i32)
 			{
 				break;
 			}
@@ -631,11 +631,6 @@ impl<'a> Enemy<'a> {
 
 //###########################
 pub struct npcData
-{
-	Data: Vec<moreIndirectionCauseFuckYou>
-}
-
-pub struct moreIndirectionCauseFuckYou
 {
 	npcName: String,
 	deckID: i32,
