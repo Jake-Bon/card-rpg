@@ -35,6 +35,7 @@ pub struct Battle<'a> {
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
 	discard: Rc<Texture<'a>>,
+	disabled_discard: Rc<Texture<'a>>,
 	e_pip_unfilled: Rc<Texture<'a>>,
 	e_pip_filled: Rc<Texture<'a>>,
 	armor: Rc<Texture<'a>>,
@@ -69,6 +70,7 @@ pub struct Battle<'a> {
 	enlarged_card: card_size,
 	enemy_card: e_card_size,
 	playCard: Rc<Texture<'a>>,
+	disabled_playCard: Rc<Texture<'a>>,
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
 
@@ -87,6 +89,7 @@ impl<'a> Battle<'a> {
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let discard = texture_manager.borrow_mut().load("assets/discard.png")?;
+		let disabled_discard = texture_manager.borrow_mut().load("assets/grayed_discard.png")?;
 		let e_pip_unfilled = texture_manager.borrow_mut().load("assets/energyPipEmpty.png")?;
 		let e_pip_filled = texture_manager.borrow_mut().load("assets/energyPipFilled.png")?;
 		let armor = texture_manager.borrow_mut().load("assets/effects/shield.png")?;
@@ -142,6 +145,7 @@ impl<'a> Battle<'a> {
 		    };
 
 		let playCard = texture_manager.borrow_mut().load("assets/play_card.png")?;
+		let disabled_playCard = texture_manager.borrow_mut().load("assets/gray_play_card.png")?;
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
 
@@ -175,6 +179,7 @@ impl<'a> Battle<'a> {
 			deck,
 			drop,
 			discard,
+			disabled_discard,
 			tmp_enemy_played_card,
 			dummy_drawn_card,
 			dummy_drawn_card_enemy,
@@ -202,6 +207,7 @@ impl<'a> Battle<'a> {
 			enlarged_card,
 			enemy_card,
 			playCard,
+			disabled_playCard,
 			retCard,
 			backDrop,
 			music,
@@ -1048,13 +1054,26 @@ impl Scene for Battle<'_> {
 				if player1.get_curr_hand_size()>=2{
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(550,640))?;
 				}else{
-					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(550,640))?;
+					if player1.get_curr_energy()<curr_card.get_cost() as i32{
+						crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_playCard, (200,60),(550,640))?;
+					}else{
+						crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(550,640))?;
+					}
 				}
 			}else{
 				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
-				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
-				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.discard, (200,60),(900,325))?;
+				if player1.get_curr_energy()<curr_card.get_cost() as i32{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_playCard, (200,60),(900,250))?;
+				}else{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
+				}
+
+				if player1.get_curr_energy()<1{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_discard, (200,60),(900,325))?;
+				}else{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.discard, (200,60),(900,325))?;
+				}
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
 			}
 		}
