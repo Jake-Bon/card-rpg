@@ -20,13 +20,13 @@ pub struct Options<'a> {
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
 	background: Rc<Texture<'a>>,
-	tile_set: Rc<Texture<'a>>,
+	return_button: Rc<Texture<'a>>,
 }
 
 impl<'a> Options<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
 		let background = texture_manager.borrow_mut().load("assets/download.png")?;
-		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
+		let return_button = texture_manager.borrow_mut().load("assets/return.png")?;
 
 		Ok(Options{
 			texture_manager,
@@ -34,7 +34,7 @@ impl<'a> Options<'a> {
 			event_system,
 			font_manager,
 			background,
-			tile_set,
+			return_button,
 		})
 	}
 }
@@ -46,10 +46,9 @@ impl Scene for Options<'_> {
 		match event {
 			GameEvent::MouseClick(x_pos,y_pos) => {
 
-				//if (x_pos > 640 && x_pos < 1280) && (y_pos > 360 && y_pos < 720) {
-				//	self.event_system.borrow().change_scene(0).unwrap();
-                //}
-                self.event_system.borrow().change_scene(0).unwrap();
+				if (x_pos > 490 && x_pos < 490+300) && (y_pos > 530 && y_pos < 530+90) {
+					self.event_system.borrow().change_scene(0).unwrap();
+                }
 
 				println!("mouse: {}, {}", x_pos, y_pos);
 			},
@@ -61,13 +60,13 @@ impl Scene for Options<'_> {
 
 		let mut wincan = self.wincan.borrow_mut();
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 120, 150))?;
-
+        crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.background)?;
         
-		crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.background)?;
+        
+        crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.return_button, (300, 90), (490, 530))?;
 
-        let mut fontm = self.font_manager.borrow_mut();
-        fontm.draw_text(&mut wincan, "work in progress", (0, 0));
-        fontm.draw_text(&mut wincan, "click anywhere to exit", (0, 50));
+        //let mut fontm = self.font_manager.borrow_mut();
+        //fontm.draw_text(&mut wincan, "work in progress", (0, 0));
 
 		wincan.present();
 
