@@ -82,6 +82,7 @@ pub struct Battler{
     full_energy: i32,
     curr_energy: i32,
     hand_size: usize, //num of cards in Battler hand, may be removed
+    copied_cards: Vec<u32>,
     hand: Vec<u32>, //Current held cards
     deck: Vec<u32>, //Deck to draw from - treat as queue
     discard: Vec<u32>, //Discarded deck
@@ -89,10 +90,13 @@ pub struct Battler{
     poison: u32,
     energy_regen: Vec<i32>,
     health_regen: Vec<i32>,
+    r_volley_bonus: u32,
+    ex_turn: u32,//extra turn
 }
 
 impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     pub fn new(name: String, full_health: i32, curr_health: i32, full_energy: i32, curr_energy: i32)-> Battler{
+        let copied_cards = Vec::new();
         let hand = Vec::new();
         let hand_size = 7 as usize;
         let deck = Vec::new();
@@ -104,7 +108,9 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let poison = 0;
         let energy_regen = Vec::new();
         let health_regen = Vec::new();
-        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,draw_num,poison,energy_regen,health_regen}
+        let r_volley_bonus = 0;
+        let ex_turn = 0;
+        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,copied_cards,hand,deck,discard,draw_num,poison,energy_regen,health_regen,r_volley_bonus,ex_turn}
     }
 
     pub fn shuffle_deck(&mut self){
@@ -143,6 +149,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.curr_health as f32/self.full_health as f32
     }
 
+    pub fn reset_health_stats(&mut self){
+        self.curr_health = self.full_health;
+        self.curr_energy = self.full_energy;
+    }
+
     pub fn get_name(&self) -> &str{
         &self.name
     }
@@ -156,6 +167,18 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
     }
 
+    pub fn get_ex_turn(&self)->u32{
+        self.ex_turn
+    }
+
+    pub fn add_ex_turn(&mut self, b: u32){
+        self.ex_turn += b;
+    }
+
+    pub fn set_ex_turn(&mut self, b: u32){
+        self.ex_turn = b;
+    }
+
     pub fn set_mult(&mut self, m: i32){
         self.mult = m;
     }
@@ -167,6 +190,19 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     pub fn restore_deck(&mut self){
         self.deck = self.discard.clone();
         self.discard.clear();
+        (&mut self.deck).shuffle(&mut thread_rng());
+
+    }
+
+    pub fn reset_cards(&mut self){
+        for i in 0..self.discard.len(){
+            self.deck.push(self.discard[i]);
+        }
+        for i in 0..self.hand.len(){
+            self.deck.push(self.hand[i]);
+        }
+        self.discard.clear();
+        self.hand.clear();
         (&mut self.deck).shuffle(&mut thread_rng());
 
     }
@@ -185,6 +221,14 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn set_curr_health(&mut self,h:i32){
         self.curr_health = h;
+    }
+
+    pub fn add_health(&mut self, h: i32){
+        self.full_health+=h;
+    }
+
+    pub fn add_energy(&mut self, h: i32){
+        self.full_energy+=h;
     }
 
     pub fn adjust_curr_health(&mut self,h:i32){
@@ -281,7 +325,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             None
         }
     }
-    
+
     // gets the card from the top of the discard pile
     pub fn get_discard_card(&self)->Option<u32>{
         if self.discard.len()>0{
@@ -295,7 +339,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     // self.draw_num is decremented in draw card
     pub fn add_draw_num(&mut self, change: u32){
         self.draw_num = self.draw_num + change;
-        println!("add_draw_num is now {}", self.draw_num);
+        //println!("add_draw_num is now {}", self.draw_num);
     }
 
     pub fn set_draw_num(&mut self, new_num: u32){
@@ -423,6 +467,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         rslt
     }
 
+    pub fn clear_energy_regen(&mut self){
+        self.energy_regen = Vec::new();
+    }
+
     pub fn add_health_regen(&mut self, val:i32){ //CAN BE NEGATIVE!
         self.health_regen.push(3 as i32);//turns
         self.health_regen.push(val);
@@ -458,30 +506,49 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         rslt
     }
 
+    pub fn clear_health_regen(&mut self){
+        self.health_regen = Vec::new();
+    }
+
     pub fn dup_card(&mut self, id:u32){
         self.deck.push(id);
+        self.copied_cards.push(id);
+    }
+
+    pub fn get_duped(&mut self)->Vec<u32>{
+        let tmp = self.copied_cards.clone();
+        self.copied_cards.clear();
+        tmp
+    }
+
+    pub fn inc_volley_bonus(&mut self){
+        self.r_volley_bonus += 1;
+    }
+
+    pub fn get_volley_bonus(&self) -> u32{
+        self.r_volley_bonus
+    }
+
+    pub fn set_volley_bonus(&mut self, new_val: u32){
+        self.r_volley_bonus = new_val;
     }
 
     pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
+        if self.ex_turn>0{
+            self.ex_turn -= 1;
+        }
+
         if self.poison>0{
             self.curr_health = self.curr_health-self.poison as i32;
             if self.curr_health < 0 { self.curr_health = 0; }
             self.poison = self.poison - 1;
         }
 
-        self.curr_energy = self.curr_energy+3 as i32;//base regen of energy
-
-        // stop overflow via base regen
-        if self.curr_energy>self.full_energy{
-            self.curr_energy = self.full_energy;
-        }
+        self.curr_energy = self.curr_energy+self.mana_delta as i32;//base regen of energy
 
         if self.energy_regen.len()>0{
             for i in 0..(self.energy_regen.len())/2{ //Go through every value/turn pair
                 self.curr_energy = self.curr_energy+self.energy_regen[i*2+1];
-                if self.curr_energy>self.full_energy{
-                    self.curr_energy = self.full_energy;
-                }
                 self.energy_regen[i*2] = self.energy_regen[i*2] - 1 as i32;
             }
 
@@ -494,6 +561,15 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             }
             self.energy_regen = new_vec;
         }
+
+        // stop energy overflow
+        if self.curr_energy>self.full_energy{
+            self.curr_energy = self.full_energy;
+        }
+        if self.curr_energy<0{
+            self.curr_energy = 0;
+        }
+
         if self.health_regen.len()>0{
             for i in 0..(self.health_regen.len())/2{ //Go through every value/turn pair
                 self.curr_health = self.curr_health+self.health_regen[i*2+1];

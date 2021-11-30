@@ -28,7 +28,6 @@ use crate::video::gfx::CAM_W;
 use crate::video::gfx::CAM_H;
 use crate::video::gfx::TILE_SIZE;
 
-
 const FullW: u32 = 2400;
 const FullH: u32 = 1800;
 
@@ -120,16 +119,13 @@ impl<'a> Overworld<'a> {
 		let mut rng = thread_rng();
 
 
-
 		//-----------------------------------------------------------------------------------
 		let path = Path::new("src/scenes/npc_loader.json");
-
 		let mut s = String::new();
 		let file = File::open(path).unwrap().read_to_string(&mut s).unwrap();
     	//let reader = BufReader::new(file);
 		let tempnpc: Vec<npcData> = serde_json::from_str(&s).unwrap();
-
-
+		println!("i made it here");
 		let mut tempsize: Vec<usize> = Vec::new();
 		let mut i = 0;
 		loop {
@@ -265,6 +261,7 @@ impl Scene for Overworld<'_> {
 
 		if(self.is_stopped){
 			self.is_stopped = false;
+			self.music = Music::from_file("assets/music/MAP.ogg")?;
 			self.music.play(-1);
 			self.elapsed = Instant::now() - Duration::from_secs_f64(self.last_time);
 			sdl2::mixer::Music::set_pos(self.last_time);
@@ -630,9 +627,8 @@ impl<'a> Enemy<'a> {
 	}
 }
 
-
-
-
+//###########################
+//###########################
 //###########################
 #[derive(Debug, Deserialize)]
 pub struct npcData

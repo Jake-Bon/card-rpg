@@ -6,7 +6,6 @@ pub mod menu;
 pub mod online;
 pub mod credits;
 
-
 pub trait Scene {
 	fn handle_input(&mut self, event: GameEvent);
 

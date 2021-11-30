@@ -35,6 +35,7 @@ pub struct Battle<'a> {
 	deck: Rc<Texture<'a>>,
 	drop: Rc<Texture<'a>>,
 	discard: Rc<Texture<'a>>,
+	disabled_discard: Rc<Texture<'a>>,
 	e_pip_unfilled: Rc<Texture<'a>>,
 	e_pip_filled: Rc<Texture<'a>>,
 	armor: Rc<Texture<'a>>,
@@ -43,6 +44,8 @@ pub struct Battle<'a> {
 	mana_boost: Rc<Texture<'a>>,
 	mana_drain: Rc<Texture<'a>>,
 	multi: Rc<Texture<'a>>,
+	r_volley_bonus: Rc<Texture<'a>>,
+	ex_turn: Rc<Texture<'a>>,
 	accepting_input: bool,
 	not_enough_mana: bool,
 
@@ -58,6 +61,7 @@ pub struct Battle<'a> {
 	active_player: i8,
 	turn: TurnPhase,
 	outcome: BattleOutcome,
+	player_rollover: Rc<RefCell<Battler>>,
 	battle_handler: Rc<RefCell<BattleStatus>>,
 	enemy_delay_inst: Instant,
 	battler_npc_deck_id: u32,
@@ -66,6 +70,7 @@ pub struct Battle<'a> {
 	enlarged_card: card_size,
 	enemy_card: e_card_size,
 	playCard: Rc<Texture<'a>>,
+	disabled_playCard: Rc<Texture<'a>>,
 	retCard: Rc<Texture<'a>>,
 	backDrop: Rc<Texture<'a>>,
 
@@ -73,6 +78,9 @@ pub struct Battle<'a> {
 	music: Music<'a>,
 	is_paused: bool,
 	is_stopped: bool,
+
+	//CHEAT
+	keyPress: [bool; 3],
 }
 
 impl<'a> Battle<'a> {
@@ -84,6 +92,7 @@ impl<'a> Battle<'a> {
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
 		let drop = texture_manager.borrow_mut().load("assets/wood_texture.png")?;
 		let discard = texture_manager.borrow_mut().load("assets/discard.png")?;
+		let disabled_discard = texture_manager.borrow_mut().load("assets/grayed_discard.png")?;
 		let e_pip_unfilled = texture_manager.borrow_mut().load("assets/energyPipEmpty.png")?;
 		let e_pip_filled = texture_manager.borrow_mut().load("assets/energyPipFilled.png")?;
 		let armor = texture_manager.borrow_mut().load("assets/effects/shield.png")?;
@@ -92,6 +101,8 @@ impl<'a> Battle<'a> {
 		let mana_boost = texture_manager.borrow_mut().load("assets/effects/mana_boost.png")?;
 		let mana_drain = texture_manager.borrow_mut().load("assets/effects/mana_drain.png")?;
 		let multi = texture_manager.borrow_mut().load("assets/effects/mult.png")?;
+		let r_volley_bonus = texture_manager.borrow_mut().load("assets/effects/barrageStatusIcon.png")?;
+		let ex_turn = texture_manager.borrow_mut().load("assets/effects/ex_turn.png")?;
 		let accepting_input = true;
 		let tmp_enemy_played_card = 100;
 		let dummy_drawn_card = DrawnCard::new(0.0, 800.0).unwrap();
@@ -137,6 +148,7 @@ impl<'a> Battle<'a> {
 		    };
 
 		let playCard = texture_manager.borrow_mut().load("assets/play_card.png")?;
+		let disabled_playCard = texture_manager.borrow_mut().load("assets/gray_play_card.png")?;
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
 
@@ -170,6 +182,7 @@ impl<'a> Battle<'a> {
 			deck,
 			drop,
 			discard,
+			disabled_discard,
 			tmp_enemy_played_card,
 			dummy_drawn_card,
 			dummy_drawn_card_enemy,
@@ -182,8 +195,11 @@ impl<'a> Battle<'a> {
 			mana_boost,
 			mana_drain,
 			multi,
+			r_volley_bonus,
+			ex_turn,
 			accepting_input,
 			not_enough_mana: false,
+			player_rollover: _p1,
 			battler_map,
 			active_player: 1,
 			turn: TurnPhase::NotInitialized,
@@ -194,11 +210,13 @@ impl<'a> Battle<'a> {
 			enlarged_card,
 			enemy_card,
 			playCard,
+			disabled_playCard,
 			retCard,
 			backDrop,
 			music,
 			is_paused,
 			is_stopped,
+			keyPress: [false;3]
 		})
 	}
 
@@ -213,6 +231,7 @@ impl<'a> Battle<'a> {
 	pub fn step(&'_ mut self) -> Result<(), String> {
 		if(self.is_stopped){
 			self.is_stopped = false;
+			self.music = Music::from_file("assets/music/BATTLE.ogg")?;
 			self.music.play(-1);
 		}
 		if(self.is_paused){
@@ -232,13 +251,14 @@ impl<'a> Battle<'a> {
             self.active_player = 1;
 
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
-            let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
+			let _p1 = self.player_rollover.clone();
             // change the number in self.battler_map.get(&X) to change battler ID
             //      Now done through the set_battler_npc_deck event
             let _p2 = Rc::new(RefCell::new(self.battler_map.get(&self.battler_npc_deck_id).unwrap().clone()));
             println!("set opponent's deck to the deck with deck_id: {}", self.battler_npc_deck_id);
 
-			_p1.borrow_mut().shuffle_deck();
+			_p1.borrow_mut().reset_cards();
+			_p1.borrow_mut().reset_health_stats();
 			_p2.borrow_mut().shuffle_deck();
 
 		    self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
@@ -281,6 +301,10 @@ impl<'a> Battle<'a> {
 	    }
 
         if self.outcome == BattleOutcome::Undetermined {
+			if self.keyPress[0]&&self.keyPress[1]&&self.keyPress[2]{
+				self.battle_handler.borrow_mut().get_inactive_player().borrow_mut().set_curr_health(0);
+				self.turn = TurnPhase::PreTurnP2;
+			}
 
 	        if self.active_player == 1 {
 
@@ -338,15 +362,23 @@ impl<'a> Battle<'a> {
 
                     //println!("End of PostTurnP1");
 
-				    let mut _p =battle_stat.get_active_player();
-				    let mut player = _p.borrow_mut();
-				    player.update_effects();
+					let mut _p = battle_stat.get_active_player();
+					let mut player = _p.borrow_mut();
+					let ex = player.get_ex_turn();
+					player.update_effects();
 
-				    battle_stat.turner();
-	                self.active_player = -1;
-	                self.turn = TurnPhase::PreTurnP2;
+					if ex>0{
+						let mut _p2 = battle_stat.get_inactive_player();
+						let mut player2 = _p2.borrow_mut();
+						player2.update_effects();
+						self.turn = TurnPhase::PreTurnP1;
+					}else{
+						battle_stat.turner();
+		                self.active_player = -1;
+		                self.turn = TurnPhase::PreTurnP2;
 
-	                println!("End of PostTurnP1");
+		                println!("End of PostTurnP1");
+					}
 
 	            }
 
@@ -459,18 +491,22 @@ impl<'a> Battle<'a> {
 	            else if self.turn == TurnPhase::PostTurnP2  && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 	                // Resolve things that need to be resolved after the Opponent's turn in here
 	                // Intended to check for Statuses that need to be removed at the end of the turn
-
-					let mut _p =self.battle_handler.borrow_mut().get_active_player();
+					let mut battle_stat = self.battle_handler.borrow_mut();
+					let mut _p =battle_stat.get_active_player();
 					let mut player = _p.borrow_mut();
+					let ex = player.get_ex_turn();
 					player.update_effects();
 
-                    // delay the turn phase by 1 second
-		            println!("waiting another second...");
-		            //sleep(Duration::new(1, 0));
-
-					println!("End of PostTurnP2");
-					self.turn = TurnPhase::RoundOver;
-					self.battle_handler.borrow_mut().turner();
+					if ex>0{
+						let mut _p1 = battle_stat.get_inactive_player();
+						let mut player1 = _p1.borrow_mut();
+						player1.update_effects();
+						self.turn = TurnPhase::PreTurnP2;
+					}else{
+						println!("End of PostTurnP2");
+						self.turn = TurnPhase::RoundOver;
+						battle_stat.turner();
+					}
 
 	            }
 	        }
@@ -492,6 +528,26 @@ impl<'a> Battle<'a> {
                 self.turn = TurnPhase::NotInitialized;
 				self.is_stopped = true;
 				sdl2::mixer::Music::halt();
+				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+
+				// Resetting all statuses here. Could make this an effect/card later
+				//UPDATING PLAYER UPON END BATTLE
+				self.player_rollover.borrow_mut().set_volley_bonus(0);
+				self.player_rollover.borrow_mut().clear_poison();
+				self.player_rollover.borrow_mut().set_defense(0);
+				self.player_rollover.borrow_mut().set_mult(1);
+				self.player_rollover.borrow_mut().clear_health_regen();
+				self.player_rollover.borrow_mut().clear_energy_regen();
+				self.player_rollover.borrow_mut().set_ex_turn(0);
+
+				self.player_rollover.borrow_mut().add_health(5); //Boost full health
+				self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
+				self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
+				let card_list = self.player_rollover.borrow_mut().get_duped();
+				for card in card_list{
+					self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
+				}
+				self.player_rollover.borrow_mut().add_card_to_deck(13);
                 self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
 	        }
@@ -557,14 +613,18 @@ impl Scene for Battle<'_> {
 			        self.battler_npc_deck_id = deck_id;
 			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
 			    },
-			    GameEvent::KeyPress(k) => {
-				    //println!("{}", k);
-				    if k.eq(&Keycode::Escape) {
-				        self.turn = TurnPhase::BattleOver;  // Changing to BattleOver instead of NotInitialized
-				        self.event_system.borrow().change_scene(1).unwrap();
-				        self.enlarged_card.set_larger(false);
-				        }
-			        },
+				GameEvent::KeyPress(k) => {
+					//println!("p:{}", k);
+					if k.eq(&Keycode::X) {self.keyPress[0]=true}
+					if k.eq(&Keycode::O) {self.keyPress[1]=true}
+					if k.eq(&Keycode::R) {self.keyPress[2]=true}
+				},
+				GameEvent::KeyRelease(k) => {
+					//println!("r:{}", k);
+					if k.eq(&Keycode::X) {self.keyPress[0]=false}
+					if k.eq(&Keycode::O) {self.keyPress[1]=false}
+					if k.eq(&Keycode::R) {self.keyPress[2]=false}
+				},
 			    GameEvent::MouseClick(x_pos,y_pos) => {
 			    	println!("{},{}", x_pos,y_pos);
 					self.not_enough_mana = false;
@@ -816,6 +876,8 @@ impl Scene for Battle<'_> {
 		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion);p1_status_duration.push(player1.get_poison() as i32);p1_status_amount.push(player1.get_poison() as f32);};
 		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);p1_status_duration.push(player1.get_energy_regen_duration());p1_status_amount.push(player1.get_energy_regen() as f32);}
 		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);p1_status_duration.push(player1.get_energy_regen_duration());p1_status_amount.push(player1.get_energy_regen() as f32);}
+        if player1.get_volley_bonus() > 0 {p1_status_effects.push(&self.r_volley_bonus); p1_status_duration.push(0); p1_status_amount.push(player1.get_volley_bonus() as f32);}
+		if player1.get_ex_turn() > 0 {p1_status_effects.push(&self.ex_turn); p1_status_duration.push(0); p1_status_amount.push(player1.get_ex_turn() as f32);}
 
 		for i in 0..p1_status_effects.len() {
 			fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
@@ -914,6 +976,8 @@ impl Scene for Battle<'_> {
 		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion);p2_status_duration.push(player2.get_poison() as i32);p2_status_amount.push(player2.get_poison() as f32);};
 		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);p2_status_duration.push(player2.get_energy_regen_duration());p2_status_amount.push(player2.get_energy_regen() as f32);}
 		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);p2_status_duration.push(player2.get_energy_regen_duration());p2_status_amount.push(player2.get_energy_regen() as f32);}
+        if player2.get_volley_bonus() > 0 {p2_status_effects.push(&self.r_volley_bonus); p2_status_duration.push(0); p2_status_amount.push(player2.get_volley_bonus() as f32);}
+		if player2.get_ex_turn() > 0 {p2_status_effects.push(&self.ex_turn); p2_status_duration.push(0); p2_status_amount.push(player2.get_ex_turn() as f32);}
 
 		for i in 0..p2_status_effects.len() {
 			fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
@@ -1006,13 +1070,26 @@ impl Scene for Battle<'_> {
 				if player1.get_curr_hand_size()>=2{
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(550,640))?;
 				}else{
-					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(550,640))?;
+					if player1.get_curr_energy()<curr_card.get_cost() as i32{
+						crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_playCard, (200,60),(550,640))?;
+					}else{
+						crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(550,640))?;
+					}
 				}
 			}else{
 				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
-				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
-				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.discard, (200,60),(900,325))?;
+				if player1.get_curr_energy()<curr_card.get_cost() as i32{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_playCard, (200,60),(900,250))?;
+				}else{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
+				}
+
+				if player1.get_curr_energy()<1{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_discard, (200,60),(900,325))?;
+				}else{
+					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.discard, (200,60),(900,325))?;
+				}
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
 			}
 		}
