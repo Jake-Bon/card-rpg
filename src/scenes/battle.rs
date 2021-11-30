@@ -58,6 +58,7 @@ pub struct Battle<'a> {
 	active_player: i8,
 	turn: TurnPhase,
 	outcome: BattleOutcome,
+	player_rollover: Rc<RefCell<Battler>>,
 	battle_handler: Rc<RefCell<BattleStatus>>,
 	enemy_delay_inst: Instant,
 	battler_npc_deck_id: u32,
@@ -184,6 +185,7 @@ impl<'a> Battle<'a> {
 			multi,
 			accepting_input,
 			not_enough_mana: false,
+			player_rollover: _p1,
 			battler_map,
 			active_player: 1,
 			turn: TurnPhase::NotInitialized,
@@ -213,6 +215,7 @@ impl<'a> Battle<'a> {
 	pub fn step(&'_ mut self) -> Result<(), String> {
 		if(self.is_stopped){
 			self.is_stopped = false;
+			self.music = Music::from_file("assets/music/BATTLE.ogg")?;
 			self.music.play(-1);
 		}
 		if(self.is_paused){
@@ -232,13 +235,14 @@ impl<'a> Battle<'a> {
             self.active_player = 1;
 
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
-            let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone())); //Must UNWRAP AND CLONE players from map for battle use
+			let _p1 = self.player_rollover.clone();
             // change the number in self.battler_map.get(&X) to change battler ID
             //      Now done through the set_battler_npc_deck event
             let _p2 = Rc::new(RefCell::new(self.battler_map.get(&self.battler_npc_deck_id).unwrap().clone()));
             println!("set opponent's deck to the deck with deck_id: {}", self.battler_npc_deck_id);
 
-			_p1.borrow_mut().shuffle_deck();
+			_p1.borrow_mut().reset_cards();
+			_p1.borrow_mut().reset_health_stats();
 			_p2.borrow_mut().shuffle_deck();
 
 		    self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
@@ -492,6 +496,16 @@ impl<'a> Battle<'a> {
                 self.turn = TurnPhase::NotInitialized;
 				self.is_stopped = true;
 				sdl2::mixer::Music::halt();
+				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+				self.player_rollover.borrow_mut().add_health(5);
+				self.player_rollover.borrow_mut().add_energy(5);
+				self.player_rollover.borrow_mut().remove_all_sel_card(21); //UPDATING PLAYER UPON END BATTLE
+				let card_list = self.player_rollover.borrow_mut().get_duped();
+				for card in card_list{
+					self.player_rollover.borrow_mut().remove_sel_card(card);
+					println!("{}",card);
+				}
+				self.player_rollover.borrow_mut().add_card_to_deck(13);
                 self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
 	        }
@@ -559,11 +573,7 @@ impl Scene for Battle<'_> {
 			    },
 			    GameEvent::KeyPress(k) => {
 				    //println!("{}", k);
-				    if k.eq(&Keycode::Escape) {
-				        self.turn = TurnPhase::BattleOver;  // Changing to BattleOver instead of NotInitialized
-				        self.event_system.borrow().change_scene(1).unwrap();
-				        self.enlarged_card.set_larger(false);
-				        }
+
 			        },
 			    GameEvent::MouseClick(x_pos,y_pos) => {
 			    	println!("{},{}", x_pos,y_pos);

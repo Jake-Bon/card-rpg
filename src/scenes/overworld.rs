@@ -228,6 +228,7 @@ impl Scene for Overworld<'_> {
 
 		if(self.is_stopped){
 			self.is_stopped = false;
+			self.music = Music::from_file("assets/music/MAP.ogg")?;
 			self.music.play(-1);
 			self.elapsed = Instant::now() - Duration::from_secs_f64(self.last_time);
 			sdl2::mixer::Music::set_pos(self.last_time);

@@ -82,6 +82,7 @@ pub struct Battler{
     full_energy: i32,
     curr_energy: i32,
     hand_size: usize, //num of cards in Battler hand, may be removed
+    copied_cards: Vec<u32>,
     hand: Vec<u32>, //Current held cards
     deck: Vec<u32>, //Deck to draw from - treat as queue
     discard: Vec<u32>, //Discarded deck
@@ -93,6 +94,7 @@ pub struct Battler{
 
 impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     pub fn new(name: String, full_health: i32, curr_health: i32, full_energy: i32, curr_energy: i32)-> Battler{
+        let copied_cards = Vec::new();
         let hand = Vec::new();
         let hand_size = 7 as usize;
         let deck = Vec::new();
@@ -104,7 +106,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let poison = 0;
         let energy_regen = Vec::new();
         let health_regen = Vec::new();
-        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,hand,deck,discard,draw_num,poison,energy_regen,health_regen}
+        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,copied_cards,hand,deck,discard,draw_num,poison,energy_regen,health_regen}
     }
 
     pub fn shuffle_deck(&mut self){
@@ -143,6 +145,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.curr_health as f32/self.full_health as f32
     }
 
+    pub fn reset_health_stats(&mut self){
+        self.curr_health = self.full_health;
+        self.curr_energy = self.full_energy;
+    }
+
     pub fn get_name(&self) -> &str{
         &self.name
     }
@@ -171,6 +178,19 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     }
 
+    pub fn reset_cards(&mut self){
+        for i in 0..self.discard.len(){
+            self.deck.push(self.discard[i]);
+        }
+        for i in 0..self.hand.len(){
+            self.deck.push(self.hand[i]);
+        }
+        self.discard.clear();
+        self.hand.clear();
+        (&mut self.deck).shuffle(&mut thread_rng());
+
+    }
+
     pub fn set_defense(&mut self,d:i32){
         self.def = d;
     }
@@ -185,6 +205,14 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn set_curr_health(&mut self,h:i32){
         self.curr_health = h;
+    }
+
+    pub fn add_health(&mut self, h: i32){
+        self.full_health+=h;
+    }
+
+    pub fn add_energy(&mut self, h: i32){
+        self.full_energy+=h;
     }
 
     pub fn adjust_curr_health(&mut self,h:i32){
@@ -281,7 +309,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             None
         }
     }
-    
+
     // gets the card from the top of the discard pile
     pub fn get_discard_card(&self)->Option<u32>{
         if self.discard.len()>0{
@@ -460,6 +488,13 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn dup_card(&mut self, id:u32){
         self.deck.push(id);
+        self.copied_cards.push(id);
+    }
+
+    pub fn get_duped(&mut self)->Vec<u32>{
+        let tmp = self.copied_cards.clone();
+        self.copied_cards.clear();
+        tmp
     }
 
     pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
