@@ -15,6 +15,7 @@ use crate::scenes::online::Online;
 use crate::scenes::overworld::Overworld;
 use crate::scenes::menu::Menu; // <-- implement with scene change
 use crate::scenes::credits::Credits;
+use crate::scenes::options::Options;
 
 use crate::events::event_subsystem::{EventSystem, GameEvent};
 
@@ -29,6 +30,7 @@ pub struct GameManager<'a> {
 	menu: Box<dyn Scene + 'a>,
 	online: Box<dyn Scene + 'a>,
 	credits: Box<dyn Scene + 'a>,
+	options: Box<dyn Scene + 'a>,
 	game_state: GameState,
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
@@ -45,6 +47,7 @@ impl<'a> GameManager<'a> {
 			2 => self.battle.handle_input(e),
 			3 => self.online.handle_input(e),
 			4 => self.credits.handle_input(e),
+			5 => self.options.handle_input(e),
 			_ => {},
 		}
 	}
@@ -71,6 +74,7 @@ impl<'a> GameManager<'a> {
 			2 => self.battle.render()?,
 			3 => self.online.render()?,
 			4 => self.credits.render()?,
+			5 => self.options.render()?,
 			_ => {},
 		};
 
@@ -109,6 +113,7 @@ impl<'a> GameManager<'a> {
 		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 		let online = Box::new(Online::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager)));
 		let credits = Box::new(Credits::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
+		let options = Box::new(Options::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 
 		Ok(GameManager {
 			overworld,
@@ -116,6 +121,7 @@ impl<'a> GameManager<'a> {
 			menu,
 			online,
 			credits,
+			options,
 			game_state: GameState::Running,
 			wincan,
 			event_system,
