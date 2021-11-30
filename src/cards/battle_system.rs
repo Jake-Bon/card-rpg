@@ -73,6 +73,7 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         19 => dup_card(val as u32,stat.get_active_player()), //Dupe own card
         20 => discard_cards_from_hand(stat.get_active_player(), val), // discard val cards from active player's hand
         21 => discard_cards_from_hand(stat.get_inactive_player(), val), // discard val cards from inactive player's hand
+        22 => r_volley_effect(stat.get_inactive_player(), stat.get_active_player()),
         _ => unreachable_action(),
     }
 }
@@ -178,8 +179,17 @@ fn discard_cards_from_hand(target: Rc<RefCell<Battler>>, discard_num: i32){
             let discard_index = rng.gen_range(0..target.get_curr_hand_size());
             target.hand_discard_card(discard_index);
         }
-    }
+    }   
+}
+
+fn r_volley_effect(target: Rc<RefCell<Battler>>, attacker: Rc<RefCell<Battler>>){
+    let mut attacker = attacker.borrow_mut();
+    let cur_bonus = attacker.get_volley_bonus();
+    let cur_multi = attacker.get_mult();
+    attacker.inc_volley_bonus();
     
+    //let target = target.borrow_mut();
+    attack((2 + cur_bonus) as i32, cur_multi, target);
     
 }
 
