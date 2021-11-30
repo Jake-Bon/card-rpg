@@ -43,6 +43,7 @@ pub struct Battle<'a> {
 	mana_boost: Rc<Texture<'a>>,
 	mana_drain: Rc<Texture<'a>>,
 	multi: Rc<Texture<'a>>,
+	r_volley_bonus: Rc<Texture<'a>>,
 	accepting_input: bool,
 	not_enough_mana: bool,
 
@@ -93,6 +94,7 @@ impl<'a> Battle<'a> {
 		let mana_boost = texture_manager.borrow_mut().load("assets/effects/mana_boost.png")?;
 		let mana_drain = texture_manager.borrow_mut().load("assets/effects/mana_drain.png")?;
 		let multi = texture_manager.borrow_mut().load("assets/effects/mult.png")?;
+		let r_volley_bonus = texture_manager.borrow_mut().load("assets/effects/barrageStatusIcon.png")?;
 		let accepting_input = true;
 		let tmp_enemy_played_card = 100;
 		let dummy_drawn_card = DrawnCard::new(0.0, 800.0).unwrap();
@@ -183,6 +185,7 @@ impl<'a> Battle<'a> {
 			mana_boost,
 			mana_drain,
 			multi,
+			r_volley_bonus,
 			accepting_input,
 			not_enough_mana: false,
 			player_rollover: _p1,
@@ -497,6 +500,15 @@ impl<'a> Battle<'a> {
 				self.is_stopped = true;
 				sdl2::mixer::Music::halt();
 				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+				
+				// Resetting all statuses here. Could make this an effect/card later
+				self.player_rollover.borrow_mut().set_volley_bonus(0);
+				self.player_rollover.borrow_mut().clear_poison();
+				self.player_rollover.borrow_mut().set_defense(0);
+				self.player_rollover.borrow_mut().set_mult(1.0);
+				self.player_rollover.borrow_mut().clear_health_regen();
+				self.player_rollover.borrow_mut().clear_energy_regen();
+				
 				self.player_rollover.borrow_mut().add_health(5);
 				self.player_rollover.borrow_mut().add_energy(5);
 				self.player_rollover.borrow_mut().remove_all_sel_card(21); //UPDATING PLAYER UPON END BATTLE
@@ -826,6 +838,7 @@ impl Scene for Battle<'_> {
 		if player1.get_poison() > 0 {p1_status_effects.push(&self.posion);p1_status_duration.push(player1.get_poison() as i32);p1_status_amount.push(player1.get_poison() as f32);};
 		if player1.get_energy_regen() > 0 {p1_status_effects.push(&self.mana_boost);p1_status_duration.push(player1.get_energy_regen_duration());p1_status_amount.push(player1.get_energy_regen() as f32);}
 		if player1.get_energy_regen() < 0 {p1_status_effects.push(&self.mana_drain);p1_status_duration.push(player1.get_energy_regen_duration());p1_status_amount.push(player1.get_energy_regen() as f32);}
+        if player1.get_volley_bonus() > 0 {p1_status_effects.push(&self.r_volley_bonus); p1_status_duration.push(0); p1_status_amount.push(player1.get_volley_bonus() as f32);}
 
 		for i in 0..p1_status_effects.len() {
 			fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),
@@ -924,6 +937,7 @@ impl Scene for Battle<'_> {
 		if player2.get_poison() > 0 {p2_status_effects.push(&self.posion);p2_status_duration.push(player2.get_poison() as i32);p2_status_amount.push(player2.get_poison() as f32);};
 		if player2.get_energy_regen() > 0 {p2_status_effects.push(&self.mana_boost);p2_status_duration.push(player2.get_energy_regen_duration());p2_status_amount.push(player2.get_energy_regen() as f32);}
 		if player2.get_energy_regen() < 0 {p2_status_effects.push(&self.mana_drain);p2_status_duration.push(player2.get_energy_regen_duration());p2_status_amount.push(player2.get_energy_regen() as f32);}
+        if player2.get_volley_bonus() > 0 {p2_status_effects.push(&self.r_volley_bonus); p2_status_duration.push(0); p2_status_amount.push(player2.get_volley_bonus() as f32);}
 
 		for i in 0..p2_status_effects.len() {
 			fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(0, 0, 0),

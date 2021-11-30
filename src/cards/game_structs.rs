@@ -90,6 +90,7 @@ pub struct Battler{
     poison: u32,
     energy_regen: Vec<i32>,
     health_regen: Vec<i32>,
+    r_volley_bonus: u32,
 }
 
 impl Battler{ //HAND and DECK created as INTRINSIC VALUES
@@ -106,7 +107,8 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let poison = 0;
         let energy_regen = Vec::new();
         let health_regen = Vec::new();
-        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,copied_cards,hand,deck,discard,draw_num,poison,energy_regen,health_regen}
+        let r_volley_bonus = 0;
+        Battler{name, full_health,curr_health,mult,def,mana_delta,full_energy,curr_energy,hand_size,copied_cards,hand,deck,discard,draw_num,poison,energy_regen,health_regen,r_volley_bonus}
     }
 
     pub fn shuffle_deck(&mut self){
@@ -323,7 +325,7 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     // self.draw_num is decremented in draw card
     pub fn add_draw_num(&mut self, change: u32){
         self.draw_num = self.draw_num + change;
-        println!("add_draw_num is now {}", self.draw_num);
+        //println!("add_draw_num is now {}", self.draw_num);
     }
 
     pub fn set_draw_num(&mut self, new_num: u32){
@@ -450,6 +452,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
         rslt
     }
+    
+    pub fn clear_energy_regen(&mut self){
+        self.energy_regen = Vec::new();
+    }
 
     pub fn add_health_regen(&mut self, val:i32){ //CAN BE NEGATIVE!
         self.health_regen.push(3 as i32);//turns
@@ -485,6 +491,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
         rslt
     }
+    
+    pub fn clear_health_regen(&mut self){
+        self.health_regen = Vec::new();
+    }
 
     pub fn dup_card(&mut self, id:u32){
         self.deck.push(id);
@@ -495,6 +505,18 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         let tmp = self.copied_cards.clone();
         self.copied_cards.clear();
         tmp
+    }
+    
+    pub fn inc_volley_bonus(&mut self){
+        self.r_volley_bonus += 1;
+    }
+    
+    pub fn get_volley_bonus(&self) -> u32{
+        self.r_volley_bonus
+    }
+    
+    pub fn set_volley_bonus(&mut self, new_val: u32){
+        self.r_volley_bonus = new_val;
     }
 
     pub fn update_effects(&mut self){//apply and decrement all other effects. If 0, remove.
