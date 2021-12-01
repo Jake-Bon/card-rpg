@@ -4,6 +4,7 @@ pub mod battle;
 pub mod overworld;
 pub mod menu;
 pub mod online;
+pub mod options;
 pub mod credits;
 
 pub trait Scene {
