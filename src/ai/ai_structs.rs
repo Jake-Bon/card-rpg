@@ -6,6 +6,8 @@ use std::collections::HashSet;
 use crate::cards::game_structs::*;
 use crate::cards::battle_system::*;
 
+use crate::ai::minimax::*;
+
 // README:
 // Debug: cargo run > treetest.txt (for the most readable print of the tree)
 //  The heavy lifting of creating the game tree is done in Node.populate()
@@ -42,19 +44,8 @@ impl Node {
     // Recursive function to populate each game tree node with children
     pub fn populate(&mut self, ai_turn: bool, height: i32) {
         if height == 0 || self.stateIsTerminating() {
-            // State is a terminating state. Set utility to a predetermined number to indicate win/loss
-            if self.stateIsTerminating() {
-                if self.status.get_p2().borrow().get_curr_health() <= 0 {
-                    self.set_utility(i32::MIN);
-                }
-                else {
-                    self.set_utility(i32::MAX);
-                }
-            }
-            // Height is 0
-            else {
-                // TODO: Call utility function here to calculate utility base on curr game state
-            }
+            let utility = self.utility();
+            self.set_utility(utility);
             return;
         }
         let ai_cards = self.status.get_p2().borrow().get_hand();
@@ -147,6 +138,31 @@ impl Node {
             child.populate(!ai_turn, height-1);
         }
     }
+
+    pub fn utility(&mut self) -> i32 {
+        let mut status = self.getStatus();
+        let player = status.get_p1().borrow().clone();
+        let ai = status.get_p2().borrow().clone();
+        if player.get_curr_health() <= 0 {
+            return i32::MAX;
+        }
+        else if ai.get_curr_health() <= 0 {
+            return i32::MIN;
+        }
+        // AI's
+        let ai_health = ai.get_curr_health();
+        let ai_energy = ai.get_curr_energy();
+        let ai_cards = ai.get_deck_size() as i32;
+        let ai_utility = ai_health + ai_energy + ai_cards;
+        // Player's
+        let player_health = player.get_curr_health();
+        let player_energy = player.get_curr_energy();
+        let player_cards = player.get_deck_size() as i32;
+        let player_utility = player_health + player_energy + player_cards;
+        // Combine
+        let utility = ai_utility - player_utility;
+        return utility;
+    }
         
 
     // Checks if the current node is in a game terminating state
@@ -157,6 +173,10 @@ impl Node {
             return true;
         }
         return false;
+    }
+
+    pub fn getStatus(&mut self) -> BattleStatus {
+        self.status.clone()
     }
 
     pub fn set_utility(&mut self, new_utility: i32) {
