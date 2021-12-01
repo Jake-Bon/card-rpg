@@ -61,8 +61,8 @@ impl Scene for Options<'_> {
 		let mut wincan = self.wincan.borrow_mut();
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 120, 150))?;
         crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.background)?;
-        
-        
+
+
         crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.return_button, (300, 90), (490, 530))?;
 
         //let mut fontm = self.font_manager.borrow_mut();

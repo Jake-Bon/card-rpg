@@ -1,6 +1,7 @@
 //Credits
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::process;
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
@@ -79,9 +80,10 @@ impl Scene for Credits<'_> {
 			if self.step > TIMEOUT*8 {
 				// Should quit instead
 				self.step = 0;
-				sdl2::mixer::Music::fade_out(1000);
+        sdl2::mixer::Music::fade_out(1000);
 				self.is_playing = false;
 				self.event_system.borrow().change_scene(0).unwrap();
+				process::exit(1);
 				println!("QUIT");
 				0
 			}
