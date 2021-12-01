@@ -19,8 +19,10 @@ pub struct Menu<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
+	background: Rc<Texture<'a>>,
 	play_button: Rc<Texture<'a>>,
 	online_button: Rc<Texture<'a>>,
+	options_button: Rc<Texture<'a>>,
 	quit_button: Rc<Texture<'a>>,
 	logo: Rc<Texture<'a>>,
 	tile_set: Rc<Texture<'a>>,
@@ -28,8 +30,10 @@ pub struct Menu<'a> {
 
 impl<'a> Menu<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
+		let background = texture_manager.borrow_mut().load("assets/download.png")?;
 		let play_button = texture_manager.borrow_mut().load("assets/play.png")?;
 		let online_button = texture_manager.borrow_mut().load("assets/online.png")?;
+		let options_button = texture_manager.borrow_mut().load("assets/options.png")?;
 		let quit_button = texture_manager.borrow_mut().load("assets/quit.png")?;
 		let logo = texture_manager.borrow_mut().load("assets/logo.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
@@ -39,8 +43,10 @@ impl<'a> Menu<'a> {
 			wincan,
 			event_system,
 			font_manager,
+			background,
 			play_button,
 			online_button,
+			options_button,
 			quit_button,
 			logo,
 			tile_set,
@@ -55,32 +61,26 @@ impl Scene for Menu<'_> {
 		match event {
 			GameEvent::MouseClick(x_pos,y_pos) => {
 
-				if (x_pos > 50 && x_pos < 300) && (y_pos > 400 && y_pos < 500) {
+				if (x_pos > 140 && x_pos < 390) && (y_pos > 550 && y_pos < 650) {
 					println!("PLAY");
 					println!("X {}, Y: {}", x_pos, y_pos);
 					self.event_system.borrow().change_scene(1).unwrap();
 				}
 
-				if (x_pos > 50 && x_pos < 300) && (y_pos > 500 && y_pos < 600) {
+				if (x_pos > 390 && x_pos < 640) && (y_pos > 550 && y_pos < 650) {
 					println!("ONLINE");
 					self.event_system.borrow().change_scene(3).unwrap();
 				}
 
-				if (x_pos > 50 && x_pos < 300) && (y_pos > 600 && y_pos < 700) {
-					println!("QUIT");
-
-					//GameEvent::WindowClose;
-					//GameManager::game_state = GameState::Quit;
-					//event = GameEvent::WindowClose;
-					self.event_system.borrow().change_scene(4).unwrap();
-				
+				if (x_pos > 640 && x_pos < 890) && (y_pos > 550 && y_pos < 650) {
+					println!("OPTIONS");
+					self.event_system.borrow().change_scene(5).unwrap();
 				}
-				
-				//if (x_pos > 50 && x_pos < 300) && (y_pos > 0 && y_pos < 200){
-				//println!("Battle Time");
-				//self.event_system.borrow().change_scene(2).unwrap();
-				
-				//}
+
+				if (x_pos > 890 && x_pos < 1140) && (y_pos > 550 && y_pos < 650) {
+					println!("QUIT");
+					self.event_system.borrow().change_scene(4).unwrap();
+				}
 
 				println!("mouse: {}, {}", x_pos, y_pos);
 			},
@@ -101,32 +101,16 @@ impl Scene for Menu<'_> {
 
         //crate::video::text::draw_text(&mut wincan, self.texture)?;
         
+		crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.background)?;
 
-		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (50, 400))?;
-		crate::video::gfx::draw_sprite(&mut wincan, &self.online_button, (50, 500))?;
-		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (50, 600))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.play_button, (140, 550))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.online_button, (390, 550))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.options_button, (640, 550))?;
+		crate::video::gfx::draw_sprite(&mut wincan, &self.quit_button, (890, 550))?;
 
 		crate::video::gfx::draw_sprite(&mut wincan, &self.logo, (340, 100))?;
-		
-		/*
-		
-		// text examples
-		
-		let mut font_m = self.font_manager.borrow_mut();
-		//println!("calling font_m.draw_text()");
-		
-		font_m.draw_text(&mut wincan, "some text", (30, 30));
-		
-		font_m.draw_text(&mut wincan, "some more text somewhere else", (20, 140));
-		
-		font_m.draw_text(&mut wincan, "some text", (400, 400));
-		
-		font_m.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 255), "text but this time it has a\n line break", (200, 200));
-		
-		font_m.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 24, Color::RGBA(0, 0, 0, 0), "transparent doesn't work", (300, 350));  
-		
-        */
-		
+
+
 
 		wincan.present();
 
