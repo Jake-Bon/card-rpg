@@ -86,6 +86,7 @@ pub struct Overworld<'a> {
 	last_time: f64,
 	is_stopped: bool,
 	is_paused: bool,
+	gameMode: Modes<'a>,
 }
 
 impl<'a> Overworld<'a> {
@@ -212,6 +213,20 @@ impl<'a> Overworld<'a> {
 		let elapsed = Instant::now();
 		let last_time=0.0;
 
+		let options = texture_manager.borrow_mut().load("assets/rustIsAwful/options1.png")?;
+		let quit = texture_manager.borrow_mut().load("assets/rustIsAwful/quit1.png")?;
+		let haze = texture_manager.borrow_mut().load("assets/rustIsAwful/haze1.png")?;
+
+		let gameMode = Modes {
+			State: 1,
+		    midSentence: true,
+			key: false,
+			track: 0 as usize,
+			options_button: options,
+			quit_button: quit,
+			haze_button: haze,
+		};
+
 
 		Ok(Overworld{
 			wincan,
@@ -227,7 +242,8 @@ impl<'a> Overworld<'a> {
 			is_paused,
 			is_stopped,
 			elapsed,
-			last_time
+			last_time,
+			gameMode
 		})
 	}
 
@@ -236,23 +252,56 @@ impl<'a> Overworld<'a> {
 impl Scene for Overworld<'_> {
 	fn handle_input(&mut self, event: GameEvent) {
 		// Matching events, most importantly KeyPress(k)'s
-		match event {
-			GameEvent::KeyPress(k) => {
-				//println!("p:{}", k);
-				if k.eq(&Keycode::W) {self.player.keyPress[0]=true}
-				if k.eq(&Keycode::S) {self.player.keyPress[1]=true}
-				if k.eq(&Keycode::A) {self.player.keyPress[2]=true}
-				if k.eq(&Keycode::D) {self.player.keyPress[3]=true}
+		match self.gameMode.State {
+			1=>	match event {
+					GameEvent::KeyPress(k) => {
+						//println!("p:{}", k);
+						if k.eq(&Keycode::W) {self.player.keyPress[0]=true}
+						if k.eq(&Keycode::S) {self.player.keyPress[1]=true}
+						if k.eq(&Keycode::A) {self.player.keyPress[2]=true}
+						if k.eq(&Keycode::D) {self.player.keyPress[3]=true}
+						if k.eq(&Keycode::Escape) {self.gameMode.State=2}
 
-			},
-			GameEvent::KeyRelease(k) => {
-				//println!("r:{}", k);
-				if k.eq(&Keycode::W) {self.player.keyPress[0]=false}
-				if k.eq(&Keycode::S) {self.player.keyPress[1]=false}
-				if k.eq(&Keycode::A) {self.player.keyPress[2]=false}
-				if k.eq(&Keycode::D) {self.player.keyPress[3]=false}
-			},
-			_ => {println!(/*"No event"*/)},
+					},
+					GameEvent::KeyRelease(k) => {
+						//println!("r:{}", k);
+						if k.eq(&Keycode::W) {self.player.keyPress[0]=false}
+						if k.eq(&Keycode::S) {self.player.keyPress[1]=false}
+						if k.eq(&Keycode::A) {self.player.keyPress[2]=false}
+						if k.eq(&Keycode::D) {self.player.keyPress[3]=false}
+					},
+					_ => {println!(/*"No event"*/)},
+
+			}//Default world
+
+			2=>	match event {
+					GameEvent::KeyPress(k) => {
+						//println!("p:{}", k);
+						if k.eq(&Keycode::Escape) {self.gameMode.State=1}
+					},
+					GameEvent::MouseClick(x_pos,y_pos) => {
+						if (x_pos > 50 && x_pos < 300) && (y_pos > 500 && y_pos < 600) {
+							println!("options");
+							println!("X {}, Y: {}", x_pos, y_pos);
+							self.event_system.borrow().change_scene(5).unwrap();
+						}
+						if (x_pos > 50 && x_pos < 300) && (y_pos > 600 && y_pos < 700)  {
+							println!("quit");
+							println!("X {}, Y: {}", x_pos, y_pos);
+							self.event_system.borrow().change_scene(4).unwrap();
+						}
+					}//exit or options
+					_ => {println!(/*"No event"*/)},//pause menu
+			}
+
+			3=>	match event {
+					GameEvent::KeyPress(k) => {
+						//println!("p:{}", k);
+						if k.eq(&Keycode::Space) {self.gameMode.key=true}
+					},
+					_ => {println!(/*"No event"*/)},
+			}//talking
+			_ => {println!(/*"No event"*/)},//pause menu
 		}
 	}
 
@@ -270,53 +319,52 @@ impl Scene for Overworld<'_> {
 			self.is_paused = false;
 			sdl2::mixer::Music::resume();
 		}
-
 		let mut wincan = self.wincan.borrow_mut();
-		self.player.update_movement();
-
-
-
-		self.frames = if (self.frames) > 9 {
-			self.anim_water = (self.anim_water+1)%9;
-			0
-		}
-		else {
-			self.frames + 1
-		};
-
-
-
-		// hard coded enemy collision
-		let mut i = 0 ;
-		while (i as usize) < self.enemy.len()
+		if (self.gameMode.State==1)
 		{
-			self.enemy[i as usize].update_movement();
-			if (f32::powf(self.enemy[i as usize].ABSx_pos - self.player.ABSx_pos,2.0) + f32::powf(self.enemy[i as usize].ABSy_pos - self.player.ABSy_pos,2.0).sqrt()) < 40.0
-			{
-				self.player.x_vel=0.0;
-				self.player.y_vel=0.0;
-				self.player.delta_x=0.0;
-				self.player.delta_y=0.0;
-				let id = self.enemy[i].npc_id;
-				self.enemy.remove(i as usize);  // remove the enemy
-				self.player.keyPress[0]=false;
-				self.player.keyPress[1]=false;
-				self.player.keyPress[2]=false;
-				self.player.keyPress[3]=false;
-				self.is_stopped = true;
-				sdl2::mixer::Music::halt();
+			self.player.update_movement();
 
-				// set the enemy's deck here. could randomize/set it here or set it during enemy creation
-				// the number passed into the function corresponds to the deck with the same number in battler-library.txt
-				println!("ID: {}",id);
-				self.event_system.borrow().set_battler_npc_deck(id).unwrap();
-				self.last_time = self.elapsed.elapsed().as_secs_f64()%203.0;//song length 3:23
-				//println!("about to change scene now...");
-				self.event_system.borrow().change_scene(2).unwrap();
+			self.frames = if (self.frames) > 9 {
+				self.anim_water = (self.anim_water+1)%9;
+				0
 			}
-			//println!("p:{}", self.player.ABSx_pos);
+			else {
+				self.frames + 1
+			};
 
-			i=i+1;
+			// hard coded enemy collision
+			let mut i = 0 ;
+			while (i as usize) < self.enemy.len()
+			{
+				self.enemy[i as usize].update_movement();
+				if (f32::powf(self.enemy[i as usize].ABSx_pos - self.player.ABSx_pos,2.0) + f32::powf(self.enemy[i as usize].ABSy_pos - self.player.ABSy_pos,2.0).sqrt()) < 40.0
+				{
+					self.player.x_vel=0.0;
+					self.player.y_vel=0.0;
+					self.player.delta_x=0.0;
+					self.player.delta_y=0.0;
+					let id = self.enemy[i].npc_id;
+					self.enemy.remove(i as usize);  // remove the enemy
+					self.player.keyPress[0]=false;
+					self.player.keyPress[1]=false;
+					self.player.keyPress[2]=false;
+					self.player.keyPress[3]=false;
+					self.is_stopped = true;
+					sdl2::mixer::Music::halt();
+
+					// set the enemy's deck here. could randomize/set it here or set it during enemy creation
+					// the number passed into the function corresponds to the deck with the same number in battler-library.txt
+					println!("ID: {}",id);
+					self.event_system.borrow().set_battler_npc_deck(id).unwrap();
+					self.last_time = self.elapsed.elapsed().as_secs_f64()%203.0;//song length 3:23
+					//println!("about to change scene now...");
+					//self.event_system.borrow().change_scene(2).unwrap();
+					self.gameMode.State=3;
+				}
+				//println!("p:{}", self.player.ABSx_pos);
+
+				i=i+1;
+			}
 		}
 
 
@@ -361,6 +409,35 @@ impl Scene for Overworld<'_> {
 		// Draw player
 		self.player.is_flipped = if self.player.x_vel>0.0{true}else if self.player.x_vel<0.0{false}else{self.player.is_flipped};
 		crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32),self.player.is_flipped,false)?;
+
+		if (self.gameMode.State==2)//pause
+		{
+			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.gameMode.haze_button)?;
+			crate::video::gfx::draw_sprite(&mut wincan, &self.gameMode.options_button, (50, 500))?;
+			crate::video::gfx::draw_sprite(&mut wincan, &self.gameMode.quit_button, (50, 600))?;
+		}
+		else if (self.gameMode.State==3)//talking
+		{
+			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.player.sprite)?;
+			self.gameMode.State=1;
+			self.event_system.borrow().change_scene(2).unwrap();
+			// if (self.gameMode.track==self.gameMode.pre)//into combat
+			// {
+			// 	self.event_system.borrow().change_scene(2).unwrap();
+			// }
+			// else if
+			// {
+			//
+			// }
+			// else if
+			// {
+			//
+			// }
+			// else
+			// {
+			//
+			// }
+		}
 
 
 		wincan.present();
@@ -631,7 +708,7 @@ impl<'a> Enemy<'a> {
 //###########################
 //###########################
 #[derive(Debug, Deserialize)]
-pub struct npcData
+struct npcData
 {
 	npcName: String,
 	deckID: i32,
@@ -641,10 +718,20 @@ pub struct npcData
 }
 
 #[derive(Debug, Deserialize)]
-pub struct jsonNPC
+struct jsonNPC
 {
     inlist: Vec<usize>,
     npcs: Vec<npcData>,
 }
 
+struct Modes<'a>
+{
+    State: i32,
+    midSentence: bool,
+	key: bool,
+	track: usize,
+	options_button: Rc<Texture<'a>>,
+    quit_button: Rc<Texture<'a>>,
+	haze_button: Rc<Texture<'a>>,
+}
 //###########################

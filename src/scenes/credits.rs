@@ -1,6 +1,7 @@
 //Credits
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::process;
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
@@ -57,7 +58,7 @@ impl Scene for Credits<'_> {
 			if self.step > TIMEOUT*8 {
 				// Should quit instead
 				self.step = 0;
-				self.event_system.borrow().change_scene(0).unwrap();
+				process::exit(1);
 				println!("QUIT");
 				0
 			}
@@ -85,7 +86,7 @@ impl Scene for Credits<'_> {
 			else {
 				0
 			};
-		
+
 		self.step += 1;
 
 		crate::video::gfx::fill_screen(&mut wincan, Color::RGBA(0,0,0,255));
