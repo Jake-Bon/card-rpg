@@ -396,6 +396,7 @@ impl<'a> Battle<'a> {
 	                println!("about to construct the game tree for the turn");
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
 					gametree.populate(3);
+					gametree.calculate_utilities();
 					gametree.print();
 					println!("finished making the game tree");
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
