@@ -1,26 +1,31 @@
 
 use std::net::IpAddr;
 use std::net::Ipv4Addr;
-use std::pin::Pin;
-use std::task::{Context, Waker, RawWaker, RawWakerVTable};
+
+use std::task::{Waker, RawWaker, RawWakerVTable};
 use std::io;
 use std::io::prelude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
 //use std::net::SocketAddr;
 use std::net::{TcpStream, Shutdown, SocketAddr};
-use std::fs::{read, write};
-use std::future::Future;
+
 use std::time::{Duration, Instant};
+use serde::{Serialize, Deserialize};
 
 use sdl2::pixels::Color;
 use sdl2::render::{Texture, WindowCanvas};
 use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
 
-
 use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
+
+#[derive(Serialize, Deserialize)]
+struct TurnData {
+	turn_id: u32,
+	card_ids: Vec<u32>,
+}
 
 pub struct Online<'a> {
 	buffer: [u8; 1024],
