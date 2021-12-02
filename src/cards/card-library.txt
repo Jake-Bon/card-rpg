@@ -39,4 +39,6 @@
 27::Barter::Discard a random card. Restore 8 health.::3::20,2::1,8::assets/cards/barter_Card.png
 28::Hasty Defenses::Defend for 9. Deal 9 Damage to yourself.::4::14,1::9,9::assets/cards/hastyDefenses_Card.png
 29::Repeating Volley::Deal 2 damage. For each copy of this card played previously, deal an additional 1 damage.::3::22::1::assets/cards/repeatingVolley_Card.png
-30::TMP::TMP::0::23::2::assets/templates/Cure_Card.png
+30::Krakaren::Dear god it's coming for you MANAGER. Deals 4 damage and 3 poison.::4::0,4::4,3::assets/cards/krakaren.png
+31::Super Cool OC::Stolen from Tumblr. Deals 1 damage.::2::0::1::assets/cards/donutsteel.png
+32::TMP::TMP::0::23::2::assets/templates/Cure_Card.png

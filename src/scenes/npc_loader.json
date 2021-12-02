@@ -1,0 +1,77 @@
+[{
+		"npcName": "temp name1",
+		"deckID": 1,
+		"predialog": [
+			"first of dialog 1",
+			"second line of dialog 1",
+			"..."
+		],
+		"postdialog": [
+			"first of dialog 1",
+			"second line of dialog 1",
+			"..."
+		],
+		"sprites": [
+			"assets/..",
+			"assets/..",
+			"..."
+		]
+	},
+	{
+		"npcName": "temp name 2",
+		"deckID": 2,
+		"predialog": [
+			"first of dialog 2",
+			"second line of dialog 2",
+			"..."
+		],
+		"postdialog": [
+			"first of dialog 2",
+			"second line of dialog 2",
+			"..."
+		],
+		"sprites": [
+			"assets/..",
+			"assets/..",
+			"..."
+		]
+	},
+	{
+		"npcName": "temp name 3",
+		"deckID": 3,
+		"predialog": [
+			"first of dialog 3",
+			"second line of dialog 3",
+			"..."
+		],
+		"postdialog": [
+			"first of dialog 3",
+			"second line of dialog 3",
+			"..."
+		],
+		"sprites": [
+			"assets/..",
+			"assets/..",
+			"..."
+		]
+	},
+	{
+		"npcName": "temp name 4",
+		"deckID": 4,
+		"predialog": [
+			"first of dialog 4",
+			"second line of dialog 4",
+			"..."
+		],
+		"postdialog": [
+			"first of dialog 4",
+			"second line of dialog 4",
+			"..."
+		],
+		"sprites": [
+			"assets/..",
+			"assets/..",
+			"..."
+		]
+	}
+]

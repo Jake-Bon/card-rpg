@@ -8,7 +8,7 @@ fn main() -> Result<()>{
     
     loop {
     
-        let (mut player_1_stream, mut player_2_stream) = accept_clients("127.0.0.1:7878").unwrap(); // localhost
+        let (mut player_1_stream, mut player_2_stream) = accept_clients("172.31.21.15:7878").unwrap(); // localhost
         //let (mut player_1_stream, mut player_2_stream) = accept_clients("34.227.148.203:54345").unwrap();
         
         player_1_stream.set_nonblocking(true);
