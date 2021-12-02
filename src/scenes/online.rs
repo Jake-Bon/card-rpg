@@ -21,7 +21,7 @@ use crate::video::text::FontManager;
 use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct TurnData {
 	turn_id: u32,
 	card_ids: Vec<u32>,
@@ -48,7 +48,7 @@ impl Scene for Online<'_> {
                 GameEvent::MouseClick(x_pos,y_pos) => {
                     if self.connected {
                         
-                        let mut send_str = format!("MouseClick at x: {}, y: {}", x_pos, y_pos);
+                        let mut send_str = TurnData{turn_id: x_pos as u32, card_ids: vec![0]};
                         
                         if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
                             //send_str = "Quit".to_string();
@@ -62,7 +62,7 @@ impl Scene for Online<'_> {
                         //}
                         
                         let mut tcp_con = self.tcp_connection.as_ref().unwrap();
-                        tcp_con.write_all(send_str.as_bytes());
+                        tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
                         tcp_con.flush();
                     }
                 },
@@ -87,7 +87,8 @@ impl Scene for Online<'_> {
 			                Ok(T) => { 
 			                    if T > 0 { // use this to ignore duplicate data-> && String::from_utf8_lossy(&self.buffer) != String::from_utf8_lossy(&buffer) {
 			                        self.buffer = buffer;
-			                        println!("Received data: '{}'", String::from_utf8_lossy(&self.buffer));
+			                        let turn_data: TurnData = serde_json::from_str(std::str::from_utf8(&buffer).expect("Oops wrong data")).expect("Read failed");
+			                        println!("Received data: {:?}", turn_data);
 			                        
 			                    }
 			                    // if T (the number of bytes read) is equal to 0, this means that the stream has reached the end of file marker, and the stream was closed. Need to reconnect
