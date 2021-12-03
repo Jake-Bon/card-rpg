@@ -28,10 +28,18 @@ use crate::ai::minimax::*;
 // because of very poor performance when considering all the cards the player could
 // play (deck+hand), I opted to leave it cheaty for now.
 
+
+
 // TODOs:
 //  - Deck replenishment when cards run out during populate() simulation
 //  - Simulate for multiple cards being played per turn
 //  - Utility function tuning
+
+
+
+// !! Known Bugs: !!
+//  - Cards that draw more cards do not seem to have an effect on populates() simulation. ie no new cards are drawn
+//      -This also means that the calculated utility of the states after a card draw are inacurrate
 
 pub struct Node {
     utility: Option<i32>,
@@ -59,6 +67,8 @@ impl Node {
         let player_deck = self.status.get_p1().borrow().get_deck();
         let mut already_played_cards: HashSet<u32> = HashSet::new();
         // Ai's turn (p2)
+        // TODO: Simulation for playing more than one card per turn
+        // TODO: Deck replenishment during simulation if cards run out
         if ai_turn {
             // Pick a card from the ai's hand to play, attempting to play one card from the
             // hand at a time and perseving the others.
@@ -91,6 +101,8 @@ impl Node {
             }
         }
         // Player's turn (p1)
+        // TODO: Simulation for playing more than one card per turn
+        // TODO: Deck replenishment during simulation if cards run out
         else {
             for i in 0..player_hand.len() { //+player_deck.len() Removed for performance concerns
                 // The BattleStatus that we will modify to pass on to the next node
