@@ -49,7 +49,8 @@ fn map_reader(map: &str) -> Result<Vec<u8>,String>{
 	let mut bytes: Vec<u8> = Vec::new();
 	buf_reader.read_to_end(&mut bytes);
 
-	bytes.drain(0..66);//remove bmp header
+	bytes.drain(0..70);//remove bmp header + Color header
+	bytes.drain((TileH*TileW) as usize..);//remove bmp header + Color header
 	let mut map: Vec<u8> = Vec::new();
 	for i in 0..TileH{ //mirror map vertically to how it is drawn
 		let j = TileH as i32-i as i32;
@@ -57,13 +58,16 @@ fn map_reader(map: &str) -> Result<Vec<u8>,String>{
 	}
 
 	let mut random_num: f32 = 0.0;
+
+	//map.drain(0..TileW as usize);
+
 	for i in 0..map.len(){
 		random_num = rng.gen_range(0.0..2.0);
 		if random_num>=1.7{
 			if map[i]==1{
-				map[i]+=2;
+				map[i]+=10;
 			}else if map[i]==2{
-				map[i]+=2;
+				map[i]+=10;
 			}
 		}
 	}
@@ -95,6 +99,7 @@ impl<'a> Overworld<'a> {
 		//let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
 		let map_rep = map_reader("src/scenes/world-1.bmp")?;
+		println!("{:?},{}",map_rep,map_rep.len()/TileW as usize);
 
 		let player = Player {
 			x_pos: (CAM_W/2) as f32,
@@ -126,11 +131,10 @@ impl<'a> Overworld<'a> {
 		let file = File::open(path).unwrap().read_to_string(&mut s).unwrap();
     	//let reader = BufReader::new(file);
 		let tempnpc: Vec<npcData> = serde_json::from_str(&s).unwrap();
-		println!("i made it here");
 		let mut tempsize: Vec<usize> = Vec::new();
 		let mut i = 0;
 		loop {
-			if (i == tempnpc.len() as i32)
+			if (i >= tempnpc.len() as i32)
 			{
 				break;
 			}
@@ -153,12 +157,13 @@ impl<'a> Overworld<'a> {
 			let mut random_x: f32 = rng.gen_range(0.0..(FullW - TILE_SIZE) as f32);
 			let mut random_y: f32 =rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 
-			loop
+			'inner: loop
 			{
 				let mut random_x: f32 = rng.gen_range(0.0..(FullW-TILE_SIZE) as f32);
 				random_x -= random_x%TILE_SIZE as f32;
 			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
+
 
 				//ensure enemy is generated in a safe area
 				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
@@ -188,7 +193,7 @@ impl<'a> Overworld<'a> {
 								is_flipped: false,
 								npc_id: rng.gen_range(1..6),//eventually get range from NPC
 							});
-							break;
+							break 'inner;
 						}
 					}
 
@@ -382,13 +387,13 @@ impl Scene for Overworld<'_> {
 			if self.map_rep[i as usize]==1{ //SAND
 				sprite_x = 0;
 				sprite_y = SpriteTILE_SIZE as i32;
-			}else if self.map_rep[i as usize]==3{ //Sand + Palm
+			}else if self.map_rep[i as usize]==11{ //Sand + Palm
 				sprite_x = SpriteTILE_SIZE as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
 			}else if self.map_rep[i as usize]==2{ //GRASS
 				sprite_x = (SpriteTILE_SIZE as i32)*2 as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
-			}else if self.map_rep[i as usize]==4{ //Grass + Flower
+			}else if self.map_rep[i as usize]==12{ //Grass + Flower
 				sprite_x = (SpriteTILE_SIZE as i32)*3 as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
 			}else{//Add more types if needed

@@ -7,20 +7,18 @@ use std::cmp;
 use crate::cards::game_structs::*;
 use crate::cards::battle_system::*;
 
-use crate::ai::minimax::*;
-
 // !! README: !!
 // Debug: cargo run > treetest.txt (for the most readable print of the tree)
 
 //  The heavy lifting of creating the game tree is done in Node.populate()
 
-// GameTree.populate(), given the battle's current BattleStatus, 
+// GameTree.populate(), given the battle's current BattleStatus,
 // calls Node.populate(). This simulates every playout up to the depth limit
 
 // The AI will match up every card in its hand to every card in the players hand.
 
 //  Currently, the tree only assumes the player and ai will play a single
-//      card per turn. 
+//      card per turn.
 
 //  Decks do not yet replenish.
 
@@ -72,7 +70,7 @@ impl Node {
         if ai_turn {
             // Pick a card from the ai's hand to play, attempting to play one card from the
             // hand at a time and perseving the others.
-            
+
             for i in 0..ai_deck.len() {
                 // The BattleStatus that we will modify to pass on to the next node
                 let mut next_status = reset_ref(self.status.clone());
@@ -155,7 +153,7 @@ impl Node {
         for child in &mut self.children {
             child.populate(!ai_turn, height-1);
         }
-    }   
+    }
 
     // Checks if the current node is in a game terminating state
     pub fn stateIsTerminating(&mut self) -> bool {
@@ -174,7 +172,7 @@ impl Node {
     pub fn set_utility(&mut self, new_utility: i32) {
         self.utility = Some(new_utility);
     }
-    
+
     // Utility function
     pub fn calculate_utilities(&mut self) {
         if self.children.len() > 0 {
@@ -311,7 +309,7 @@ impl GameTree {
 
     // Takes rounds as a parameter. Each round consists of a player turn and an AI
     // turn. In testing, numbers beyond 3 may take prohibitively long or stall the
-    // program completely for decks with a great variance of card. For relatively 
+    // program completely for decks with a great variance of card. For relatively
     // simple/homogenous decks, performance for simulating beyond 3 turns is far
     // greater. Keep this in mind if we want to have AI of varying ability to
     // 'see into the future' and therefore probably be more difficult for the player.
@@ -344,7 +342,7 @@ impl GameTree {
 }
 
 // Resets the refrences within BattleStatus so that when we clone BattleStatus
-// we have distinct battlers rather than a reference to the same Battlers as the 
+// we have distinct battlers rather than a reference to the same Battlers as the
 // source of the copy
 pub fn reset_ref(mut incoming_status: BattleStatus) -> BattleStatus {
     let mut status = BattleStatus::new(
