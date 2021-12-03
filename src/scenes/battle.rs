@@ -399,6 +399,7 @@ impl<'a> Battle<'a> {
 					gametree.calculate_utilities();
 					gametree.print();
 					println!("finished making the game tree");
+					//let card_rslt = gametree.minimax();
 					let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
 					if !card_rslt.is_none(){
