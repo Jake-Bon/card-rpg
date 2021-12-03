@@ -17,7 +17,6 @@ use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
 
 use crate::ai::ai_structs::*;
-use crate::ai::minimax::*;
 
 use crate::cards::game_structs::*;
 

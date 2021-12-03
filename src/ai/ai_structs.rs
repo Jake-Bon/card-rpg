@@ -7,8 +7,6 @@ use std::cmp;
 use crate::cards::game_structs::*;
 use crate::cards::battle_system::*;
 
-use crate::ai::minimax::*;
-
 // !! README: !!
 // Debug: cargo run > treetest.txt (for the most readable print of the tree)
 
