@@ -2,38 +2,46 @@ use std::fs;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashSet;
+use std::cmp;
 
 use crate::cards::game_structs::*;
 use crate::cards::battle_system::*;
 
 use crate::ai::minimax::*;
 
-// README:
+// !! README: !!
 // Debug: cargo run > treetest.txt (for the most readable print of the tree)
+
 //  The heavy lifting of creating the game tree is done in Node.populate()
+
 // GameTree.populate(), given the battle's current BattleStatus, 
 // calls Node.populate(). This simulates every playout up to the depth limit
+
 // The AI will match up every card in its hand to every card in the players hand.
+
 //  Currently, the tree only assumes the player and ai will play a single
 //      card per turn. 
+
 //  Decks do not yet replenish.
+
 // AI considers only the cards in the player's hand. This is kind of cheaty, but
 // because of very poor performance when considering all the cards the player could
 // play (deck+hand), I opted to leave it cheaty for now.
+
 // TODOs:
 //  - Deck replenishment when cards run out during populate() simulation
 //  - Simulate for multiple cards being played per turn
-//  - Utility function for arbitrary game state
+//  - Utility function tuning
 
 pub struct Node {
     utility: Option<i32>,
     status: BattleStatus,
-    last_played_card: Card,
+    last_played_card: u32,
     children: Vec<Node>,
 }
 
 impl Node {
-    pub fn new(mut incoming_status: BattleStatus, last: Card) -> Node {
+    pub fn new(mut incoming_status: BattleStatus, last: u32) -> Node {
         let utility = None;
         let last_played_card = last;
         let children: Vec<Node> = Vec::new();
@@ -79,7 +87,7 @@ impl Node {
                 next_status.turner();
                 // Add new child node representing the game state after
                 // card_to_play is played
-                self.children.push(Node::new(next_status, curr_card));
+                self.children.push(Node::new(next_status, card_id));
             }
         }
         // Player's turn (p1)
@@ -128,7 +136,7 @@ impl Node {
                 next_status.turner();
                 // Add new child node representing the game state after
                 // card_to_play is played
-                self.children.push(Node::new(next_status, curr_card));
+                self.children.push(Node::new(next_status, card_id));
             }
         }
         // Recursively populate each child
@@ -168,10 +176,14 @@ impl Node {
         let ai = status.get_p2().borrow().clone();
         if player.get_curr_health() <= 0 {
             self.set_utility(i32::MAX);
+            return;
         }
         else if ai.get_curr_health() <= 0 {
-            self.set_utility(i32::MAX);
+            self.set_utility(i32::MIN);
+            return;
         }
+        // !! Tune up needed here !!
+        // Utility value calculations
         // AI's
         let ai_health = ai.get_curr_health();
         let ai_energy = ai.get_curr_energy();
@@ -180,7 +192,7 @@ impl Node {
         let ai_energy_regen = ai.get_energy_regen();
         let ai_poison = ai.get_poison() as i32;
         let ai_defense = ai.get_defense();
-        let ai_utility = (ai_health + ai_energy + ai_deck.sqrt() as i32 + ai_health_regen + ai_energy_regen + ai_defense) - ai_poison;
+        let ai_utility = (ai_health*2 + ai_energy + ai_deck.sqrt() as i32 + ai_health_regen + ai_energy_regen + ai_defense) - ai_poison;
         // Player's
         let player_health = player.get_curr_health();
         let player_energy = player.get_curr_energy();
@@ -195,6 +207,42 @@ impl Node {
         self.set_utility(utility);
     }
 
+    // For use in Minimax
+    pub fn maximizer(&mut self, mut alpha: i32, mut beta: i32) -> i32 {
+        if self.children.len() <= 0 {
+            return self.utility.unwrap();
+        }
+        let mut best_value = i32::MIN;
+        for child in &mut self.children {
+            let value = child.minimizer(alpha, beta);
+            best_value = cmp::max(best_value, value);
+            alpha = cmp::max(alpha, best_value);
+            if beta <= alpha {
+                break;
+            }
+        }
+        self.set_utility(best_value);
+        return best_value;
+    }
+
+    // For use in Minimax
+    pub fn minimizer(&mut self, mut alpha: i32, mut beta: i32) -> i32 {
+        if self.children.len() <= 0 {
+            return self.utility.unwrap();
+        }
+        let mut best_value = i32::MAX;
+        for child in &mut self.children {
+            let value = child.maximizer(alpha, beta);
+            best_value = cmp::min(best_value, value);
+            beta = cmp::min(beta, best_value);
+            if beta <= alpha {
+                break;
+            }
+        }
+        self.set_utility(best_value);
+        return best_value;
+    }
+
     pub fn print(&mut self, tab: u32) {
         let mut util = ("None").to_string();
         if self.utility.is_some() {
@@ -204,13 +252,32 @@ impl Node {
         for i in 0..tab {
             print!("-");
         }
+
         if tab % 2 == 0 {
-            let ai = self.get_status().get_p2().borrow().clone();
-            println!("ai|d:{}|c:{}|last:{}|h:{}|e:{}|u:{}", ai.get_deck().len(), ai.get_deck().len() + ai.get_hand().len(), self.last_played_card.get_name(), ai.get_curr_health(), ai.get_curr_energy(), util);
+            let mut status = self.get_status();
+            let ai = status.get_p2().borrow().clone();
+            let card_id = self.last_played_card;
+            let mut card_name = String::new();
+            if card_id == u32::MAX {
+                card_name = String::from("Unknown");
+            }
+            else {
+                card_name = status.get_card(card_id).get_name().to_string();
+            }
+            println!("ai|d:{}|c:{}|last:{}|h:{}|e:{}|u:{}", ai.get_deck().len(), ai.get_deck().len() + ai.get_hand().len(), card_name, ai.get_curr_health(), ai.get_curr_energy(), util);
         }
         else {
-            let player = self.get_status().get_p1().borrow().clone();
-            println!("pl|d:{}|c:{}|last:{}|h:{}|e:{}|u:{}", player.get_deck().len(), player.get_deck().len() + player.get_hand().len(), self.last_played_card.get_name(), player.get_curr_health(), player.get_curr_energy(), util);
+            let mut status = self.get_status();
+            let player = status.get_p1().borrow().clone();
+            let card_id = self.last_played_card;
+            let mut card_name = String::new();
+            if card_id == u32::MAX {
+                card_name = String::from("Unknown");
+            }
+            else {
+                card_name = status.get_card(card_id).get_name().to_string();
+            }
+            println!("pl|d:{}|c:{}|last:{}|h:{}|e:{}|u:{}", player.get_deck().len(), player.get_deck().len() + player.get_hand().len(), card_name, player.get_curr_health(), player.get_curr_energy(), util);
         }
         for child in &mut self.children {
             child.print(tab+1);
@@ -225,7 +292,7 @@ pub struct GameTree {
 impl GameTree {
     pub fn new(status: BattleStatus) -> GameTree {
         //let status: BattleStatus = rc_status.borrow().clone();
-        let last_played_card = Card::new(String::from("Unknown"), String::from("Unknown"), 0, vec![0], vec![0], String::from("None"));
+        let last_played_card = u32::MAX;
         let root = Node::new(reset_ref(status), last_played_card);
         GameTree { root }
     }
@@ -246,6 +313,16 @@ impl GameTree {
 
     pub fn calculate_utilities(&mut self) {
         self.root.calculate_utilities();
+    }
+
+    pub fn minimax(&mut self) -> Option<u32> {
+        let best_utility = self.root.maximizer(i32::MIN, i32::MAX);
+        for child in &mut self.root.children {
+            if child.utility.unwrap() == best_utility {
+                return Some(child.last_played_card);
+            }
+        }
+        return None;
     }
 
     pub fn print(&mut self) {
