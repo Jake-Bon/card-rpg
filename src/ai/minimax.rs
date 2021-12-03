@@ -1,4 +1,4 @@
-use crate::ai::ai_structs;
+use crate::ai::ai_structs::*;
 
 // Utility representing a losing game state is currently i32::MIN and winning game state
 // is i32::MAX

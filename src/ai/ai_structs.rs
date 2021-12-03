@@ -6,6 +6,8 @@ use std::collections::HashSet;
 use crate::cards::game_structs::*;
 use crate::cards::battle_system::*;
 
+use crate::ai::minimax::*;
+
 // README:
 // Debug: cargo run > treetest.txt (for the most readable print of the tree)
 //  The heavy lifting of creating the game tree is done in Node.populate()
@@ -42,22 +44,9 @@ impl Node {
     // Recursive function to populate each game tree node with children
     pub fn populate(&mut self, ai_turn: bool, height: i32) {
         if height == 0 || self.stateIsTerminating() {
-            // State is a terminating state. Set utility to a predetermined number to indicate win/loss
-            if self.stateIsTerminating() {
-                if self.status.get_p2().borrow().get_curr_health() <= 0 {
-                    self.set_utility(i32::MIN);
-                }
-                else {
-                    self.set_utility(i32::MAX);
-                }
-            }
-            // Height is 0
-            else {
-                // TODO: Call utility function here to calculate utility base on curr game state
-            }
             return;
         }
-        let ai_cards = self.status.get_p2().borrow().get_hand();
+        let ai_deck = self.status.get_p2().borrow().get_hand();
         let player_hand = self.status.get_p1().borrow().get_hand();
         let player_deck = self.status.get_p1().borrow().get_deck();
         let mut already_played_cards: HashSet<u32> = HashSet::new();
@@ -66,11 +55,11 @@ impl Node {
             // Pick a card from the ai's hand to play, attempting to play one card from the
             // hand at a time and perseving the others.
             
-            for i in 0..ai_cards.len() {
+            for i in 0..ai_deck.len() {
                 // The BattleStatus that we will modify to pass on to the next node
                 let mut next_status = reset_ref(self.status.clone());
                 // Get card ID and related card struct
-                let card_id = ai_cards[i];
+                let card_id = ai_deck[i];
                 let curr_card = next_status.get_card((card_id as u32));
                 // If we've already simulated this round with this card, skip
                 if already_played_cards.contains(&card_id) {
@@ -146,8 +135,7 @@ impl Node {
         for child in &mut self.children {
             child.populate(!ai_turn, height-1);
         }
-    }
-        
+    }   
 
     // Checks if the current node is in a game terminating state
     pub fn stateIsTerminating(&mut self) -> bool {
@@ -159,8 +147,52 @@ impl Node {
         return false;
     }
 
+    pub fn get_status(&mut self) -> BattleStatus {
+        self.status.clone()
+    }
+
     pub fn set_utility(&mut self, new_utility: i32) {
         self.utility = Some(new_utility);
+    }
+    
+    // Utility function
+    pub fn calculate_utilities(&mut self) {
+        if self.children.len() > 0 {
+            for child in &mut self.children {
+                child.calculate_utilities();
+            }
+            return;
+        }
+        let mut status = self.get_status();
+        let player = status.get_p1().borrow().clone();
+        let ai = status.get_p2().borrow().clone();
+        if player.get_curr_health() <= 0 {
+            self.set_utility(i32::MAX);
+        }
+        else if ai.get_curr_health() <= 0 {
+            self.set_utility(i32::MAX);
+        }
+        // AI's
+        let ai_health = ai.get_curr_health();
+        let ai_energy = ai.get_curr_energy();
+        let ai_deck = ai.get_deck_size() as f64;
+        let ai_health_regen = ai.get_health_regen();
+        let ai_energy_regen = ai.get_energy_regen();
+        let ai_poison = ai.get_poison() as i32;
+        let ai_defense = ai.get_defense();
+        let ai_utility = (ai_health + ai_energy + ai_deck.sqrt() as i32 + ai_health_regen + ai_energy_regen + ai_defense) - ai_poison;
+        // Player's
+        let player_health = player.get_curr_health();
+        let player_energy = player.get_curr_energy();
+        let player_deck = player.get_deck_size() as f64;
+        let player_health_regen = player.get_health_regen();
+        let player_energy_regen = player.get_energy_regen();
+        let player_poison = player.get_poison() as i32;
+        let player_defense = player.get_defense();
+        let player_utility = (player_health + player_energy + player_deck.sqrt() as i32 + player_health_regen + player_energy_regen + ai_defense) - ai_poison;
+        // Combine
+        let utility = ai_utility - player_utility;
+        self.set_utility(utility);
     }
 
     pub fn print(&mut self, tab: u32) {
@@ -173,10 +205,12 @@ impl Node {
             print!("-");
         }
         if tab % 2 == 0 {
-            println!("ai|c:{}|last:{}|h:{}|p:{}|u:{}", self.status.get_p2().borrow().get_hand().len(), self.last_played_card.get_name(), self.status.get_p2().borrow().get_curr_health(),self.status.get_p2().borrow().get_poison(), util);
+            let ai = self.get_status().get_p2().borrow().clone();
+            println!("ai|d:{}|c:{}|last:{}|h:{}|e:{}|u:{}", ai.get_deck().len(), ai.get_deck().len() + ai.get_hand().len(), self.last_played_card.get_name(), ai.get_curr_health(), ai.get_curr_energy(), util);
         }
         else {
-            println!("pl|c:{}|last:{}|h:{}|p:{}|u:{}", self.status.get_p1().borrow().get_hand().len() + self.status.get_p1().borrow().get_deck().len(), self.last_played_card.get_name(), self.status.get_p1().borrow().get_curr_health(),self.status.get_p1().borrow().get_poison(), util);
+            let player = self.get_status().get_p1().borrow().clone();
+            println!("pl|d:{}|c:{}|last:{}|h:{}|e:{}|u:{}", player.get_deck().len(), player.get_deck().len() + player.get_hand().len(), self.last_played_card.get_name(), player.get_curr_health(), player.get_curr_energy(), util);
         }
         for child in &mut self.children {
             child.print(tab+1);
@@ -205,9 +239,13 @@ impl GameTree {
     // In short, longer simulations pair best with a more homogenous AI deck.
     //
     // !! Currently, the ai only simulates the game tree based on the player's
-    // *hand*, so performance is greater than stated above.
+    // !! hand, so performance is greater than stated above.
     pub fn populate(&mut self, rounds: i32) {
         self.root.populate(true, rounds*2);
+    }
+
+    pub fn calculate_utilities(&mut self) {
+        self.root.calculate_utilities();
     }
 
     pub fn print(&mut self) {
