@@ -41,34 +41,45 @@ const ACCEL_RATE: f32 = 0.3;
 
 //mod crate::video;
 
-fn map_reader(map: &str) -> Result<Vec<u8>,String>{
+fn map_reader() -> Result<Vec<Vec<u8>>,String>{
+	//"src/scenes/world-1.bmp"
+	let fileList = vec!["src/scenes/world-1.bmp","src/scenes/world-2.bmp"];
+	let mut mapList = Vec::new();
 	let mut rng = thread_rng();
-	let file = File::open(map.to_string()).expect("File not opened.");
-	let mut buf_reader = BufReader::new(file);
+	for f in fileList{
+		let file = File::open(f.to_string()).expect("File not opened.");
+		let mut buf_reader = BufReader::new(file);
 
-	let mut bytes: Vec<u8> = Vec::new();
-	buf_reader.read_to_end(&mut bytes);
+		let mut bytes: Vec<u8> = Vec::new();
+		buf_reader.read_to_end(&mut bytes);
 
-	bytes.drain(0..66);//remove bmp header
-	let mut map: Vec<u8> = Vec::new();
-	for i in 0..TileH{ //mirror map vertically to how it is drawn
-		let j = TileH as i32-i as i32;
-		map.extend_from_slice(&(bytes[(j-1) as usize*TileW as usize..j as usize*TileW as usize]));
-	}
+		bytes.drain(0..70);//remove bmp header + Color header
+		bytes.drain((TileH*TileW) as usize..);//remove bmp header + Color header
+		let mut map: Vec<u8> = Vec::new();
+		for i in 0..TileH{ //mirror map vertically to how it is drawn
+			let j = TileH as i32-i as i32;
+			map.extend_from_slice(&(bytes[(j-1) as usize*TileW as usize..j as usize*TileW as usize]));
+		}
 
-	let mut random_num: f32 = 0.0;
-	for i in 0..map.len(){
-		random_num = rng.gen_range(0.0..2.0);
-		if random_num>=1.7{
-			if map[i]==1{
-				map[i]+=2;
-			}else if map[i]==2{
-				map[i]+=2;
+		let mut random_num: f32 = 0.0;
+
+		//map.drain(0..TileW as usize);
+
+		for i in 0..map.len(){
+			random_num = rng.gen_range(0.0..2.0);
+			if random_num>=1.7{
+				if map[i]==1{
+					map[i]+=10;
+				}else if map[i]==2{
+					map[i]+=10;
+				}
 			}
 		}
+		mapList.push(map);
 	}
 
-	Ok(map)
+
+	Ok(mapList)
 }
 
 pub struct Overworld<'a> {
@@ -80,6 +91,7 @@ pub struct Overworld<'a> {
 	enemy: Vec<Enemy<'a>>,
 	anim_water: u32,
 	frames: u32,
+	maps: Vec<Vec<u8>>,
 	map_rep: Vec<u8>,
 	music: Music<'a>,
 	elapsed: Instant,
@@ -87,6 +99,7 @@ pub struct Overworld<'a> {
 	is_stopped: bool,
 	is_paused: bool,
 	gameMode: Modes<'a>,
+	currMap: u32,
 }
 
 impl<'a> Overworld<'a> {
@@ -94,7 +107,8 @@ impl<'a> Overworld<'a> {
 		//let tile_map = [0; 144];
 		//let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
-		let map_rep = map_reader("src/scenes/world-1.bmp")?;
+		let maps = map_reader()?;
+		let map_rep = maps[0].clone();
 
 		let player = Player {
 			x_pos: (CAM_W/2) as f32,
@@ -126,11 +140,10 @@ impl<'a> Overworld<'a> {
 		let file = File::open(path).unwrap().read_to_string(&mut s).unwrap();
     	//let reader = BufReader::new(file);
 		let tempnpc: Vec<npcData> = serde_json::from_str(&s).unwrap();
-		println!("i made it here");
 		let mut tempsize: Vec<usize> = Vec::new();
 		let mut i = 0;
 		loop {
-			if (i == tempnpc.len() as i32)
+			if (i >= tempnpc.len() as i32)
 			{
 				break;
 			}
@@ -153,25 +166,27 @@ impl<'a> Overworld<'a> {
 			let mut random_x: f32 = rng.gen_range(0.0..(FullW - TILE_SIZE) as f32);
 			let mut random_y: f32 =rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 
-			loop
+			'inner: loop
 			{
 				let mut random_x: f32 = rng.gen_range(0.0..(FullW-TILE_SIZE) as f32);
 				random_x -= random_x%TILE_SIZE as f32;
 			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
 
+
 				//ensure enemy is generated in a safe area
 				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
 				{
+					let chosen_map = rng.gen_range(0..2);
 					let map_x = (random_x/TILE_SIZE as f32) as usize;
 					let map_y = (random_y/TILE_SIZE as f32) as usize;
 					let map_x_right = if map_x>=(TileW-1) as usize{map_x}else{map_x+1};
 					let map_y_down = if map_y>=(TileH-1) as usize{map_y}else{map_y+1};
 
-					let orig = map_rep[map_x + TileW as usize*map_y]==0; //2x2 area needed for safe gen
-					let right = map_rep[map_x_right + TileW as usize*map_y]==0;
-					let down = map_rep[map_x + TileW as usize*map_y_down]==0;
-					let diag = map_rep[map_x_right + TileW as usize*map_y_down]==0;
+					let orig = maps[chosen_map][map_x + TileW as usize*map_y]==0; //2x2 area needed for safe gen
+					let right = maps[chosen_map][map_x_right + TileW as usize*map_y]==0;
+					let down = maps[chosen_map][map_x + TileW as usize*map_y_down]==0;
+					let diag = maps[chosen_map][map_x_right + TileW as usize*map_y_down]==0;
 
 					if !(random_x<=4.0||random_y<=4.0||random_x>=FullW as f32-TILE_SIZE as f32||random_y>=FullH as f32-TILE_SIZE as f32){
 						if orig&&right&&down&&diag{ //Create enemy if: OUTSIDE player camera,
@@ -182,13 +197,14 @@ impl<'a> Overworld<'a> {
 								y_vel: rng.gen_range(0.0..2.0 as f32),
 								timer: Instant::now(),
 								sprite: texture_manager.borrow_mut().load("assets/simple_enemy_sprite.png")?,
-								map_copy: map_rep.clone(),
+								map_copy: maps[chosen_map].clone(),
 								last_safe_x: random_x,
 								last_safe_y: random_y,
 								is_flipped: false,
+								on_map: (chosen_map+1) as u32,
 								npc_id: rng.gen_range(1..6),//eventually get range from NPC
 							});
-							break;
+							break 'inner;
 						}
 					}
 
@@ -237,19 +253,22 @@ impl<'a> Overworld<'a> {
 			enemy,
 			frames,
 			anim_water,
+			maps,
 			map_rep,
 			music,
 			is_paused,
 			is_stopped,
 			elapsed,
 			last_time,
-			gameMode
+			gameMode,
+			currMap:1,
 		})
 	}
 
 }
 
 impl Scene for Overworld<'_> {
+
 	fn handle_input(&mut self, event: GameEvent) {
 		// Matching events, most importantly KeyPress(k)'s
 		match self.gameMode.State {
@@ -336,36 +355,59 @@ impl Scene for Overworld<'_> {
 			let mut i = 0 ;
 			while (i as usize) < self.enemy.len()
 			{
-				self.enemy[i as usize].update_movement();
-				if (f32::powf(self.enemy[i as usize].ABSx_pos - self.player.ABSx_pos,2.0) + f32::powf(self.enemy[i as usize].ABSy_pos - self.player.ABSy_pos,2.0).sqrt()) < 40.0
-				{
-					self.player.x_vel=0.0;
-					self.player.y_vel=0.0;
-					self.player.delta_x=0.0;
-					self.player.delta_y=0.0;
-					let id = self.enemy[i].npc_id;
-					self.enemy.remove(i as usize);  // remove the enemy
-					self.player.keyPress[0]=false;
-					self.player.keyPress[1]=false;
-					self.player.keyPress[2]=false;
-					self.player.keyPress[3]=false;
-					self.is_stopped = true;
-					sdl2::mixer::Music::halt();
+					self.enemy[i as usize].update_movement();
+					if self.enemy[i].on_map==self.currMap&&(f32::powf(self.enemy[i as usize].ABSx_pos - self.player.ABSx_pos,2.0) + f32::powf(self.enemy[i as usize].ABSy_pos - self.player.ABSy_pos,2.0).sqrt()) < 40.0
+					{
+						self.player.x_vel=0.0;
+						self.player.y_vel=0.0;
+						self.player.delta_x=0.0;
+						self.player.delta_y=0.0;
+						let id = self.enemy[i].npc_id;
+						self.enemy.remove(i as usize);  // remove the enemy
+						self.player.keyPress[0]=false;
+						self.player.keyPress[1]=false;
+						self.player.keyPress[2]=false;
+						self.player.keyPress[3]=false;
+						self.is_stopped = true;
+						sdl2::mixer::Music::halt();
 
-					// set the enemy's deck here. could randomize/set it here or set it during enemy creation
-					// the number passed into the function corresponds to the deck with the same number in battler-library.txt
-					println!("ID: {}",id);
-					self.event_system.borrow().set_battler_npc_deck(id).unwrap();
-					self.last_time = self.elapsed.elapsed().as_secs_f64()%203.0;//song length 3:23
-					//println!("about to change scene now...");
-					//self.event_system.borrow().change_scene(2).unwrap();
-					self.gameMode.State=3;
-				}
-				//println!("p:{}", self.player.ABSx_pos);
-
+						// set the enemy's deck here. could randomize/set it here or set it during enemy creation
+						// the number passed into the function corresponds to the deck with the same number in battler-library.txt
+						println!("ID: {}",id);
+						self.event_system.borrow().set_battler_npc_deck(id).unwrap();
+						self.last_time = self.elapsed.elapsed().as_secs_f64()%203.0;//song length 3:23
+						//println!("about to change scene now...");
+						//self.event_system.borrow().change_scene(2).unwrap();
+						self.gameMode.State=3;
+					}
+					//println!("p:{}", self.player.ABSx_pos);
 				i=i+1;
+
 			}
+
 		}
+
+		println!("{} {}",self.currMap,self.player.ABSy_pos);
+
+		if self.currMap==1&&self.player.ABSy_pos<=5.0{
+			self.currMap=2;
+			self.map_rep = self.maps[1].clone();
+			self.player.map_copy = self.maps[1].clone();
+			self.player.ABSy_pos = FullH as f32-60.0;
+			self.player.Box_y_pos = (self.player.ABSy_pos).clamp(0.0, (FullH-CAM_H) as f32);
+			self.player.last_safe_y = self.player.ABSy_pos;
+		}
+
+		if self.currMap==2&&self.player.ABSy_pos>=(FullH-45) as f32{
+			self.currMap=1;
+			self.map_rep = self.maps[0].clone();
+			self.player.map_copy = self.maps[0].clone();
+			self.player.ABSy_pos = 10.0;
+			self.player.Box_y_pos = (0.0 as f32).clamp(0.0, (FullH-CAM_H) as f32);
+			self.player.last_safe_y = self.player.ABSy_pos;
+		}
+
+
 
 
 		// Draw background color
@@ -382,15 +424,18 @@ impl Scene for Overworld<'_> {
 			if self.map_rep[i as usize]==1{ //SAND
 				sprite_x = 0;
 				sprite_y = SpriteTILE_SIZE as i32;
-			}else if self.map_rep[i as usize]==3{ //Sand + Palm
+			}else if self.map_rep[i as usize]==11{ //Sand + Palm
 				sprite_x = SpriteTILE_SIZE as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
 			}else if self.map_rep[i as usize]==2{ //GRASS
 				sprite_x = (SpriteTILE_SIZE as i32)*2 as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
-			}else if self.map_rep[i as usize]==4{ //Grass + Flower
+			}else if self.map_rep[i as usize]==12{ //Grass + Flower
 				sprite_x = (SpriteTILE_SIZE as i32)*3 as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
+			}else if self.map_rep[i as usize]==3{
+				sprite_x = (self.anim_water*SpriteTILE_SIZE) as i32;
+				sprite_y = (SpriteTILE_SIZE as i32)*2 as i32;
 			}else{//Add more types if needed
 				continue;
 			}
@@ -402,8 +447,10 @@ impl Scene for Overworld<'_> {
 
 		// draw enemy
 		for i in 0 as usize..self.enemy.len(){
-			self.enemy[i].is_flipped = if self.enemy[i].x_vel<0.0{false}else if self.enemy[i].x_vel>0.0{true}else{self.enemy[i].is_flipped};
-			crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.enemy[i].sprite, (self.enemy[i].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i].ABSy_pos as i32-self.player.Box_y_pos as i32),self.enemy[i].is_flipped,false)?;
+			if self.enemy[i].on_map==self.currMap{
+				self.enemy[i].is_flipped = if self.enemy[i].x_vel<0.0{false}else if self.enemy[i].x_vel>0.0{true}else{self.enemy[i].is_flipped};
+				crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.enemy[i].sprite, (self.enemy[i].ABSx_pos as i32-self.player.Box_x_pos as i32, self.enemy[i].ABSy_pos as i32-self.player.Box_y_pos as i32),self.enemy[i].is_flipped,false)?;
+			}
 		}
 
 		// Draw player
@@ -580,10 +627,11 @@ impl<'a> Player<'a> {
 		let map_y_up = if map_y==0{map_y}else{map_y-1};
 		let map_y_down = if map_y==(TileH) as usize{map_y}else{map_y+1};
 
-		let up_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y)]!=0;
-		let down_checks = self.map_copy[map_x+TileW as usize*(map_y_down)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
-		let left_checks = self.map_copy[map_x+TileW as usize*(map_y)]!=0||self.map_copy[map_x+TileW as usize*(map_y_down)]!=0;
-		let right_checks = self.map_copy[map_x_right+TileW as usize*(map_y)]!=0||self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0;
+		let up_checks = (self.map_copy[map_x+TileW as usize*(map_y)]!=0&&self.map_copy[map_x+TileW as usize*(map_y)]!=3)||(self.map_copy[map_x_right+TileW as usize*(map_y)]!=0&&self.map_copy[map_x_right+TileW as usize*(map_y)]!=3);
+		let down_checks = (self.map_copy[map_x+TileW as usize*(map_y_down)]!=0&&self.map_copy[map_x+TileW as usize*(map_y_down)]!=3)||(self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0&&self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=3);
+		let left_checks = (self.map_copy[map_x+TileW as usize*(map_y)]!=0&&self.map_copy[map_x+TileW as usize*(map_y)]!=3)||(self.map_copy[map_x+TileW as usize*(map_y_down)]!=0&&self.map_copy[map_x+TileW as usize*(map_y_down)]!=3);
+		let right_checks = (self.map_copy[map_x_right+TileW as usize*(map_y)]!=0&&self.map_copy[map_x_right+TileW as usize*(map_y)]!=3)||(self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=0&&self.map_copy[map_x_right+TileW as usize*(map_y_down)]!=3);
+
 
 		if up_checks||down_checks||left_checks||right_checks{ //If any collision detected
 			if self.ABSx_pos > (CAM_W/2) as f32&&self.ABSx_pos < (FullW-CAM_W/2) as f32{ //If position is close to border
@@ -651,6 +699,7 @@ struct Enemy<'a> {
 	last_safe_x: f32,
 	last_safe_y: f32,
 	is_flipped: bool,
+	on_map: u32,
 	npc_id: u32,
 }
 
