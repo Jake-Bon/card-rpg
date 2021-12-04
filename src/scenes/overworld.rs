@@ -433,6 +433,9 @@ impl Scene for Overworld<'_> {
 			}else if self.map_rep[i as usize]==12{ //Grass + Flower
 				sprite_x = (SpriteTILE_SIZE as i32)*3 as i32;
 				sprite_y = SpriteTILE_SIZE as i32;
+			}else if self.map_rep[i as usize]==3{
+				sprite_x = (self.anim_water*SpriteTILE_SIZE) as i32;
+				sprite_y = (SpriteTILE_SIZE as i32)*2 as i32;
 			}else{//Add more types if needed
 				continue;
 			}
