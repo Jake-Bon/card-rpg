@@ -65,6 +65,8 @@ pub struct Battle<'a> {
 	enemy_delay_inst: Instant,
 	battler_npc_deck_id: u32,
 
+    // Mulligan
+
 	//enlarge
 	enlarged_card: card_size,
 	enemy_card: e_card_size,
@@ -104,8 +106,8 @@ impl<'a> Battle<'a> {
 		let ex_turn = texture_manager.borrow_mut().load("assets/effects/ex_turn.png")?;
 		let accepting_input = true;
 		let tmp_enemy_played_card = 100;
-		let dummy_drawn_card = DrawnCard::new(0.0, 800.0).unwrap();
-		let dummy_drawn_card_enemy = DrawnCard::new(0.0, 800.0).unwrap();
+		let dummy_drawn_card = DrawnCard::new(1140.0, 560.0).unwrap();
+		let dummy_drawn_card_enemy = DrawnCard::new(40.0, 20.0).unwrap();
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
@@ -277,10 +279,10 @@ impl<'a> Battle<'a> {
             println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
 
             // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
-            for i in 0..4{
-                player1.draw_card(false);  // p1 is player
-                player2.draw_card(false);  // p2 is opponent
-            }
+            //for i in 0..4{
+                player1.add_draw_num(3);//player1.draw_card(false);  // p1 is player
+                player2.add_draw_num(3);//player2.draw_card(false);  // p2 is opponent
+            //}
 
             println!("The player has {} cards in the deck", player1.get_deck_size());
             println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
@@ -291,7 +293,10 @@ impl<'a> Battle<'a> {
             println!("{}", player1.to_string());
             println!("{}", player2.to_string());
 
-	        self.turn = TurnPhase::PreTurnP1;
+	        //self.turn = TurnPhase::PreTurnP1;
+	        
+	        // use PreMulliganPhase so that the cards can be drawn before mulligan phase
+	        self.turn = TurnPhase::PreMulliganPhase;
 	        self.outcome = BattleOutcome::Undetermined;
 
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
@@ -379,6 +384,11 @@ impl<'a> Battle<'a> {
 		                println!("End of PostTurnP1");
 					}
 
+	            }
+	            else if self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::PreMulliganPhase {
+	            
+	                // similar to TurnP1, just wait in here until mulligan phase is done
+	                
 	            }
 
 	        }
@@ -629,10 +639,20 @@ impl Scene for Battle<'_> {
 			    GameEvent::MouseClick(x_pos,y_pos) => {
 			    	println!("{},{}", x_pos,y_pos);
 					self.not_enough_mana = false;
+					
+					// Player clicks End Turn button when self.turn == TurnPhase::TurnP1
 			        if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
 					    self.turn = TurnPhase::PostTurnP1;
 					}
+					
+					// Player clicks End Turn button when self.turn == TurnPhase::MulliganPhase
+					else if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::MulliganPhase) {
+					    println!("End Turn button was pressed, Mulligan phase over");
+					    self.battle_handler.borrow_mut().get_p1().borrow_mut().shuffle_deck();
+					    self.turn = TurnPhase::PreTurnP1;
+					}
+					// If the enlarged card menu UI is already on screen
 					else if self.enlarged_card.get_larger() == true{
 
 						// play the card
@@ -645,129 +665,168 @@ impl Scene for Battle<'_> {
 						//println!("card cost is {}", curr_card_cost);
 						let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
 						if (!card_rslt.is_none()){
+                            
+                            if self.turn != TurnPhase::MulliganPhase {
+                                // if the card is not Glitch
+						        if !curr_card.get_actions().contains(&19){
+						            // return button
+							        if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
+								        self.enlarged_card.set_larger(false);
+							        }
 
-						if !curr_card.get_actions().contains(&19){
-							if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
-								self.enlarged_card.set_larger(false);
-							}
+                                    // play button
+							        else if((x_pos > 900 && x_pos < 1100) && (y_pos > 250 && y_pos < 310) && self.turn == TurnPhase::TurnP1){
+								        //println!("current energy is {}", curr_energy);
+								        // only play if player has enough energy
+								        if (curr_energy >= curr_card_cost){
 
-							if((x_pos > 900 && x_pos < 1100) && (y_pos > 250 && y_pos < 310) && self.turn == TurnPhase::TurnP1){
-								//println!("current energy is {}", curr_energy);
-								// only play if player has enough energy
-								if (curr_energy >= curr_card_cost){
+					            		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
-					    		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+								        // add card to discard pile
+					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+					            		// if the player has enough energy to cover the cost of playing the card:
+					            		crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
 
-								// add card to discard pile
-					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
-					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-					    		// if the player has enough energy to cover the cost of playing the card:
-					    		crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+								        self.enlarged_card.set_larger(false);
+								        }
+								        // otherwise, don'
+                            			else {
+									        self.not_enough_mana = true;
+                                			println!("Not enough energy!");
+                            			}
 
-								self.enlarged_card.set_larger(false);
-								}
-								// otherwise, don'
-                    			else {
-									self.not_enough_mana = true;
-                        			println!("Not enough energy!");
-                    			}
+							        }
 
-							}
+							        //Discard implementation
+							        else if((x_pos > 900 && x_pos < 1100) && (y_pos > 325 && y_pos < 385) && self.turn == TurnPhase::TurnP1){
+								        //println!("current energy is {}", curr_energy);
+								        // only play if player has enough energy
+								        if (curr_energy >= 1){
 
-							//Discard implementation
-							if((x_pos > 900 && x_pos < 1100) && (y_pos > 325 && y_pos < 385) && self.turn == TurnPhase::TurnP1){
-								//println!("current energy is {}", curr_energy);
-								// only play if player has enough energy
-								if (curr_energy >= 1){
+					            		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
-					    		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+								        // add card to discard pile
+					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-1);
+								        self.enlarged_card.set_larger(false);
+								        }
+								        // otherwise, don't
+                            			else {
+									        self.not_enough_mana = true;
+                                			println!("Not enough energy!");
+                            			}
 
-								// add card to discard pile
-					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
-					    		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-1);
-								self.enlarged_card.set_larger(false);
-								}
-								// otherwise, don'
-                    			else {
-									self.not_enough_mana = true;
-                        			println!("Not enough energy!");
-                    			}
-
-							}
-							}else if curr_card.get_actions().contains(&19){
-								if curr_energy >= curr_card_cost{
-									if(x_pos>50&&x_pos<250)&&(y_pos>50&&y_pos<346){
-										self.dup_screen(curr_card,curr_card_cost,0);
-									}else if(x_pos>250&&x_pos<450)&&(y_pos>200&&y_pos<496){
-										self.dup_screen(curr_card,curr_card_cost,2);
-									}else if(x_pos>50&&x_pos<250)&&(y_pos>350&&y_pos<646){
-										self.dup_screen(curr_card,curr_card_cost,1);
-									}else if(x_pos>850&&x_pos<1050)&&(y_pos>200&&y_pos<496){
-										self.dup_screen(curr_card,curr_card_cost,3);
-									}else if(x_pos>1050&&x_pos<1250)&&(y_pos>50&&y_pos<346){
-										self.dup_screen(curr_card,curr_card_cost,4);
-									}else if(x_pos>1050&&x_pos<1250)&&(y_pos>350&&y_pos<646){
-										self.dup_screen(curr_card,curr_card_cost,5);
-									}
-								}else{
-									self.not_enough_mana = true;
-								}
-								if(x_pos>550&&x_pos<750&&y_pos>640&&y_pos<700){
-									let sz = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_hand_size();
-									if sz<2{
-										self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
-										self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-									}
-									self.enlarged_card.set_larger(false);
-								}
-						}
-					}
-				}
-				//see the enemy's last played card
-					else if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 550 && x_pos < 750) && (y_pos > 230 && y_pos < 526){
-						//if there are cards in the discard pile
-						if(self.battle_handler.borrow_mut().get_p2().borrow().get_discard_size() > 0){
-							self.enemy_card.set_elarger(true);
-						}
-						//do nothing
-						else{
-						}
-
-					}
-					else if (self.enemy_card.get_elarger() == true){
-						if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
-								self.enemy_card.set_elarger(false);
-							}
-					}
-				else{
-				        // check if the player is clicking on any of the cards in their hand
-				        //let mut battle_stat = self.battle_handler.borrow_mut();
-
-				        let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
-				        //let curr_turn = self.battle_handler.borrow_mut().get_turn();
-
-						if (self.battle_handler.borrow_mut().get_turn()==0&&self.enlarged_card.get_larger()==false&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
-							let i = ((x_pos-260)/120) as usize;
-							//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
-							//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
-
-							//println!("game thinks that the player is clicking on card {}", i);
-
-                            if self.turn == TurnPhase::TurnP1 && self.outcome == BattleOutcome::Undetermined {
-
-							    // play the card
-							    let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
-							    //let card_cost = card_rslt.unwrap().get_cost();
-							    if !card_rslt.is_none(){
-								    //enlarge the picked card
-							    	    self.enlarged_card.set_cardpos(i as usize);
-							    	    self.enlarged_card.set_larger(true);
-
+							        }
 							    }
-							}
-						}
+							    else if curr_card.get_actions().contains(&19){
+								    if curr_energy >= curr_card_cost{
+									    if(x_pos>50&&x_pos<250)&&(y_pos>50&&y_pos<346){
+										    self.dup_screen(curr_card,curr_card_cost,0);
+									    }else if(x_pos>250&&x_pos<450)&&(y_pos>200&&y_pos<496){
+										    self.dup_screen(curr_card,curr_card_cost,2);
+									    }else if(x_pos>50&&x_pos<250)&&(y_pos>350&&y_pos<646){
+										    self.dup_screen(curr_card,curr_card_cost,1);
+									    }else if(x_pos>850&&x_pos<1050)&&(y_pos>200&&y_pos<496){
+										    self.dup_screen(curr_card,curr_card_cost,3);
+									    }else if(x_pos>1050&&x_pos<1250)&&(y_pos>50&&y_pos<346){
+										    self.dup_screen(curr_card,curr_card_cost,4);
+									    }else if(x_pos>1050&&x_pos<1250)&&(y_pos>350&&y_pos<646){
+										    self.dup_screen(curr_card,curr_card_cost,5);
+									    }
+								    }else{
+									    self.not_enough_mana = true;
+								    }
+								    if(x_pos>550&&x_pos<750&&y_pos>640&&y_pos<700){
+									    let sz = self.battle_handler.borrow_mut().get_p1().borrow_mut().get_curr_hand_size();
+									    if sz<2{
+										    self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+										    self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+									    }
+									    self.enlarged_card.set_larger(false);
+								    }
+						        }
+						    }
+						    // mulligan phase
+						    else {
+						        // discard button
+						        if (x_pos > 900 && x_pos < 1100) && (y_pos > 325 && y_pos < 385) {
+						            
+						            
+						            //println!("before mulligan discard:");
+						            //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+						            
+						            self.enlarged_card.set_larger(false);
+						            
+						            let discarded_card = self.battle_handler.borrow_mut().get_p1().borrow_mut().select_hand(self.enlarged_card.get_cardpos()).unwrap();
+						            
+						            // add the discarded card back into the deck
+						            self.battle_handler.borrow_mut().get_p1().borrow_mut().add_card_to_deck(discarded_card);
+						            
+						            // remove the card from the hand (doesn't add to discard pile)
+						            self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_del_card(self.enlarged_card.get_cardpos());
+						            // Draw another card to replace it with
+						            self.battle_handler.borrow_mut().get_p1().borrow_mut().add_draw_num(1);
+						            
+						            //println!("after mulligan discard:");
+						            //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+						            
+						        }
+						        // return button
+						        if (x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) {
+							        self.enlarged_card.set_larger(false);
+						        }
+						    }
+					    }
 				    }
-			    }
+				    //see the enemy's last played card
+				    // re-enables the enemy last played card in the center of the screen once the enlarged card UI is exited
+				    else if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 550 && x_pos < 750) && (y_pos > 230 && y_pos < 526){
+					    //if there are cards in the discard pile
+					    if(self.battle_handler.borrow_mut().get_p2().borrow().get_discard_size() > 0){
+						    self.enemy_card.set_elarger(true);
+					    }
+					    //do nothing
+					    else{
+					    }
+
+				    }
+				    
+				    else if (self.enemy_card.get_elarger() == true){
+					    if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
+							    self.enemy_card.set_elarger(false);
+						    }
+				    }
+				    // select card from hand
+				    else{
+				            // check if the player is clicking on any of the cards in their hand
+				            //let mut battle_stat = self.battle_handler.borrow_mut();
+
+				            let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
+				            //let curr_turn = self.battle_handler.borrow_mut().get_turn();
+
+						    if (self.battle_handler.borrow_mut().get_turn()==0&&self.enlarged_card.get_larger()==false&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+							    let i = ((x_pos-260)/120) as usize;
+							    //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
+							    //println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
+
+							    //println!("game thinks that the player is clicking on card {}", i);
+
+                                if (self.turn == TurnPhase::TurnP1 || self.turn == TurnPhase::MulliganPhase) && self.outcome == BattleOutcome::Undetermined {
+
+							        // select the card
+							        let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
+							        //let card_cost = card_rslt.unwrap().get_cost();
+							        if !card_rslt.is_none(){
+								        //enlarge the picked card
+							        	    self.enlarged_card.set_cardpos(i as usize);
+							        	    self.enlarged_card.set_larger(true);
+
+							        }
+							    }
+						    }
+				        }
+			        }
 
 			    _ => {},
 		    }
@@ -805,7 +864,7 @@ impl Scene for Battle<'_> {
 		}
 
         // Card Draw Animation P1
-        if player1.get_draw_num() > 0 {
+        if player1.get_draw_num() > 0 && self.turn != TurnPhase::MulliganPhase {
 
             if player1.get_deck_size() == 0 {
                 //println!("but there's no more cards in the deck! setting draw_num to 0");
@@ -837,6 +896,11 @@ impl Scene for Battle<'_> {
 
                         self.frames_elapsed = 0;
                         self.dummy_drawn_card.x_pos = 1140.0;
+                        
+                        // begin mulligan phase
+                        if self.turn == TurnPhase::PreMulliganPhase && player1.get_draw_num() == 0 {
+                            self.turn = TurnPhase::MulliganPhase;
+                        }
 
                     }
                 }
@@ -866,6 +930,17 @@ impl Scene for Battle<'_> {
 		}
 
 		let mut fontm = self.font_manager.borrow_mut();
+
+        // mulligan screen text
+        if self.turn == TurnPhase::MulliganPhase {
+            fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0), "Choose Your Hand...", (50, 330));
+            // give the player feedback when they discard a card
+            if player1.get_draw_num() > 0 {
+                fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0), "Replacing:", (50, 390));
+                fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0), &player1.get_draw_num().to_string(), (285, 390));
+                fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 36, Color::RGB(0, 0, 0), "Card(s)", (50, 445));
+            }
+        }
 
 		// draw the player's status effects
 		let mut p1_status_effects = Vec::new();
@@ -1038,13 +1113,22 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_i,(150,150), (60,560))?; //player icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play2_i,(150,150), (1070,20))?; //enemy icon
 
+        if self.turn == TurnPhase::TurnP1 || self.turn == TurnPhase::MulliganPhase {
 		// End Turn button "sprite"
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
 		// End Turn button text
 		//let mut fontm = self.font_manager.borrow_mut();
-		fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
+		
+		if self.turn == TurnPhase::TurnP1 {
+		    fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
+		}
+		else {
+		    fontm.draw_text(&mut wincan, "Confirm", (1120, 480));
+		}
+		
+		}
 
-		if(self.enlarged_card.get_larger() == true){
+		if(self.enlarged_card.get_larger() == true && self.turn != TurnPhase::MulliganPhase){
 			let curr_selection = player1.select_hand(self.enlarged_card.get_cardpos() as usize);
 			if !curr_selection.is_none(){
 			let curr_sel = curr_selection.unwrap();
@@ -1080,20 +1164,37 @@ impl Scene for Battle<'_> {
 			}else{
 				crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
+				// if player doesn't have enough mana to play the card, gray out the play button
 				if player1.get_curr_energy()<curr_card.get_cost() as i32{
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_playCard, (200,60),(900,250))?;
-				}else{
+				}else{  // otherwise don't gray it out
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
 				}
-
+                
+                // if player doesn't have enough mana to discard the card, gray out the discard button
 				if player1.get_curr_energy()<1{
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_discard, (200,60),(900,325))?;
-				}else{
+				}else{  // otherwise don't gray it out
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.discard, (200,60),(900,325))?;
 				}
 				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
 			}
 		}
+		}
+		// else if it's during the mulligan phase, don't need to account for Glitch
+		else if (self.enlarged_card.get_larger() == true && self.turn == TurnPhase::MulliganPhase){
+		    let curr_selection = player1.select_hand(self.enlarged_card.get_cardpos() as usize);
+			if !curr_selection.is_none(){
+			    let curr_sel = curr_selection.unwrap();
+			    let curr_card = battle_stat.get_card(curr_sel);
+		        crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
+			    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(400,592), (450,50))?;
+			    // can't play the card during mulligan phase, skip drawing the play button
+			    // discarding during mulligan phase is free, don't need to gray it out
+			    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.discard, (200,60),(900,325))?;
+			    // draw the return button
+			    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
+			}
 		}
 
 		if self.not_enough_mana==true{
