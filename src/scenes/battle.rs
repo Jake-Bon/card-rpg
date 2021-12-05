@@ -968,8 +968,26 @@ impl Scene for Battle<'_> {
 
 		//enemy side
 
-		for i in 0..p2_hand_size {
-		    crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
+		// --------------
+		// Note: implemented a debug mode which allows player to see p2's cards
+		//       to disable, set debug_flag to false
+		// --------------
+
+		// draw ai's hand
+		let debug_flag = true;
+		if debug_flag == true //debug for ai testing
+		{
+			for i in 0..p2_hand_size {
+				let curr_hand = player2.select_hand(i as usize).unwrap();
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_hand as usize).unwrap()), (100,148), ((920 - (i * 120)) as i32,20))?;
+			}
+
+		}
+		else //normal mode
+		{
+			for i in 0..p2_hand_size {
+				crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(100,148), ((920 - (i * 120)) as i32,20))?;
+			}
 		}
 
         // Card Draw Animation P2
