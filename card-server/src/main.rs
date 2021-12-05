@@ -14,8 +14,8 @@ fn main() -> Result<()>{
         player_1_stream.set_nonblocking(true);
         player_2_stream.set_nonblocking(true);
         
-        let mut p1_buffer = [0; 1024];
-        let mut p2_buffer = [0; 1024];
+        let mut p1_buffer = [0; 4096];
+        let mut p2_buffer = [0; 4096];
         
         player_1_stream.write_all(b"connected to server as player 1");
         player_1_stream.flush();
@@ -43,7 +43,7 @@ fn main() -> Result<()>{
                             player_2_stream.write_all(&p1_buffer);
                             player_2_stream.flush()?;
                             // clear the buffer
-                            p1_buffer = [0;1024];
+                            p1_buffer = [0;4096];
                         }
                         else{
                             println!("Is p1 connection gone?");
@@ -77,7 +77,7 @@ fn main() -> Result<()>{
                             player_1_stream.write_all(&p2_buffer);
                             player_1_stream.flush()?;
                             // clear the buffer
-                            p2_buffer = [0;1024];
+                            p2_buffer = [0;4096];
                         }
                         else{
                             println!("Is p2 connection gone?");

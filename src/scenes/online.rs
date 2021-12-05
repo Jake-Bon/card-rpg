@@ -24,11 +24,11 @@ use crate::scenes::{Scene, GameEvent};
 #[derive(Serialize, Deserialize, Debug)]
 struct TurnData {
 	turn_id: u32,
-	card_ids: Vec<u32>,
+	card_ids: [u32; 8],
 }
 
 pub struct Online<'a> {
-	buffer: [u8; 1024],
+	buffer: [u8; 4096],
 	waker: Waker,
 	connected: bool,
 	//connection: Option<TcpConnection>,
@@ -48,7 +48,7 @@ impl Scene for Online<'_> {
                 GameEvent::MouseClick(x_pos,y_pos) => {
                     if self.connected {
                         
-                        let mut send_str = TurnData{turn_id: x_pos as u32, card_ids: vec![0]};
+                        let mut send_str = TurnData{turn_id: x_pos as u32, card_ids: [0; 8]};
                         
                         if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
                             //send_str = "Quit".to_string();
@@ -63,7 +63,7 @@ impl Scene for Online<'_> {
                         
                         let mut tcp_con = self.tcp_connection.as_ref().unwrap();
                         tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
-                        tcp_con.flush();
+                        // tcp_con.flush();
                     }
                 },
                 _ => {},
@@ -75,7 +75,7 @@ impl Scene for Online<'_> {
 			// because the connection is set to nonblocking once it's established, it would call read every frame.
 			// The interval at which it checks for new data can be changed via the Duration. Currently set to check every half second, which may still be too often honestly
 			if self.poll_instant.elapsed() >= Duration::from_millis(500) {
-			    let mut buffer = [0; 1024];
+			    let mut buffer = [0; 4096];
 			    match &self.tcp_connection {
 			        Some(T) => {
 			            //println!("there's a connection");
@@ -87,8 +87,10 @@ impl Scene for Online<'_> {
 			                Ok(T) => { 
 			                    if T > 0 { // use this to ignore duplicate data-> && String::from_utf8_lossy(&self.buffer) != String::from_utf8_lossy(&buffer) {
 			                        self.buffer = buffer;
-			                        let turn_data: TurnData = serde_json::from_str(std::str::from_utf8(&buffer).expect("Oops wrong data")).expect("Read failed");
-			                        println!("Received data: {:?}", turn_data);
+			                        match serde_json::from_str::<TurnData>(&String::from_utf8_lossy(&buffer).trim_matches(char::from(0))) {
+			                        	Ok(data) => println!("Success!: {:?}", data),
+			                        	Err(e) => {println!("{}", e.to_string()); println!("Received data: {}", String::from_utf8_lossy(&buffer).trim_matches(char::from(0)));}
+			                        }
 			                        
 			                    }
 			                    // if T (the number of bytes read) is equal to 0, this means that the stream has reached the end of file marker, and the stream was closed. Need to reconnect
@@ -146,7 +148,7 @@ impl <'a> Online<'a> {
 
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>) -> Self {
 
-		let buffer = [0; 1024];
+		let buffer = [0; 4096];
 		let raw_waker = RawWaker::new(&(), &VTABLE);
 		let waker = unsafe {Waker::from_raw(raw_waker)};
 		let return_button = texture_manager.borrow_mut().load("assets/return.png").unwrap();
