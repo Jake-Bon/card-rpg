@@ -656,7 +656,6 @@ impl<'a> Battle<'a> {
         // if the outcome of the battle has changed, show prepare to show the result on screen
         /*if self.outcome != BattleOutcome::Undetermined {
             println!("Updating the enemy_delay_inst to show battle result on screen");
-
             // reusing enemy_delay to show battle result for a few seconds before moving back to overworld
             self.enemy_delay_inst = Instant::now();
         }*/
