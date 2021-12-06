@@ -11,7 +11,11 @@ pub struct EventSystem {
 	event_subsystem: EventSubsystem,
 	scene_change_event_id: u32,
 	set_battler_npc_deck_event_id: u32,
+	set_online: u32,
 	online_turn_event_id: u32,
+	set_card_to_play: u32,
+	push_card_to_battle: u32,
+	poll_updates: u32,
 }
 
 impl EventSystem {
@@ -33,15 +37,16 @@ impl EventSystem {
 				        200 => { game_events.push(Some(GameEvent::SceneChange(data1 as u32))); },
 				        201 => { game_events.push(Some(GameEvent::SetBattlerNPCDeck(data1 as u32))); },
 				        202 => { game_events.push(Some(GameEvent::OnlineTurn((data1 as u32 >> 16) as u16, data1 as u16))); },
-						    203 => { let stat = if(data1 as u32==1){
+						    203 => {let stat = if(data1 as u32==1){
 								  TurnPhase::NotInitOnlineP1
 							  }else{
 								  TurnPhase::NotInitOnlineP2
 							  };
 								  game_events.push(Some(GameEvent::SetClientTurn(stat)));
-
 						    },
 						    204 => { game_events.push(Some(GameEvent::OnlinePlay(data1 as u32)));},
+							205 => { game_events.push(Some(GameEvent::PushCard(data1 as u32)));},
+							206 => { game_events.push(Some(GameEvent::PollFromBattle()));},
 				          _ => {},
 				        }
 				},
@@ -59,14 +64,22 @@ impl EventSystem {
 
 		let scene_change_event_id = unsafe { event_subsystem.register_event().unwrap() };
 		let set_battler_npc_deck_event_id = unsafe { event_subsystem.register_event().unwrap() };
+		let set_online = unsafe { event_subsystem.register_event().unwrap() };
 		let online_turn_event_id = unsafe { event_subsystem.register_event().unwrap() };
+		let set_card_to_play = unsafe { event_subsystem.register_event().unwrap() };
+		let push_card_to_battle = unsafe { event_subsystem.register_event().unwrap() };
+		let poll_updates = unsafe { event_subsystem.register_event().unwrap() };
 
 		Ok(EventSystem {
 			event_pump,
 			event_subsystem,
 			scene_change_event_id,
 			set_battler_npc_deck_event_id,
+			set_online,
 			online_turn_event_id,
+			set_card_to_play,
+			push_card_to_battle,
+			poll_updates,
 		})
 	}
 
@@ -86,7 +99,7 @@ impl EventSystem {
 
 	pub fn receive_online(&self, mut turn_data: TurnData) -> Result<(), String> {
 
-		let data = (turn_data.turn_id as u32) << 16 + turn_data.card_ids;
+		let data = ((turn_data.turn_id as u32) << 16 ) + turn_data.card_ids as u32;
 
 		let event = sdl2::event::Event::User {
 			timestamp: 0,
@@ -123,9 +136,73 @@ impl EventSystem {
 	    Ok(())
 
 	}
+
+	pub fn set_online(&self, player: u32) -> Result<(), String> {
+
+	    let setOnlineTurn = sdl2::event::Event::User {
+	        timestamp: 0,
+	        window_id: 0,
+	        type_: self.set_online,
+	        code: 203,
+	        data1: player as *mut c_void,
+	        data2: 0x5678 as *mut c_void, // could use this field to set the player's deck as well? To do both at once.
+	    };
+
+	    self.event_subsystem.push_event(setOnlineTurn)?;
+	    Ok(())
+
+	}
+
+	pub fn set_card_to_play(&self, card: u32) -> Result<(), String> {
+
+	    let setOnlineTurn = sdl2::event::Event::User {
+	        timestamp: 0,
+	        window_id: 0,
+	        type_: self.set_card_to_play,
+	        code: 204,
+	        data1: card as *mut c_void,
+	        data2: 0x5678 as *mut c_void, // could use this field to set the player's deck as well? To do both at once.
+	    };
+
+	    self.event_subsystem.push_event(setOnlineTurn)?;
+	    Ok(())
+
+	}
+
+	pub fn push_card_to_battle(&self, card: u32) -> Result<(), String> { //Push over the internet
+
+	    let pushCard = sdl2::event::Event::User {
+	        timestamp: 0,
+	        window_id: 0,
+	        type_: self.push_card_to_battle,
+	        code: 205,
+	        data1: card as *mut c_void,
+	        data2: 0x5678 as *mut c_void, // could use this field to set the player's deck as well? To do both at once.
+	    };
+
+	    self.event_subsystem.push_event(pushCard)?;
+	    Ok(())
+
+	}
+
+	pub fn poll_for_updates(&self) -> Result<(), String> { //Poll over the internet
+
+	    let pollUpdates = sdl2::event::Event::User {
+	        timestamp: 0,
+	        window_id: 0,
+	        type_: self.poll_updates,
+	        code: 206,
+	        data1: 0x5678 as *mut c_void,
+	        data2: 0x5678 as *mut c_void, // could use this field to set the player's deck as well? To do both at once.
+	    };
+
+	    self.event_subsystem.push_event(pollUpdates)?;
+	    Ok(())
+
+	}
 }
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq,Eq)]
 pub enum GameEvent {
 	WindowClose,
 	SceneChange(u32),
@@ -135,6 +212,8 @@ pub enum GameEvent {
 	OnlineTurn(u16, u16),
 	OnlinePlay(u32),
 	SetClientTurn(TurnPhase),
+	PushCard(u32),
+	PollFromBattle(),
 	KeyPress(Keycode),
 	KeyRelease(Keycode),
 }

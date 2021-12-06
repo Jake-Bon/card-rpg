@@ -82,6 +82,7 @@ pub struct Battle<'a> {
 
 	//NETWORK
 	is_online: bool,
+	net_card: u32,
 
 	//CHEAT
 	keyPress: [bool; 3],
@@ -221,6 +222,7 @@ impl<'a> Battle<'a> {
 			is_paused,
 			is_stopped,
 			is_online: false,
+			net_card: 404,
 			keyPress: [false;3]
 		})
 	}
@@ -314,12 +316,17 @@ impl<'a> Battle<'a> {
 	        // player structs and decks will be initialized here
 
             println!("Start of Battle...");
+			println!("{:?}",self.turn);
 			self.is_online = true;
-			self.active_player = 1;
-			if self.turn == TurnPhase::NotInitOnlineP2{
+			if self.turn == TurnPhase::NotInitOnlineP1{
+				self.active_player = 1;
+				self.turn = TurnPhase::PreTurnP1;
+			}else if self.turn == TurnPhase::NotInitOnlineP2{
 				self.active_player = 2;
 				self.turn = TurnPhase::PreTurnP2;
 			}
+
+			println!("{} {:?}",self.active_player,self.turn);
 
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
 			let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone()));
@@ -360,10 +367,6 @@ impl<'a> Battle<'a> {
             println!("{}", player2.to_string());
 
 	        //self.turn = TurnPhase::PreTurnP1;
-
-	        // use PreMulliganPhase so that the cards can be drawn before mulligan phase
-	        self.turn = TurnPhase::PreMulliganPhase;
-	        self.outcome = BattleOutcome::Undetermined;
 
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
 
@@ -465,11 +468,7 @@ impl<'a> Battle<'a> {
 	            self.outcome = self.battle_handler.borrow_mut().check_victory();
 
                 // self.enemy_delay_inst is updated in the PreTurnP2 phase. After 1 second, the code below runs
-	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
-
-					if self.is_online{
-
-					}else{
+	            if self.turn == TurnPhase::TurnP2 && !self.is_online && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 	                // Enemy AI should be called from here
 	                println!("about to construct the game tree for the turn");
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
@@ -510,7 +509,7 @@ impl<'a> Battle<'a> {
 						//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
 						//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 					}
-				}
+
 
                     // delay the turn phase by 1 second NEED THIS FOR CARD DRAW ANIM
                     println!("waiting another second...");
@@ -520,7 +519,50 @@ impl<'a> Battle<'a> {
 	                self.turn = TurnPhase::PostTurnP2;
 
 
-	            }
+	            }else if self.turn == TurnPhase::TurnP2 && self.is_online && self.enemy_delay_inst.elapsed().as_secs() as f32 >= 0.5{
+					self.event_system.borrow().poll_for_updates().unwrap();
+					if self.net_card==505{
+						self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+						self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-1);
+					}else if self.net_card==25{
+						let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
+						self.net_card = 404;
+						print!("{}\n",curr_card.to_string());
+						let curr_card_cost = curr_card.get_cost() as i32;
+						println!("card cost is {}", curr_card_cost);
+						let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
+						println!("current energy is {}", curr_energy);
+						// only play if player has enough energy
+						if curr_energy >= curr_card_cost{
+						//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+						// add card to discard pile after playing
+						self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+						self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
+						self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+						}
+					}else if self.net_card!=404{
+						let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
+						self.net_card = 404;
+						print!("{}\n",curr_card.to_string());
+						let curr_card_cost = curr_card.get_cost() as i32;
+						println!("card cost is {}", curr_card_cost);
+						let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
+						println!("current energy is {}", curr_energy);
+						// only play if player has enough energy
+						if curr_energy >= curr_card_cost{
+						//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+						// add card to discard pile after playing
+						self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+						self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+						// if the player has enough energy to cover the cost of playing the card:
+						crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+
+					}
+				}
+				self.enemy_delay_inst = Instant::now();
+				}
 	            else if self.turn == TurnPhase::PreTurnP2 {
 	                // Resolve things that need to be resolved prior to the Opponent's turn in here
 	                // Intended to check for Statuses that need to be removed at the beginning of the turn
@@ -685,7 +727,6 @@ impl<'a> Battle<'a> {
 impl Scene for Battle<'_> {
 
 	fn handle_input(&mut self, event: GameEvent) {
-
 		// Some input should be restricted if it isn't the player's turn
 
 		    match event {
@@ -695,6 +736,17 @@ impl Scene for Battle<'_> {
 			    },
 				GameEvent::SetClientTurn(v) => {
 					self.turn = v;
+				}
+				GameEvent::OnlinePlay(c) => {
+					self.net_card = c;
+					if self.net_card==1337{//end turn
+						println!("End P2 Turn");
+						self.turn = TurnPhase::PostTurnP2;
+						self.net_card = 404;
+					}else{
+						self.active_player = 1;
+						self.turn = TurnPhase::PreTurnP1;
+					}
 				}
 				GameEvent::KeyPress(k) => {
 					//println!("p:{}", k);
@@ -715,6 +767,9 @@ impl Scene for Battle<'_> {
 					// Player clicks End Turn button when self.turn == TurnPhase::TurnP1
 			        if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
+						if self.is_online{
+							self.event_system.borrow().push_card_to_battle(1337);
+						}
 					    self.turn = TurnPhase::PostTurnP1;
 					}
 
@@ -753,6 +808,9 @@ impl Scene for Battle<'_> {
 								        if (curr_energy >= curr_card_cost){
 
 					            		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+										if self.is_online{
+											self.event_system.borrow().push_card_to_battle(card_ID);
+										}
 
 								        // add card to discard pile
 					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
@@ -778,6 +836,9 @@ impl Scene for Battle<'_> {
 
 					            		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
+										if self.is_online{
+											self.event_system.borrow().push_card_to_battle(505);
+										}
 								        // add card to discard pile
 					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
 					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-1);

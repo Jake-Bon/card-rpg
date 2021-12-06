@@ -38,18 +38,15 @@ pub struct Online<'a> {
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
 	return_button: Rc<Texture<'a>>,
+	started: bool,
 }
 
 impl Scene for Online<'_> {
 
 		fn handle_input(&mut self, event: GameEvent) {
-
             match event {
                 GameEvent::MouseClick(x_pos, y_pos) => {
                     if self.connected {
-
-                        let mut send_str = TurnData{turn_id: x_pos as u16, card_ids: 0};
-                        
                         if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
                             //send_str = "Quit".to_string();
                             self.tcp_connection.as_ref().unwrap().shutdown(Shutdown::Both);
@@ -57,25 +54,83 @@ impl Scene for Online<'_> {
                             self.event_system.borrow().change_scene(0).unwrap();
                             return;
                         }
-                        //else {
-                        //    let send_str = format!("MouseClick at x: {}, y: {}", x_pos, y_pos);
-                        //}
-
-                        let mut tcp_con = self.tcp_connection.as_ref().unwrap();
-                        tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
-                        // tcp_con.flush();
                     }
                 },
+				GameEvent::PushCard(chosen) => {
+                    if self.connected {
+                        let mut send_str = TurnData{turn_id: 0, card_ids: chosen as u16};
+
+                        let mut tcp_con = self.tcp_connection.as_ref().unwrap();
+						println!("Attempting to send out {}", chosen);
+                        tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
+                        // tcp_con.flush();
+						self.event_system.borrow().change_scene(2).unwrap();
+                    }
+                },
+				GameEvent::PollFromBattle() => {
+					let mut buffer = [0; 4096];
+				    match &self.tcp_connection {
+				        Some(T) => {
+				            //println!("there's a connection");
+
+				            self.connected = true;
+
+				            let mut stream = T;
+				            match stream.read(&mut buffer) {
+				                Ok(T) => {
+				                    if T > 0 { // use this to ignore duplicate data-> && String::from_utf8_lossy(&self.buffer) != String::from_utf8_lossy(&buffer) {
+				                        self.buffer = buffer;
+				                        match serde_json::from_str::<TurnData>(&String::from_utf8_lossy(&buffer).trim_matches(char::from(0))) {
+				                        	Ok(data) => { println!("Success!: {:?}", data); self.event_system.borrow().receive_online(data);},
+				                        	Err(e) => { println!("{}", e.to_string()); println!("Received data: {}", String::from_utf8_lossy(&buffer).trim_matches(char::from(0))); }
+				                        }
+				                    }
+				                    // if T (the number of bytes read) is equal to 0, this means that the stream has reached the end of file marker, and the stream was closed. Need to reconnect
+				                    else {
+				                        println!("Connection lost or closed!");
+				                        self.connected = false;
+				                        self.tcp_connection = None;
+				                    }
+				                },
+				                Err(ref e) => { /*println!("No data to receive! Would have blocked!");*/ },
+				                Err(e) => { println!("Something else went wrong!: {}", e); },
+				            }
+
+				        },
+				        None => { println!("no connection yet, trying again..."); self.tcp_connection = attempt_connection(); },
+				    }
+				    self.poll_instant = Instant::now();
+				//let mut server_data = poll_server(&mut buffer);
+				//let mut cx = Context::from_waker(&self.waker);
+				//let pin = unsafe { Pin::new_unchecked(&mut server_data) };
+				//pin.poll(&mut cx);
+	            
+				}
                 GameEvent::OnlineTurn(turn_id, card_id) => {
+					println!("Attempting to bring back {}", card_id);
                 	// let data: &mut TurnData = unsafe { &mut *(turn_data as *mut TurnData)};
+					if self.started{
+						self.event_system.borrow().change_scene(2).unwrap();
+						self.event_system.borrow().set_card_to_play(card_id as u32).unwrap();
+					}else{
+						self.started = true;
+						if(card_id==0){
+							self.event_system.borrow().change_scene(2).unwrap();
+							self.event_system.borrow().set_online(1).unwrap();
+						}else{
+							self.event_system.borrow().change_scene(2).unwrap();
+							self.event_system.borrow().set_online(2).unwrap();
+						}
+
+					}
                 	println!("Turn Data after {}, {}", turn_id, card_id);
                 },
                 _ => {},
             }
+
 		}
 
 		fn render(&mut self) -> Result<(), String> {
-
 			// because the connection is set to nonblocking once it's established, it would call read every frame.
 			// The interval at which it checks for new data can be changed via the Duration. Currently set to check every half second, which may still be too often honestly
 			if self.poll_instant.elapsed() >= Duration::from_millis(500) {
@@ -95,7 +150,6 @@ impl Scene for Online<'_> {
 			                        	Ok(data) => { println!("Success!: {:?}", data); self.event_system.borrow().receive_online(data);},
 			                        	Err(e) => { println!("{}", e.to_string()); println!("Received data: {}", String::from_utf8_lossy(&buffer).trim_matches(char::from(0))); }
 			                        }
-
 			                    }
 			                    // if T (the number of bytes read) is equal to 0, this means that the stream has reached the end of file marker, and the stream was closed. Need to reconnect
 			                    else {
@@ -117,10 +171,6 @@ impl Scene for Online<'_> {
 			//let pin = unsafe { Pin::new_unchecked(&mut server_data) };
 			//pin.poll(&mut cx);
             }
-
-			if self.connected{
-				self.event_system.borrow().change_scene(2).unwrap();
-			}
 
             // online screen
             let mut wincan = self.wincan.borrow_mut();
@@ -172,6 +222,7 @@ impl <'a> Online<'a> {
 			event_system,
 			font_manager,
 			return_button,
+			started: false,
 		}
 	}
 }
