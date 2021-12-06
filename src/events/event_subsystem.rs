@@ -3,6 +3,7 @@ use sdl2::{Sdl, EventPump, EventSubsystem};
 use sdl2::keyboard::Keycode;
 use sdl2::event::Event as SDL_Event;
 
+use crate::cards::battle_enums::*;
 use crate::scenes::online::TurnData;
 
 pub struct EventSystem {
@@ -32,6 +33,15 @@ impl EventSystem {
 				        200 => { game_events.push(Some(GameEvent::SceneChange(data1 as u32))); },
 				        201 => { game_events.push(Some(GameEvent::SetBattlerNPCDeck(data1 as u32))); },
 				        202 => { game_events.push(Some(GameEvent::OnlineTurn(data1 as *mut _ as *mut TurnData))); },
+						203 => { let stat = if(data1 as u32==1){
+								TurnPhase::NotInitOnlineP1
+							}else{
+								TurnPhase::NotInitOnlineP2
+							};
+								game_events.push(Some(GameEvent::SetClientTurn(stat)));
+
+						},
+						204 => { game_events.push(Some(GameEvent::OnlinePlay(data1 as u32)));},
 				        _ => {},
 				    }
 				},
@@ -39,7 +49,7 @@ impl EventSystem {
 				_ => game_events.push(None),
 			}
 		}
-		
+
 		return game_events;
 	}
 
@@ -87,9 +97,9 @@ impl EventSystem {
 		self.event_subsystem.push_event(event)?;
 		Ok(())
 	}
-	
+
 	pub fn set_battler_npc_deck(&self, deck_id: u32) -> Result<(), String> {
-	
+
 	    let setBattlerNpcDeckEvent = sdl2::event::Event::User {
 	        timestamp: 0,
 	        window_id: 0,
@@ -98,7 +108,7 @@ impl EventSystem {
 	        data1: deck_id as *mut c_void,
 	        data2: 0x5678 as *mut c_void, // could use this field to set the player's deck as well? To do both at once.
 	    };
-	    
+
 	    //println!("pushed the set_battler_npc_deck event to the event pump. \n{:#?}", setBattlerNpcDeckEvent);
 	    //match self.event_subsystem.push_event(setBattlerNpcDeckEvent) {
 	        //Ok(T) => println!("     the return value of the event subsystem was ()"),
@@ -106,7 +116,7 @@ impl EventSystem {
 	    //}
 	    self.event_subsystem.push_event(setBattlerNpcDeckEvent)?;
 	    Ok(())
-	
+
 	}
 }
 
@@ -118,6 +128,8 @@ pub enum GameEvent {
 	MouseClick(i32, i32),
 	MouseHover(i32, i32),
 	OnlineTurn(*mut TurnData),
+	OnlinePlay(u32),
+	SetClientTurn(TurnPhase),
 	KeyPress(Keycode),
 	KeyRelease(Keycode),
 }
