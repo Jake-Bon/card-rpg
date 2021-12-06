@@ -17,9 +17,9 @@ fn main() -> Result<()>{
         let mut p1_buffer = [0; 4096];
         let mut p2_buffer = [0; 4096];
         
-        player_1_stream.write_all(b"connected to server as player 1");
+        //player_1_stream.write_all(b"connected to server as player 1");
         player_1_stream.flush();
-        player_2_stream.write_all(b"connected to server as player 2");
+        //player_2_stream.write_all(b"connected to server as player 2");
         player_2_stream.flush();
         //let mut player_1_stream = player_1_stream.unwrap();
         //let mut player_2_stream = player_2_stream.unwrap();
@@ -146,6 +146,8 @@ fn accept_clients(server_addr: &str) -> Result<(TcpStream, TcpStream)> {
         if connection_1_set && connection_2_set {
             println!("both clients connected!");
             // stop accepting new clients
+            connection_1.as_ref().unwrap().write(r#"{"turn_id":0,"card_ids":0}"#.as_bytes());
+            connection_2.as_ref().unwrap().write(r#"{"turn_id":0,"card_ids":0}"#.as_bytes());
             break;
         }
         
