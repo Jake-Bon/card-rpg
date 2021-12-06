@@ -3,11 +3,14 @@ use sdl2::{Sdl, EventPump, EventSubsystem};
 use sdl2::keyboard::Keycode;
 use sdl2::event::Event as SDL_Event;
 
+use crate::scenes::online::TurnData;
+
 pub struct EventSystem {
 	event_pump: EventPump,
 	event_subsystem: EventSubsystem,
 	scene_change_event_id: u32,
 	set_battler_npc_deck_event_id: u32,
+	online_turn_event_id: u32,
 }
 
 impl EventSystem {
@@ -28,6 +31,7 @@ impl EventSystem {
 				    match custom_event_code {
 				        200 => { game_events.push(Some(GameEvent::SceneChange(data1 as u32))); },
 				        201 => { game_events.push(Some(GameEvent::SetBattlerNPCDeck(data1 as u32))); },
+				        202 => { game_events.push(Some(GameEvent::OnlineTurn(data1 as *mut _ as *mut TurnData))); },
 				        _ => {},
 				    }
 				},
@@ -45,22 +49,38 @@ impl EventSystem {
 
 		let scene_change_event_id = unsafe { event_subsystem.register_event().unwrap() };
 		let set_battler_npc_deck_event_id = unsafe { event_subsystem.register_event().unwrap() };
+		let online_turn_event_id = unsafe { event_subsystem.register_event().unwrap() };
 
 		Ok(EventSystem {
 			event_pump,
 			event_subsystem,
 			scene_change_event_id,
 			set_battler_npc_deck_event_id,
+			online_turn_event_id,
 		})
 	}
 
-	pub fn change_scene(&self, scene_id: u32) -> Result<(), String>{
+	pub fn change_scene(&self, scene_id: u32) -> Result<(), String> {
 		let event = sdl2::event::Event::User {
 			timestamp: 0,
 			window_id: 0,
 			type_: self.scene_change_event_id,
 			code: 200,
 			data1: scene_id as *mut c_void,
+			data2: 0x5678 as *mut c_void,
+		};
+
+		self.event_subsystem.push_event(event)?;
+		Ok(())
+	}
+
+	pub fn receive_online(&self, mut turn_data: TurnData) -> Result<(), String> {
+		let event = sdl2::event::Event::User {
+			timestamp: 0,
+			window_id: 0,
+			type_: self.online_turn_event_id,
+			code: 202,
+			data1: &mut turn_data as *mut _ as *mut c_void,
 			data2: 0x5678 as *mut c_void,
 		};
 
@@ -97,6 +117,7 @@ pub enum GameEvent {
 	SetBattlerNPCDeck(u32),
 	MouseClick(i32, i32),
 	MouseHover(i32, i32),
+	OnlineTurn(*mut TurnData),
 	KeyPress(Keycode),
 	KeyRelease(Keycode),
 }
