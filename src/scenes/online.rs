@@ -43,11 +43,11 @@ pub struct Online<'a> {
 impl Scene for Online<'_> {
 
 		fn handle_input(&mut self, event: GameEvent) {
-            
+
             match event {
                 GameEvent::MouseClick(x_pos, y_pos) => {
                     if self.connected {
-                        
+
                         let mut send_str = TurnData{turn_id: x_pos as u16, card_ids: 0};
                         
                         if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
@@ -57,10 +57,10 @@ impl Scene for Online<'_> {
                             self.event_system.borrow().change_scene(0).unwrap();
                             return;
                         }
-                        //else { 
+                        //else {
                         //    let send_str = format!("MouseClick at x: {}, y: {}", x_pos, y_pos);
                         //}
-                        
+
                         let mut tcp_con = self.tcp_connection.as_ref().unwrap();
                         tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
                         // tcp_con.flush();
@@ -75,7 +75,7 @@ impl Scene for Online<'_> {
 		}
 
 		fn render(&mut self) -> Result<(), String> {
-			
+
 			// because the connection is set to nonblocking once it's established, it would call read every frame.
 			// The interval at which it checks for new data can be changed via the Duration. Currently set to check every half second, which may still be too often honestly
 			if self.poll_instant.elapsed() >= Duration::from_millis(500) {
@@ -83,19 +83,19 @@ impl Scene for Online<'_> {
 			    match &self.tcp_connection {
 			        Some(T) => {
 			            //println!("there's a connection");
-			            
+
 			            self.connected = true;
-			            
+
 			            let mut stream = T;
 			            match stream.read(&mut buffer) {
-			                Ok(T) => { 
+			                Ok(T) => {
 			                    if T > 0 { // use this to ignore duplicate data-> && String::from_utf8_lossy(&self.buffer) != String::from_utf8_lossy(&buffer) {
 			                        self.buffer = buffer;
 			                        match serde_json::from_str::<TurnData>(&String::from_utf8_lossy(&buffer).trim_matches(char::from(0))) {
 			                        	Ok(data) => { println!("Success!: {:?}", data); self.event_system.borrow().receive_online(data);},
 			                        	Err(e) => { println!("{}", e.to_string()); println!("Received data: {}", String::from_utf8_lossy(&buffer).trim_matches(char::from(0))); }
 			                        }
-			                        
+
 			                    }
 			                    // if T (the number of bytes read) is equal to 0, this means that the stream has reached the end of file marker, and the stream was closed. Need to reconnect
 			                    else {
@@ -107,7 +107,7 @@ impl Scene for Online<'_> {
 			                Err(ref e) => { /*println!("No data to receive! Would have blocked!");*/ },
 			                Err(e) => { println!("Something else went wrong!: {}", e); },
 			            }
-			            
+
 			        },
 			        None => { println!("no connection yet, trying again..."); self.tcp_connection = attempt_connection(); },
 			    }
@@ -117,14 +117,18 @@ impl Scene for Online<'_> {
 			//let pin = unsafe { Pin::new_unchecked(&mut server_data) };
 			//pin.poll(&mut cx);
             }
-            
+
+			if self.connected{
+				self.event_system.borrow().change_scene(2).unwrap();
+			}
+
             // online screen
             let mut wincan = self.wincan.borrow_mut();
-            
+
             crate::video::gfx::fill_screen(&mut wincan, Color::RGB(0, 120, 150))?;
-            
+
             crate::video::gfx::draw_sprite(&mut wincan, &self.return_button, (10, 580));
-            
+
             let mut fontm = self.font_manager.borrow_mut();
             fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
 					"Client->Server->Client Demo", (550, 10));
@@ -138,9 +142,9 @@ impl Scene for Online<'_> {
 				fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
 					    "Then, see terminals for more!", (10, 220));
 		    }
-            
-            
-            
+
+
+
             wincan.present();
 
 			Ok(())
@@ -183,7 +187,7 @@ fn attempt_connection() -> Option<TcpStream> {
 }
 
 //fn read(buf: &mut [u8]) -> io::Result<usize> {
-    
+
 //}
 
 /*
@@ -231,5 +235,3 @@ static VTABLE: RawWakerVTable = RawWakerVTable::new(
 	vt_wake_by_ref,
 	vt_drop,
 );
-
-
