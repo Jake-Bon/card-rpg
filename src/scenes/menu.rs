@@ -58,12 +58,23 @@ impl Scene for Menu<'_> {
 
 	fn handle_input(&mut self, event: GameEvent) {
 
+		//so players don't blow off their eardrums when playing w/o going to options
+		if (sdl2::mixer::Music::get_volume() > 50) {
+			sdl2::mixer::Music::set_volume(50);
+		}
+
 		match event {
 			GameEvent::MouseClick(x_pos,y_pos) => {
 
 				if (x_pos > 140 && x_pos < 390) && (y_pos > 550 && y_pos < 650) {
 					println!("PLAY");
 					println!("X {}, Y: {}", x_pos, y_pos);
+					
+					//"previous scene" flag
+					//volume is a multiple of 10 as per options controls, so if volume mod 10 == 1, this flag was tripped
+					//...which means that options menu would return to the overworld and not the title screen
+					sdl2::mixer::Music::set_volume(sdl2::mixer::Music::get_volume() + 1);
+					
 					self.event_system.borrow().change_scene(1).unwrap();
 				}
 
