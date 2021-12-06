@@ -80,6 +80,9 @@ pub struct Battle<'a> {
 	is_paused: bool,
 	is_stopped: bool,
 
+	//NETWORK
+	is_online: bool,
+
 	//CHEAT
 	keyPress: [bool; 3],
 }
@@ -217,6 +220,7 @@ impl<'a> Battle<'a> {
 			music,
 			is_paused,
 			is_stopped,
+			is_online: false,
 			keyPress: [false;3]
 		})
 	}
@@ -294,7 +298,69 @@ impl<'a> Battle<'a> {
             println!("{}", player2.to_string());
 
 	        //self.turn = TurnPhase::PreTurnP1;
-	        
+
+	        // use PreMulliganPhase so that the cards can be drawn before mulligan phase
+	        self.turn = TurnPhase::PreMulliganPhase;
+	        self.outcome = BattleOutcome::Undetermined;
+
+	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
+
+
+	    }
+
+		if self.turn == TurnPhase::NotInitOnlineP1||self.turn == TurnPhase::NotInitOnlineP2 {
+
+
+	        // player structs and decks will be initialized here
+
+            println!("Start of Battle...");
+			self.is_online = true;
+			self.active_player = 1;
+			if self.turn == TurnPhase::NotInitOnlineP2{
+				self.active_player = 2;
+				self.turn = TurnPhase::PreTurnP2;
+			}
+
+            // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
+			let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone()));
+            // change the number in self.battler_map.get(&X) to change battler ID
+            //      Now done through the set_battler_npc_deck event
+            let _p2 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone()));
+            println!("set opponent's deck to the deck with deck_id: {}", self.battler_npc_deck_id);
+
+		    self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
+
+            // free up the borrow_mut slot by using a local variable
+            let mut battle_stat = self.battle_handler.borrow_mut();
+
+            let mut _player1 = battle_stat.get_p1();
+            let mut player1 = _player1.borrow_mut();
+            player1.shuffle_deck();
+
+            let mut _player2 = battle_stat.get_p2();
+            let mut player2 = _player2.borrow_mut();
+            player2.shuffle_deck();
+
+            println!("The player has {} cards in the deck", player1.get_deck_size());
+            println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
+
+            // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
+            //for i in 0..4{
+                player1.add_draw_num(3);//player1.draw_card(false);  // p1 is player
+                player2.add_draw_num(3);//player2.draw_card(false);  // p2 is opponent
+            //}
+
+            println!("The player has {} cards in the deck", player1.get_deck_size());
+            println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
+
+            println!("The player has {} cards in their hand", player1.get_curr_hand_size());
+            println!("The opponent has {} cards in the hand\n", player2.get_curr_hand_size());
+
+            println!("{}", player1.to_string());
+            println!("{}", player2.to_string());
+
+	        //self.turn = TurnPhase::PreTurnP1;
+
 	        // use PreMulliganPhase so that the cards can be drawn before mulligan phase
 	        self.turn = TurnPhase::PreMulliganPhase;
 	        self.outcome = BattleOutcome::Undetermined;
@@ -386,9 +452,9 @@ impl<'a> Battle<'a> {
 
 	            }
 	            else if self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::PreMulliganPhase {
-	            
+
 	                // similar to TurnP1, just wait in here until mulligan phase is done
-	                
+
 	            }
 
 	        }
@@ -401,6 +467,9 @@ impl<'a> Battle<'a> {
                 // self.enemy_delay_inst is updated in the PreTurnP2 phase. After 1 second, the code below runs
 	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 
+					if self.is_online{
+
+					}else{
 	                // Enemy AI should be called from here
 	                println!("about to construct the game tree for the turn");
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
@@ -441,6 +510,7 @@ impl<'a> Battle<'a> {
 						//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
 						//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 					}
+				}
 
                     // delay the turn phase by 1 second NEED THIS FOR CARD DRAW ANIM
                     println!("waiting another second...");
@@ -586,7 +656,6 @@ impl<'a> Battle<'a> {
         // if the outcome of the battle has changed, show prepare to show the result on screen
         /*if self.outcome != BattleOutcome::Undetermined {
             println!("Updating the enemy_delay_inst to show battle result on screen");
-
             // reusing enemy_delay to show battle result for a few seconds before moving back to overworld
             self.enemy_delay_inst = Instant::now();
         }*/
@@ -624,6 +693,9 @@ impl Scene for Battle<'_> {
 			        self.battler_npc_deck_id = deck_id;
 			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
 			    },
+				GameEvent::SetClientTurn(v) => {
+					self.turn = v;
+				}
 				GameEvent::KeyPress(k) => {
 					//println!("p:{}", k);
 					if k.eq(&Keycode::X) {self.keyPress[0]=true}
@@ -639,13 +711,13 @@ impl Scene for Battle<'_> {
 			    GameEvent::MouseClick(x_pos,y_pos) => {
 			    	println!("{},{}", x_pos,y_pos);
 					self.not_enough_mana = false;
-					
+
 					// Player clicks End Turn button when self.turn == TurnPhase::TurnP1
 			        if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
 					    self.turn = TurnPhase::PostTurnP1;
 					}
-					
+
 					// Player clicks End Turn button when self.turn == TurnPhase::MulliganPhase
 					else if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::MulliganPhase) {
 					    println!("End Turn button was pressed, Mulligan phase over");
@@ -665,7 +737,7 @@ impl Scene for Battle<'_> {
 						//println!("card cost is {}", curr_card_cost);
 						let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
 						if (!card_rslt.is_none()){
-                            
+
                             if self.turn != TurnPhase::MulliganPhase {
                                 // if the card is not Glitch
 						        if !curr_card.get_actions().contains(&19){
@@ -751,26 +823,26 @@ impl Scene for Battle<'_> {
 						    else {
 						        // discard button
 						        if (x_pos > 900 && x_pos < 1100) && (y_pos > 325 && y_pos < 385) {
-						            
-						            
+
+
 						            //println!("before mulligan discard:");
 						            //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
-						            
+
 						            self.enlarged_card.set_larger(false);
-						            
+
 						            let discarded_card = self.battle_handler.borrow_mut().get_p1().borrow_mut().select_hand(self.enlarged_card.get_cardpos()).unwrap();
-						            
+
 						            // add the discarded card back into the deck
 						            self.battle_handler.borrow_mut().get_p1().borrow_mut().add_card_to_deck(discarded_card);
-						            
+
 						            // remove the card from the hand (doesn't add to discard pile)
 						            self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_del_card(self.enlarged_card.get_cardpos());
 						            // Draw another card to replace it with
 						            self.battle_handler.borrow_mut().get_p1().borrow_mut().add_draw_num(1);
-						            
+
 						            //println!("after mulligan discard:");
 						            //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
-						            
+
 						        }
 						        // return button
 						        if (x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) {
@@ -791,7 +863,7 @@ impl Scene for Battle<'_> {
 					    }
 
 				    }
-				    
+
 				    else if (self.enemy_card.get_elarger() == true){
 					    if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
 							    self.enemy_card.set_elarger(false);
@@ -896,7 +968,7 @@ impl Scene for Battle<'_> {
 
                         self.frames_elapsed = 0;
                         self.dummy_drawn_card.x_pos = 1140.0;
-                        
+
                         // begin mulligan phase
                         if self.turn == TurnPhase::PreMulliganPhase && player1.get_draw_num() == 0 {
                             self.turn = TurnPhase::MulliganPhase;
@@ -1136,14 +1208,14 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
 		// End Turn button text
 		//let mut fontm = self.font_manager.borrow_mut();
-		
+
 		if self.turn == TurnPhase::TurnP1 {
 		    fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
 		}
 		else {
 		    fontm.draw_text(&mut wincan, "Confirm", (1120, 480));
 		}
-		
+
 		}
 
 		if(self.enlarged_card.get_larger() == true && self.turn != TurnPhase::MulliganPhase){
@@ -1188,7 +1260,7 @@ impl Scene for Battle<'_> {
 				}else{  // otherwise don't gray it out
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.playCard, (200,60),(900,250))?;
 				}
-                
+
                 // if player doesn't have enough mana to discard the card, gray out the discard button
 				if player1.get_curr_energy()<1{
 					crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.disabled_discard, (200,60),(900,325))?;
