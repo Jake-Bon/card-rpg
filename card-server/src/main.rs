@@ -146,6 +146,8 @@ fn accept_clients(server_addr: &str) -> Result<(TcpStream, TcpStream)> {
         if connection_1_set && connection_2_set {
             println!("both clients connected!");
             // stop accepting new clients
+            connection_1.as_ref().unwrap().write(r#"{"turn_id":371,card_ids":0}"#.as_bytes());
+            connection_2.as_ref().unwrap().write(r#"{"turn_id":371,card_ids":0}"#.as_bytes());
             break;
         }
         
