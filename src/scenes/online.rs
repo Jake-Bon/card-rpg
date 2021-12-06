@@ -24,7 +24,7 @@ use crate::scenes::{Scene, GameEvent};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TurnData {
 	turn_id: u32,
-	card_ids: [u32; 8],
+	card_ids: u32,
 }
 
 pub struct Online<'a> {
@@ -48,7 +48,7 @@ impl Scene for Online<'_> {
                 GameEvent::MouseClick(x_pos, y_pos) => {
                     if self.connected {
                         
-                        let mut send_str = TurnData{turn_id: x_pos as u32, card_ids: [0; 8]};
+                        let mut send_str = TurnData{turn_id: x_pos as u32, card_ids: 0};
                         
                         if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
                             //send_str = "Quit".to_string();
