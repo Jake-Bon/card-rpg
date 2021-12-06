@@ -316,7 +316,18 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
             self.hand.remove(index);
         }
     }
-
+    // deletes first instance of card_id in hand
+    pub fn hand_find_and_discard_card(&mut self, card_id: u32) {
+        if self.hand.len() > 0 {
+            for i in 0..self.hand.len() {
+                if self.hand[i] == card_id {
+                    self.add_card_to_discard(self.hand[i]);
+                    self.hand.remove(i);
+                    return;
+                }
+            }
+        }
+    }
     // gets the card from the top of the deck
     pub fn get_deck_card(&self)->Option<u32>{
         if self.deck.len()>0{
