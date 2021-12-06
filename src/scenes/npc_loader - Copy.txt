@@ -1,0 +1,137 @@
+[
+	{
+		"npcName": "Larry n Stumpy",
+		"deckID": 1,
+		"portraitPlayerPre": [
+			1,
+			3,
+			5,
+			2
+		],
+		"portraitEnemyPre": [
+			3,
+			5,
+			1,
+			1
+		],
+		"predialog": [
+			"2ay there! what hav we here",
+			"1oh hey there, just out on the ocean, enjoying the sun",
+			"2well isnt that just lovey. well while your doin that you wouldnt mind handing over all ya goods no, would you?",
+			"1aw did you really have to ruin the moment"
+		],
+		"portraitPlayerPost": [
+			5,
+			1,
+			1,
+			3,
+			0,
+			0
+
+		],
+		"portraitEnemyPost": [
+			5,
+			4,
+			1,
+			4,
+			5,
+			2
+		],
+		"postdialog": [
+			"2what the hell, how'd you do that",
+			"1what? kick your ass?",
+			"2you little-",
+			"1HEY, look over there",
+			"2Huh?",
+			"2did.... did we really just fall for that?"
+		],
+		"portraitPlayerPostlose": [
+			2,
+			5,
+			2,
+			2
+
+		],
+		"portraitEnemyPostlose": [
+			3,
+			5,
+			4,
+			3
+
+		],
+		"postdialoglose": [
+			"2geeze your pretty weak short stack",
+			"1damnit, did you really need to do that",
+			"2you may not have found gettting the crap beaten out of you fun",
+			"2but we certainly found it fun kicking the shit out of you"
+		],
+		"sprites": [
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/Larry_and_Stumpy_Sprites.png",
+		]
+	},
+	{
+		"npcName": "Tony",
+		"deckID": 1,
+		"portraitPlayerPre": [
+			4,
+			2,
+			1,
+			2
+		],
+		"portraitEnemyPre": [
+			5,
+			1,
+			3,
+			3
+		],
+		"predialog": [
+			"2ay, there, short one.... you just rammed into me",
+			"1ya.... sorry about that, im pretty bad at this boat stuff",
+			"2well now that we are here... IM BORED LETS FIGHT",
+			"1wait... what"
+		],
+		"portraitPlayerPost": [
+			3,
+			5,
+			5,
+			2
+		],
+		"portraitEnemyPost": [
+			1,
+			2,
+			4,
+			4
+		],
+		"postdialog": [
+			"2 damn you hit like a beast, tiny",
+			"1 why the hell does everyone call me short! what if i called you furry?",
+			"2 ......",
+			"1 yeah that made more sense in my head"
+		],
+		"portraitPlayerPostlose": [
+			2,
+			5,
+			2,
+			2
+
+		],
+		"portraitEnemyPostlose": [
+			3,
+			5,
+			4,
+			3
+
+		],
+		"postdialoglose": [
+			"2welp that was disapointing",
+			"1come on, you were on the ropes the whole time",
+			"2sure i was, keep telling yourself that",
+			"2but we certainly found it fun kicking the shit out of you"
+		],
+		"sprites": [
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/Tiger_Sprites.png",
+		]
+	}
+]
