@@ -495,7 +495,7 @@ impl<'a> Battle<'a> {
 
 							// add card to discard pile after playing
 							self.tmp_enemy_played_card = card_ID as usize;
-							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_find_and_discard_card(card_ID);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 							// if the player has enough energy to cover the cost of playing the card:
 							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);

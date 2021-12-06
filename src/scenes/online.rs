@@ -21,10 +21,10 @@ use crate::video::text::FontManager;
 use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TurnData {
-	turn_id: u32,
-	card_ids: u32,
+	pub turn_id: u16,
+	pub card_ids: u16,
 }
 
 pub struct Online<'a> {
@@ -48,8 +48,8 @@ impl Scene for Online<'_> {
                 GameEvent::MouseClick(x_pos, y_pos) => {
                     if self.connected {
 
-                        let mut send_str = TurnData{turn_id: x_pos as u32, card_ids: 0};
-
+                        let mut send_str = TurnData{turn_id: x_pos as u16, card_ids: 0};
+                        
                         if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
                             //send_str = "Quit".to_string();
                             self.tcp_connection.as_ref().unwrap().shutdown(Shutdown::Both);
@@ -66,9 +66,9 @@ impl Scene for Online<'_> {
                         // tcp_con.flush();
                     }
                 },
-                GameEvent::OnlineTurn(turn_data) => {
-                	let data: &mut TurnData = unsafe { & mut *(turn_data as *mut TurnData)};
-                	println!("{:?}", data);
+                GameEvent::OnlineTurn(turn_id, card_id) => {
+                	// let data: &mut TurnData = unsafe { &mut *(turn_data as *mut TurnData)};
+                	println!("Turn Data after {}, {}", turn_id, card_id);
                 },
                 _ => {},
             }
