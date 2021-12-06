@@ -22,7 +22,7 @@ use crate::EventSystem;
 use crate::scenes::{Scene, GameEvent};
 
 #[derive(Serialize, Deserialize, Debug)]
-struct TurnData {
+pub struct TurnData {
 	turn_id: u32,
 	card_ids: [u32; 8],
 }
@@ -45,7 +45,7 @@ impl Scene for Online<'_> {
 		fn handle_input(&mut self, event: GameEvent) {
             
             match event {
-                GameEvent::MouseClick(x_pos,y_pos) => {
+                GameEvent::MouseClick(x_pos, y_pos) => {
                     if self.connected {
                         
                         let mut send_str = TurnData{turn_id: x_pos as u32, card_ids: [0; 8]};
@@ -65,6 +65,10 @@ impl Scene for Online<'_> {
                         tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
                         // tcp_con.flush();
                     }
+                },
+                GameEvent::OnlineTurn(turn_data) => {
+                	let data: &mut TurnData = unsafe { & mut *(turn_data as *mut TurnData)};
+                	println!("{:?}", data);
                 },
                 _ => {},
             }
@@ -88,8 +92,8 @@ impl Scene for Online<'_> {
 			                    if T > 0 { // use this to ignore duplicate data-> && String::from_utf8_lossy(&self.buffer) != String::from_utf8_lossy(&buffer) {
 			                        self.buffer = buffer;
 			                        match serde_json::from_str::<TurnData>(&String::from_utf8_lossy(&buffer).trim_matches(char::from(0))) {
-			                        	Ok(data) => println!("Success!: {:?}", data),
-			                        	Err(e) => {println!("{}", e.to_string()); println!("Received data: {}", String::from_utf8_lossy(&buffer).trim_matches(char::from(0)));}
+			                        	Ok(data) => { println!("Success!: {:?}", data); self.event_system.borrow().receive_online(data);},
+			                        	Err(e) => { println!("{}", e.to_string()); println!("Received data: {}", String::from_utf8_lossy(&buffer).trim_matches(char::from(0))); }
 			                        }
 			                        
 			                    }
