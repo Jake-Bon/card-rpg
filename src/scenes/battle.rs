@@ -897,6 +897,7 @@ impl Scene for Battle<'_> {
 
 						}
 						else if self.net_card!=404{
+							self.tmp_enemy_played_card = self.net_card as usize;
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
@@ -1385,6 +1386,7 @@ impl Scene for Battle<'_> {
 
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(150, 0, 0),
 			"Enemy Played:", (550,250-40));
+			println!("Enemy played: {}",self.tmp_enemy_played_card);
 		if self.tmp_enemy_played_card<100{
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.tmp_enemy_played_card)).unwrap(),(200,296),(550,230))?;
 		}else{

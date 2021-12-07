@@ -356,7 +356,6 @@ impl Scene for Overworld<'_> {
 
 
 	fn render(&mut self) -> Result<(), String> {
-
 		if(self.is_stopped){
 			self.is_stopped = false;
 			self.music = Music::from_file("assets/music/MAP.ogg")?;
@@ -399,6 +398,7 @@ impl Scene for Overworld<'_> {
 						self.player.keyPress[3]=false;
 						self.is_stopped = true;
 						sdl2::mixer::Music::halt();
+						println!("========is stopped {}",self.is_stopped);
 
 						// set the enemy's deck here. could randomize/set it here or set it during enemy creation
 						// the number passed into the function corresponds to the deck with the same number in battler-library.txt
