@@ -61,9 +61,10 @@ impl Scene for Online<'_> {
                         let mut send_str = TurnData{turn_id: 0, card_ids: chosen as u16};
 
                         let mut tcp_con = self.tcp_connection.as_ref().unwrap();
-						println!("Attempting to send out {}", chosen);
+						println!("Attempting to send out {} to remote player", chosen);
                         tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
                         // tcp_con.flush();
+                        println!("switching back to battle now");
 						self.event_system.borrow().change_scene(2).unwrap();
                     }
                 },
@@ -107,17 +108,22 @@ impl Scene for Online<'_> {
 	            
 				}
                 GameEvent::OnlineTurn(turn_id, card_id) => {
-					println!("Attempting to bring back {}", card_id);
+					println!("In online.rs: GameEvent::OnlineTurn() event handlers: Received card_id: {}", card_id);
                 	// let data: &mut TurnData = unsafe { &mut *(turn_data as *mut TurnData)};
 					if self.started{
+						// switch to the battle scene
+						println!("switching to the battle scene to start the battle...");
 						self.event_system.borrow().change_scene(2).unwrap();
 						self.event_system.borrow().set_card_to_play(card_id as u32).unwrap();
 					}else{
 						self.started = true;
 						if(card_id==0){
+							// set as player 1
+							println!("setting this player as player 1");
 							self.event_system.borrow().change_scene(2).unwrap();
 							self.event_system.borrow().set_online(1).unwrap();
 						}else{
+						    println!("setting this player as player 2");
 							self.event_system.borrow().change_scene(2).unwrap();
 							self.event_system.borrow().set_online(2).unwrap();
 						}
@@ -188,9 +194,9 @@ impl Scene for Online<'_> {
                 fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
 					    "Connected to server!", (10, 100));
 			    fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
-					    "Try clicking around once both clients are connected.", (10, 160));
-				fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
-					    "Then, see terminals for more!", (10, 220));
+					    "Waiting for second player...", (10, 160));
+				//fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
+				//	    "Then, see terminals for more!", (10, 220));
 		    }
 
 
@@ -229,7 +235,8 @@ impl <'a> Online<'a> {
 
 fn attempt_connection() -> Option<TcpStream> {
 
-    match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(18, 212, 232, 174)), 7878), Duration::from_secs(5)) { // localhost
+    //match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(18, 212, 232, 174)), 7878), Duration::from_secs(5)) { // localhost
+    match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 7878), Duration::from_secs(5)) {
     //match TcpStream::connect_timeout(&socketAddr::from(([34, 227, 148, 203], 76567)), Duration::from_secs(5)) {
         Ok(T) => { T.set_nonblocking(true).expect("couldn't set stream T as nonblocking"); println!("there's a connection"); return Some(T); }, // setting the stream as nonblocking means calls to read() won't block, allowing us to check however often we want without multithreading
         Err(E) => { println!("Failed to connect! Error: {}", E); return None; },
