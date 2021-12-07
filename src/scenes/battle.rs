@@ -27,8 +27,10 @@ pub struct Battle<'a> {
 	event_system: Rc<RefCell<EventSystem>>,
 	font_manager: Rc<RefCell<FontManager<'a>>>,
 	card_textures: Vec<Rc<Texture<'a>>>,
-	play1_i: Rc<Texture<'a>>,
+	play1_story: Rc<Texture<'a>>,
+	play1_online: Rc<Texture<'a>>,
 	play2_i: Rc<Texture<'a>>,
+	battler_photos: Vec<Rc<Texture<'a>>>,
 	behind_health:Rc<Texture<'a>>,
 	behind_mana:Rc<Texture<'a>>,
 	deck: Rc<Texture<'a>>,
@@ -95,8 +97,15 @@ pub struct Battle<'a> {
 
 impl<'a> Battle<'a> {
 	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>, font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
-		let play1_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
+		let play1_story = texture_manager.borrow_mut().load("assets/battlers/Player_Battler.png")?;
+		let play1_online = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummy.png")?;
 		let play2_i = texture_manager.borrow_mut().load("assets/temp_player_icons/icondummyenemy.png")?;
+
+		let mut battler_photos: Vec<Rc<Texture>> = Vec::new();
+		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Larry_and_Stumpy_Battler.png").unwrap());
+		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Tiger_Battler.png").unwrap());
+
+
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
 		let behind_mana = texture_manager.borrow_mut().load("assets/behind_health.png")?;   // can be removed?
 		let deck = texture_manager.borrow_mut().load("assets/cards/Card Back.png")?;
@@ -187,8 +196,10 @@ impl<'a> Battle<'a> {
 			event_system,
 			font_manager,
 			card_textures,
-			play1_i,
+			play1_story,
+			play1_online,
 			play2_i,
+			battler_photos,
 			behind_health,
 			behind_mana,
 			deck,
@@ -763,6 +774,9 @@ impl Scene for Battle<'_> {
 			    },
 				GameEvent::SendEnemy(npc_id) => {
 			        self.battler_npc_photo_id = npc_id;
+					//match self.battler_npc_photo_id{
+
+					//}
 			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
 			    },
 				GameEvent::SetClientTurn(v) => {
@@ -796,7 +810,6 @@ impl Scene for Battle<'_> {
 							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
 							// add card to discard pile after playing
-							println!("Why this not working");
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
@@ -815,7 +828,7 @@ impl Scene for Battle<'_> {
 				            return;
 			                // return to main menu
 			                //self.event_system.borrow().change_scene(0).unwrap();
-						    
+
 						}
 						// mulligan things
 						else if self.net_card == 600 || self.net_card == 601 || self.net_card == 602 || self.net_card == 603 {
@@ -829,7 +842,7 @@ impl Scene for Battle<'_> {
 						        }
 						        self.battle_handler.borrow_mut().get_inactive_player().borrow_mut().set_draw_num(remote_to_draw);
 						        self.remote_ready = true;
-						        
+
 						        // if both players are finished with the mulligan phase, start the game
 						        if self.remote_ready && self.client_ready {
 						            self.turn = TurnPhase::PreTurnP1;
@@ -838,7 +851,7 @@ impl Scene for Battle<'_> {
 						        else {
 						            println!("still waiting on client");
 						        }
-						        
+
 						    }
 						    else if self.turn == TurnPhase::MullOnlineP2 {
 						        // if player is assigned player 2 by the server, player 1 is already set as the active player
@@ -849,7 +862,7 @@ impl Scene for Battle<'_> {
 						        }
 						        self.battle_handler.borrow_mut().get_active_player().borrow_mut().set_draw_num(remote_to_draw);
 						        self.remote_ready = true;
-						        
+
 						        // if both players are finished with the mulligan phase, start the game
 						        if self.remote_ready && self.client_ready {
 						            self.turn = TurnPhase::PreTurnP2;
@@ -858,9 +871,9 @@ impl Scene for Battle<'_> {
 						        else {
 						            println!("still waiting on client");
 						        }
-						        
+
 						    }
-						    
+
 						}
 						else if self.net_card!=404{
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
@@ -936,7 +949,7 @@ impl Scene for Battle<'_> {
 					            }
 					        }
 					        println!("finished sending client player mulligan result, now waiting for remote player {:?}", self.turn);
-					        
+
 					    }
 					}
 					// If the enlarged card menu UI is already on screen
@@ -1436,8 +1449,13 @@ impl Scene for Battle<'_> {
 			&player1.get_curr_energy().to_string(), (20,505));
 
 
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_i,(150,150), (60,560))?; //player icon
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play2_i,(150,150), (1070,20))?; //enemy icon
+		if self.is_online{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_online,(150,150), (60,560))?; //player icon
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play2_i,(150,150), (1070,20))?; //enemy icon
+		}else{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_story,(150,150), (60,560))?; //player icon
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.battler_photos[(self.battler_npc_photo_id) as usize],(150,150), (1070,20))?; //enemy icon
+		}
 
         // End Turn / Confirm button
         if self.turn == TurnPhase::TurnP1 || (self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::MullOnlineP1 || self.turn == TurnPhase::MullOnlineP2) {
