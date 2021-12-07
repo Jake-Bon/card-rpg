@@ -62,6 +62,9 @@ impl<'a> GameManager<'a> {
 				    //println!("sending the SetBattlerNPCDeck event to battle, deck_id was {}", deck_id as u32);
 				    self.battle.handle_input(GameEvent::SetBattlerNPCDeck(deck_id)); // only scene that should care about the battler deck id is battle.rs
 				},
+				Some(GameEvent::SendEnemy(npc)) => {
+				    self.battle.handle_input(GameEvent::SendEnemy(npc)); // only scene that should care about the battler deck id is battle.rs
+				},
 				Some(GameEvent::PushCard(card)) => {
 					self.online.handle_input(GameEvent::PushCard(card));
 				},
@@ -74,8 +77,8 @@ impl<'a> GameManager<'a> {
 				Some(GameEvent::OnlinePlay(card)) => {
 					self.battle.handle_input(GameEvent::OnlinePlay(card));
 				},
-				Some(GameEvent::WinOrLoss(card)) => {
-					self.overworld.handle_input(GameEvent::WinOrLoss(card));
+				Some(GameEvent::WinOrLoss(stat)) => {
+					self.overworld.handle_input(GameEvent::WinOrLoss(stat));
 				},
 				Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
 				Some(e) => self.handle_input(e),
