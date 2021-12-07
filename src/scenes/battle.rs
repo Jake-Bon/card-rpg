@@ -53,6 +53,8 @@ pub struct Battle<'a> {
 	dummy_drawn_card: DrawnCard,
 	dummy_drawn_card_enemy: DrawnCard,
 	frames_elapsed: u32,
+	
+	wait: Rc<Texture<'a>>,
 
 
 	// BATTLE DATA
@@ -116,6 +118,8 @@ impl<'a> Battle<'a> {
 		let dummy_drawn_card = DrawnCard::new(1140.0, 560.0).unwrap();
 		let dummy_drawn_card_enemy = DrawnCard::new(40.0, 20.0).unwrap();
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
+		
+		let wait = texture_manager.borrow_mut().load("assets/Oppo_Wait.png")?;
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
 
@@ -208,6 +212,7 @@ impl<'a> Battle<'a> {
 			accepting_input,
 			not_enough_mana: false,
 			player_rollover: _p1,
+			wait,
 			battler_map,
 			active_player: 1,
 			turn: TurnPhase::NotInitialized,
@@ -1526,7 +1531,7 @@ impl Scene for Battle<'_> {
 				"Not enough mana!", (500, 10));
 		}
 
-		//see the enemy's card
+		//see the enemy's previously played card 
 		if(self.enemy_card.get_elarger() == true){
 			let curr_card = if self.is_online{
 				self.tmp_enemy_played_card
@@ -1547,7 +1552,8 @@ impl Scene for Battle<'_> {
 
 		        // if the battle is ongoing and it's the enemy's turn, say so
 		        if self.turn == TurnPhase::PreTurnP2 || self.turn == TurnPhase::TurnP2 || self.turn == TurnPhase::PostTurnP2 {
-                    fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "Opponent's Turn...", (50, 330));
+		        	crate::video::gfx::draw_sprite(&mut wincan, &self.wait, (0, 280));
+                    //fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "Opponent's Turn...", (50, 330));
                 }
                 Ok(())
 
