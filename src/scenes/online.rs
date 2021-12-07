@@ -104,14 +104,14 @@ impl Scene for Online<'_> {
 				//let mut cx = Context::from_waker(&self.waker);
 				//let pin = unsafe { Pin::new_unchecked(&mut server_data) };
 				//pin.poll(&mut cx);
-	            
+
 				}
                 GameEvent::OnlineTurn(turn_id, card_id) => {
 					println!("Attempting to bring back {}", card_id);
                 	// let data: &mut TurnData = unsafe { &mut *(turn_data as *mut TurnData)};
 					if self.started{
-						self.event_system.borrow().change_scene(2).unwrap();
 						self.event_system.borrow().set_card_to_play(card_id as u32).unwrap();
+						self.event_system.borrow().change_scene(2).unwrap();
 					}else{
 						self.started = true;
 						if(card_id==0){
