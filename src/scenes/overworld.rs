@@ -160,7 +160,7 @@ impl<'a> Overworld<'a> {
 			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
 
-				let mut person: i32 = rng.gen_range(0..2 as i32);
+				let mut person: i32 = rng.gen_range(0..6 as i32);
 
 				//ensure enemy is generated in a safe area
 				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
