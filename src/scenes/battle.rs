@@ -375,8 +375,8 @@ impl<'a> Battle<'a> {
             println!("{}", player2.to_string());
 
 	        //self.turn = TurnPhase::PreTurnP1;
-	        
-	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");       
+
+	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");
 
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
 
@@ -531,7 +531,7 @@ impl<'a> Battle<'a> {
 
 
 	            }else if self.turn == TurnPhase::TurnP2 && self.is_online && self.enemy_delay_inst.elapsed().as_secs() as f32 >= 0.5{
-					
+
                     // poll for updates from online.rs
                     println!("waiting for remote player, pushing a poll_for_updates call to the event system");
 					self.event_system.borrow().poll_for_updates().unwrap();
@@ -555,7 +555,7 @@ impl<'a> Battle<'a> {
 					    //player.draw_card(false);  // p2 is player
 
                         if player.get_deck_size() > 0  && player.get_curr_hand_size() < 7 {
-                            
+
                             player.add_draw_num(1);
                             self.dummy_drawn_card.x_pos = 40.0;
                             self.dummy_drawn_card.y_pos = 20.0;
@@ -642,15 +642,22 @@ impl<'a> Battle<'a> {
 				self.player_rollover.borrow_mut().clear_health_regen();
 				self.player_rollover.borrow_mut().clear_energy_regen();
 				self.player_rollover.borrow_mut().set_ex_turn(0);
-
-				self.player_rollover.borrow_mut().add_health(5); //Boost full health
-				self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
-				self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
 				let card_list = self.player_rollover.borrow_mut().get_duped();
 				for card in card_list{
 					self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
 				}
-				self.player_rollover.borrow_mut().add_card_to_deck(13);
+
+				if self.outcome == BattleOutcome::VictoryP1{
+					self.player_rollover.borrow_mut().add_health(5); //Boost full health
+					self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
+					self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
+					self.player_rollover.borrow_mut().add_card_to_deck(13);
+					self.event_system.borrow().set_win_or_loss(2);
+				}else{
+					self.event_system.borrow().set_win_or_loss(0);
+				}
+
+
                 self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
 	        }
