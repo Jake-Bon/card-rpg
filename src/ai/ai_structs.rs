@@ -71,6 +71,13 @@ impl Node {
             // Pick a card from the ai's hand to play, attempting to play one card from the
             // hand at a time and perseving the others.
 
+            let ai_powerset = powerset(&ai_deck);
+            /*
+            for set in ai_powerset {
+                let mut next_status = reset_ref(self.status.clone());
+                let card_id = ai_deck[i];
+            }
+            */
             for i in 0..ai_deck.len() {
                 // The BattleStatus that we will modify to pass on to the next node
                 let mut next_status = reset_ref(self.status.clone());
@@ -105,17 +112,7 @@ impl Node {
             for i in 0..player_hand.len() { //+player_deck.len() Removed for performance concerns
                 // The BattleStatus that we will modify to pass on to the next node
                 let mut next_status = reset_ref(self.status.clone());
-                // Removed for performance concerns
-                /*
-                let card_id = {
-                    if i < player_hand.len() {
-                        player_hand[i]
-                    }
-                    else {
-                        player_deck[i-player_hand.len()]
-                    }
-                };
-                */
+
                 // Get card ID and card struct
                 let card_id = player_hand[i];
                 let curr_card = next_status.get_card((card_id as u32));
@@ -131,14 +128,7 @@ impl Node {
                 // Delete card from hand
                 next_status.get_p1().borrow_mut().hand_del_card(i);
                 // Removed for performance concerns
-                /*
-                if i < player_hand.len() {
-                    next_status.get_p1().borrow_mut().hand_del_card(i);
-                }
-                else {
-                    next_status.get_p1().borrow_mut().deck_del_card_specific(i-player_hand.len());
-                }
-                */
+
                 // Play card
                 crate::cards::battle_system::play_card(Rc::new(RefCell::new(next_status.clone())), curr_card.clone());
                 // Update effects and turner
@@ -338,6 +328,18 @@ impl GameTree {
     }
 
     pub fn print(&mut self) {
+        let vec: Vec<i32> = vec![0,1,2,3,3,3];
+        let power = powerset(&vec);
+        println!("Powerset of 0,1,2,3: ");
+        for vec in power {
+            println!();
+            if vec.len() == 0 {
+                print!("[]");
+            }
+            for i in 0..vec.len() {
+                print!("[{}]", vec[i]);
+            }
+        }
         println!("Name | Children | Last Card Played | This player's health | Posion");
         self.root.print(0);
     }
@@ -355,4 +357,25 @@ pub fn reset_ref(mut incoming_status: BattleStatus) -> BattleStatus {
         status.turner();
     }
     status
+}
+
+pub fn powerset<T: Clone>(slice: &[T]) -> Vec<Vec<T>> {
+    let mut v: Vec<Vec<T>> = Vec::new();
+
+    for mask in 0..(1 << slice.len()) {
+        let mut ss: Vec<T> = vec![];
+        let mut bitset = mask;
+        while bitset > 0 {
+            // isolate the rightmost bit to select one item
+            let rightmost: u64 = bitset & !(bitset - 1);
+            // turn the isolated bit into an array index
+            let idx = rightmost.trailing_zeros();
+            let item = (*slice.get(idx as usize).unwrap()).clone();
+            ss.push(item);
+            // zero the trailing bit
+            bitset &= bitset - 1;
+        }
+        v.push(ss);
+    }
+    v
 }
