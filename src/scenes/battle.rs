@@ -137,11 +137,11 @@ impl<'a> Battle<'a> {
 
 		let enlarged_card = card_size{
 		    	card_pos: 0,
-			x_size: 400,
-			y_size: 592,
-			x_pos: 450,
-			y_pos: 50,
-			larger: false,
+			    x_size: 400,
+			    y_size: 592,
+			    x_pos: 450,
+			    y_pos: 50,
+			    larger: false,
 		    };
 
 		let enemy_card = e_card_size{
@@ -344,6 +344,7 @@ impl<'a> Battle<'a> {
             // free up the borrow_mut slot by using a local variable
             let mut battle_stat = self.battle_handler.borrow_mut();
 			if self.active_player==2{
+			    // update active player
 				battle_stat.turner();
 			}
 
@@ -375,13 +376,7 @@ impl<'a> Battle<'a> {
 
 	        //self.turn = TurnPhase::PreTurnP1;
 	        
-	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");
-	        
-	        // update active player
-	        if self.turn == TurnPhase::PreTurnP2 {
-	            battle_stat.turner();
-	        }
-	        
+	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");       
 
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
 
@@ -540,7 +535,7 @@ impl<'a> Battle<'a> {
                     // poll for updates from online.rs
                     println!("waiting for remote player, pushing a poll_for_updates call to the event system");
 					self.event_system.borrow().poll_for_updates().unwrap();
-				self.enemy_delay_inst = Instant::now();
+				    self.enemy_delay_inst = Instant::now();
 				}
 	            else if self.turn == TurnPhase::PreTurnP2 {
 	                // Resolve things that need to be resolved prior to the Opponent's turn in here
