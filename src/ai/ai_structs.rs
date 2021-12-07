@@ -57,7 +57,7 @@ impl Node {
 
     // Recursive function to populate each game tree node with children
     pub fn populate(&mut self, ai_turn: bool, height: i32) {
-        if height == 0 || self.stateIsTerminating() {
+        if height == 0 || self.stateIsTerminating() || self.last_card_was_special()  {
             return;
         }
         let ai_deck = self.status.get_p2().borrow().get_hand();
@@ -70,12 +70,15 @@ impl Node {
         if ai_turn {
             // Pick a card from the ai's hand to play, attempting to play one card from the
             // hand at a time and perseving the others.
-
-            let ai_powerset = powerset(&ai_deck);
             /*
+            let ai_powerset = powerset(&ai_deck); //[1,2,2] = [{}, {1}, {2}, {1,2}]
+            
             for set in ai_powerset {
                 let mut next_status = reset_ref(self.status.clone());
-                let card_id = ai_deck[i];
+                for i in 0..set.len() {
+                    let card_id = ai_deck[i];
+                    let curr_card = next_status.get_card(card_id as u32);
+                }
             }
             */
             for i in 0..ai_deck.len() {
@@ -150,6 +153,14 @@ impl Node {
         let player = self.status.get_p1().borrow().clone();
         let ai = self.status.get_p2().borrow().clone();
         if 0 >= player.get_curr_health() || 0 >= ai.get_curr_health() {
+            return true;
+        }
+        return false;
+    }
+
+    pub fn last_card_was_special(&mut self) -> bool {
+        let last = self.last_played_card;
+        if last == 16 || last == 17 || last == 20 || last == 25 || last == 26 {
             return true;
         }
         return false;
