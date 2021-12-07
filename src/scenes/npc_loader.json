@@ -79,11 +79,13 @@
 			2,
 			1,
 			4,
+			4,
 			5,
 			4,
 			5
 		],
 		"portraitEnemyPre": [
+			1,
 			1,
 			1,
 			1,
@@ -97,6 +99,7 @@
 			"Your ocean?",
 			"Tony - These here be cat waters - I am a cat",
 			"I can see that...",
+			"Also... your name's Tony? Really?"
 			"Tony - Hold yer tongue! I have no use for your humorous quips.",
 			"You think I'm humorous?",
 			"Tony - That's it. I can't tolerate this landlubberin' foolery. Cats, ATTACK!"
