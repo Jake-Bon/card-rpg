@@ -196,22 +196,24 @@ impl Node {
         // Utility value calculations
         // AI's
         let ai_health = ai.get_curr_health();
+        let ai_hand_size = ai.get_curr_hand_size();
         let ai_energy = ai.get_curr_energy();
         let ai_deck = ai.get_deck_size() as f64;
         let ai_health_regen = ai.get_health_regen();
         let ai_energy_regen = ai.get_energy_regen();
         let ai_poison = ai.get_poison() as i32;
         let ai_defense = ai.get_defense();
-        let ai_utility = (ai_health*2 + ai_energy + ai_deck.sqrt() as i32 + ai_health_regen + ai_energy_regen + ai_defense) - ai_poison;
+        let ai_utility = (ai_health*2 + (7 - ai_hand_size as i32) + ai_energy + ai_deck.sqrt() as i32 + ai_health_regen + ai_energy_regen + ai_defense) - ai_poison;
         // Player's
         let player_health = player.get_curr_health();
+        let player_hand_size = player.get_curr_hand_size();
         let player_energy = player.get_curr_energy();
         let player_deck = player.get_deck_size() as f64;
         let player_health_regen = player.get_health_regen();
         let player_energy_regen = player.get_energy_regen();
         let player_poison = player.get_poison() as i32;
         let player_defense = player.get_defense();
-        let player_utility = (player_health + player_energy + player_deck.sqrt() as i32 + player_health_regen + player_energy_regen + ai_defense) - ai_poison;
+        let player_utility = (player_health + (7 - player_hand_size as i32) + player_energy + player_deck.sqrt() as i32 + player_health_regen + player_energy_regen + ai_defense) - ai_poison;
         // Combine
         let utility = ai_utility - player_utility;
         self.set_utility(utility);

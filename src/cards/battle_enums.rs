@@ -1,7 +1,14 @@
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq,Debug)]
 pub enum TurnPhase {
     NotInitialized,
+    NotInitOnlineP1,
+    NotInitOnlineP2,
     PreMulliganPhase,
+    PreMullOnlineP1,
+    PreMullOnlineP2,
+    MullOnlineP1,
+    MullOnlineP2,
+    ConnectionLost,
     MulliganPhase,
     PreTurnP1,
     TurnP1,
