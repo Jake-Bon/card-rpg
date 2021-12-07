@@ -900,7 +900,6 @@ impl Scene for Battle<'_> {
 						else if self.net_card!=404{
 							self.tmp_enemy_played_card = self.net_card as usize;
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
-							self.tmp_enemy_played_card = self.net_card as usize;
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
 							let curr_card_cost = curr_card.get_cost() as i32;
