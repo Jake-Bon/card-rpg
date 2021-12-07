@@ -106,10 +106,6 @@ impl<'a> Battle<'a> {
 		let mut battler_photos: Vec<Rc<Texture>> = Vec::new();
 		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Larry_and_Stumpy_Battler.png").unwrap());
 		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Tiger_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/God_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Demon_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Idol_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Boris_Battler.png").unwrap());
 
 
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
@@ -534,7 +530,8 @@ impl<'a> Battle<'a> {
 					gametree.calculate_utilities();
 					gametree.print();
 					println!("finished making the game tree");
-					let card_rslt = gametree.minimax(); //let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
+					let card_rslt = gametree.minimax();
+					// let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
 					if !card_rslt.is_none(){
 						let card_ID = card_rslt.unwrap();//self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();
