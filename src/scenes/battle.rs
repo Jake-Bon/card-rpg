@@ -64,6 +64,7 @@ pub struct Battle<'a> {
 	battle_handler: Rc<RefCell<BattleStatus>>,
 	enemy_delay_inst: Instant,
 	battler_npc_deck_id: u32,
+	battler_npc_photo_id: u32,
 
     // Mulligan
 
@@ -212,6 +213,7 @@ impl<'a> Battle<'a> {
 			battle_handler,
 			enemy_delay_inst: Instant::now(),
 			battler_npc_deck_id: 1,
+			battler_npc_photo_id: 0,
 			enlarged_card,
 			enemy_card,
 			playCard,
@@ -727,6 +729,10 @@ impl Scene for Battle<'_> {
 		    match event {
 			    GameEvent::SetBattlerNPCDeck(deck_id) => {
 			        self.battler_npc_deck_id = deck_id;
+			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
+			    },
+				GameEvent::SendEnemy(npc_id) => {
+			        self.battler_npc_photo_id = npc_id;
 			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
 			    },
 				GameEvent::SetClientTurn(v) => {

@@ -380,7 +380,8 @@ impl Scene for Overworld<'_> {
 						// set the enemy's deck here. could randomize/set it here or set it during enemy creation
 						// the number passed into the function corresponds to the deck with the same number in battler-library.txt
 						println!("ID: {}",id);
-						self.event_system.borrow().set_battler_npc_deck(id).unwrap();
+						self.event_system.borrow().set_battler_npc_deck(id).unwrap(); //use NPC DECK ID
+						self.event_system.borrow().send_enemy_to_battle(id).unwrap(); //use NPC BATTLER ID
 						self.last_time = self.elapsed.elapsed().as_secs_f64()%203.0;//song length 3:23
 						//println!("about to change scene now...");
 						//self.event_system.borrow().change_scene(2).unwrap();
