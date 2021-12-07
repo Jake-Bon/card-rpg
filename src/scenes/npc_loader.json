@@ -1,77 +1,154 @@
 [{
-		"npcName": "temp name1",
+		"npcName": "Larry n Stumpy",
 		"deckID": 1,
+		"npcID": 1,
+		"portraitPlayerPre": [
+			1,
+			3,
+			5,
+			2
+		],
+		"portraitEnemyPre": [
+			3,
+			5,
+			1,
+			1
+		],
 		"predialog": [
-			"first of dialog 1",
-			"second line of dialog 1",
-			"..."
+			"Stumpy - ay there! what hav we here",
+			"oh hey there, dont mind me. just out on the ocean enjoying the sun",
+			"Larry - isnt that just lovey. well while your doin that you wouldnt mind handing over all ya goods now, would you?",
+			"aw did you really have to ruin the moment"
+		],
+		"portraitPlayerPost": [
+			5,
+			1,
+			1,
+			3,
+			6,
+			6
+
+		],
+		"portraitEnemyPost": [
+			5,
+			4,
+			1,
+			4,
+			5,
+			2
 		],
 		"postdialog": [
-			"first of dialog 1",
-			"second line of dialog 1",
-			"..."
+			"Larry - what the hell, how'd you do that",
+			"what? kick your ass?",
+			"Stumpy - you little-",
+			"HEY, look over there",
+			"Larry n Stumpy - Huh?",
+			"Larry - did.... did we really just fall for that?"
+		],
+		"portraitPlayerPostlose": [
+			2,
+			5,
+			2,
+			2
+
+		],
+		"portraitEnemyPostlose": [
+			3,
+			5,
+			4,
+			3
+
+		],
+		"postdialoglose": [
+			"2geeze your pretty weak short stack",
+			"1damnit, did you really need to do that",
+			"2you may not have found gettting the crap beaten out of you fun",
+			"2but we certainly found it fun kicking the shit out of you"
 		],
 		"sprites": [
-			"assets/..",
-			"assets/..",
-			"..."
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/Larry_and_Stumpy_Sprites.png"
 		]
 	},
 	{
-		"npcName": "temp name 2",
+		"npcName": "Tony",
 		"deckID": 2,
+		"npcID": 2,
+		"portraitPlayerPre": [
+			1,
+			2,
+			1,
+			4,
+			5,
+			4,
+			5
+		],
+		"portraitEnemyPre": [
+			1,
+			1,
+			1,
+			1,
+			5,
+			1,
+			5
+		],
 		"predialog": [
-			"first of dialog 2",
-			"second line of dialog 2",
-			"..."
+			"Tony - Ahoy there! What do you think yer doin' in me ocean?",
+			"Your ocean?",
+			"Tony - These here be cat waters - I am a cat",
+			"I can see that...",
+			"Tony - Hold yer tongue! I have no use for your humorous quips.",
+			"You think I'm humorous?",
+			"Tony - That's it. I can't tolerate this landlubberin' foolery. Cats, ATTACK!"
+		],
+		"portraitPlayerPost": [
+			3,
+			5,
+			5,
+			2,
+			2
+		],
+		"portraitEnemyPost": [
+			2,
+			2,
+			1,
+			1,
+			4
 		],
 		"postdialog": [
-			"first of dialog 2",
-			"second line of dialog 2",
-			"..."
+			"Tony - Well I'll be... yeh hit like a beast, tiny",
+			"Why the hell does everyone call me short! What if i called you furry?",
+			"Tony - ......",
+			"Yeah that made more sense in my head",
+			"Tony - Yer a fool! But... a mighty opponent. We'll battle again someday - and I'll be winnin'."
+		],
+		"portraitPlayerPostlose": [
+			2,
+			4,
+			5,
+			2,
+			2,
+			1
+		],
+		"portraitEnemyPostlose": [
+			3,
+			1,
+			1,
+			5,
+			1,
+			4
+		],
+		"postdialoglose": [
+			"Tony - YES!!!",
+			"I mean - er... that was... mighty disapointing",
+			"Come on, you were on the ropes the whole time",
+			"Tony - Keep telling yerself that, ya scallywag",
+			"I will",
+			"Tony - Y'know, yer pretty determined. Maybe we'll battle again someday"
 		],
 		"sprites": [
-			"assets/..",
-			"assets/..",
-			"..."
-		]
-	},
-	{
-		"npcName": "temp name 3",
-		"deckID": 3,
-		"predialog": [
-			"first of dialog 3",
-			"second line of dialog 3",
-			"..."
-		],
-		"postdialog": [
-			"first of dialog 3",
-			"second line of dialog 3",
-			"..."
-		],
-		"sprites": [
-			"assets/..",
-			"assets/..",
-			"..."
-		]
-	},
-	{
-		"npcName": "temp name 4",
-		"deckID": 4,
-		"predialog": [
-			"first of dialog 4",
-			"second line of dialog 4",
-			"..."
-		],
-		"postdialog": [
-			"first of dialog 4",
-			"second line of dialog 4",
-			"..."
-		],
-		"sprites": [
-			"assets/..",
-			"assets/..",
-			"..."
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/Tiger_Sprites.png"
 		]
 	}
 ]

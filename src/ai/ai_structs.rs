@@ -40,7 +40,7 @@ use crate::cards::battle_system::*;
 //      -This also means that the calculated utility of the states after a card draw are inacurrate
 
 pub struct Node {
-    utility: Option<i32>,
+    utility: Option<f32>,
     status: BattleStatus,
     last_played_card: u32,
     children: Vec<Node>,
@@ -170,7 +170,7 @@ impl Node {
         self.status.clone()
     }
 
-    pub fn set_utility(&mut self, new_utility: i32) {
+    pub fn set_utility(&mut self, new_utility: f32) {
         self.utility = Some(new_utility);
     }
 
@@ -185,51 +185,79 @@ impl Node {
         let mut status = self.get_status();
         let player = status.get_p1().borrow().clone();
         let ai = status.get_p2().borrow().clone();
-        if player.get_curr_health() <= 0 {
-            self.set_utility(i32::MAX);
+        if ai.get_curr_health() <= 0 {
+            self.set_utility(f32::MIN);
+           // println!("UTILITY: {} @ ai_hp {}, p1_hp {}", i32::MIN, ai.get_curr_health(), player.get_curr_health());
             return;
         }
-        else if ai.get_curr_health() <= 0 {
-            self.set_utility(i32::MIN);
+        else if player.get_curr_health() <= 0 {
+            self.set_utility(f32::MAX);
+            //println!("UTILITY: {} @ ai_hp {}, p1_hp {}", i32::MAX, ai.get_curr_health(), player.get_curr_health());
             return;
         }
         // !! Tune up needed here !!
         // Utility value calculations
         // AI's
-        let ai_health = ai.get_curr_health();
-        let ai_hand_size = ai.get_curr_hand_size();
-        let ai_energy = ai.get_curr_energy();
-        let ai_deck = ai.get_deck_size() as f64;
-        let ai_health_regen = ai.get_health_regen();
-        let ai_energy_regen = ai.get_energy_regen();
-        let ai_poison = ai.get_poison() as i32;
-        let ai_defense = ai.get_defense();
-        let ai_utility = (ai_health*2 + (7 - ai_hand_size as i32) + ai_energy + ai_deck.sqrt() as i32 + ai_health_regen + ai_energy_regen + ai_defense) - ai_poison;
+        let ai_health = ai.get_curr_health() as f32;
+        let ai_energy = ai.get_curr_energy() as f32;
+        let ai_deck = ai.get_deck_size() as f32;
+        let ai_health_regen = ai.get_health_regen() as f32;
+        let ai_energy_regen = ai.get_energy_regen() as f32;
+        let ai_poison = ai.get_poison() as f32;
+        let ai_defense = ai.get_defense() as f32;
+        //let ai_utility = (ai_health*2 + ai_energy + ai_deck.sqrt() as i32 + ai_health_regen + ai_energy_regen + ai_defense) - ai_poison;
         // Player's
-        let player_health = player.get_curr_health();
-        let player_hand_size = player.get_curr_hand_size();
-        let player_energy = player.get_curr_energy();
-        let player_deck = player.get_deck_size() as f64;
-        let player_health_regen = player.get_health_regen();
-        let player_energy_regen = player.get_energy_regen();
-        let player_poison = player.get_poison() as i32;
-        let player_defense = player.get_defense();
-        let player_utility = (player_health + (7 - player_hand_size as i32) + player_energy + player_deck.sqrt() as i32 + player_health_regen + player_energy_regen + ai_defense) - ai_poison;
+        let player_health = player.get_curr_health() as f32;
+        let player_energy = player.get_curr_energy() as f32;
+        let player_deck = player.get_deck_size() as f32;
+        let player_health_regen = player.get_health_regen() as f32;
+        let player_energy_regen = player.get_energy_regen() as f32;
+        let player_poison = player.get_poison() as f32;
+        let player_defense = player.get_defense() as f32;
+        //let player_utility = (player_health + player_energy + player_deck.sqrt() as i32 + player_health_regen + player_energy_regen + ai_defense) - ai_poison;
         // Combine
-        let utility = ai_utility - player_utility;
+        //let utility = ai_utility - player_utility;
+
+        //println!("ai_hp {}, p1_hp {}, ai_deck {}, ai_def {}", ai_health, player_health, ai_deck, ai_defense);
+        
+        let utility = -632.5/(ai_health+1.0) // avoids states w/ ai low health
+                + 3.1*ai_deck
+                + 1.0*ai_defense
+                - 2.8*ai_poison
+                + 2.4*ai_energy
+                + 3.5*ai_health_regen
+                + 206.0/(player_health+1.0)   // gravitates to states w/ player low health
+                + 3.6*player_poison
+                - 0.2*player_energy
+                - 0.8*player_health_regen
+                - 0.6*player_defense
+                - 1.3*player_deck
+                ;
+        //println!("UTILITY: {} @ ai_hp {}, p1_hp {}", utility, ai_health, player_health);
         self.set_utility(utility);
+        //println!();
     }
 
     // For use in Minimax
-    pub fn maximizer(&mut self, mut alpha: i32, mut beta: i32) -> i32 {
+    pub fn maximizer(&mut self, mut alpha: f32, mut beta: f32) -> f32 {
         if self.children.len() <= 0 {
             return self.utility.unwrap();
         }
-        let mut best_value = i32::MIN;
+        let mut best_value = f32::MIN;
         for child in &mut self.children {
             let value = child.minimizer(alpha, beta);
-            best_value = cmp::max(best_value, value);
-            alpha = cmp::max(alpha, best_value);
+            //best_value = cmp::max(best_value, value);
+            best_value = if best_value > value {
+                best_value
+            } else {
+                value
+            };
+            //alpha = cmp::max(alpha, best_value);
+            alpha = if alpha > best_value {
+                alpha
+            } else {
+                best_value
+            };
             if beta <= alpha {
                 break;
             }
@@ -239,15 +267,25 @@ impl Node {
     }
 
     // For use in Minimax
-    pub fn minimizer(&mut self, mut alpha: i32, mut beta: i32) -> i32 {
+    pub fn minimizer(&mut self, mut alpha: f32, mut beta: f32) -> f32 {
         if self.children.len() <= 0 {
             return self.utility.unwrap();
         }
-        let mut best_value = i32::MAX;
+        let mut best_value = f32::MAX;
         for child in &mut self.children {
             let value = child.maximizer(alpha, beta);
-            best_value = cmp::min(best_value, value);
-            beta = cmp::min(beta, best_value);
+            //best_value = cmp::min(best_value, value);
+            best_value = if best_value < value {
+                best_value
+            } else {
+                value
+            };
+            //beta = cmp::min(beta, best_value);
+            beta = if beta < best_value {
+                beta
+            } else {
+                best_value
+            };
             if beta <= alpha {
                 break;
             }
@@ -329,7 +367,7 @@ impl GameTree {
     }
 
     pub fn minimax(&mut self) -> Option<u32> {
-        let best_utility = self.root.maximizer(i32::MIN, i32::MAX);
+        let best_utility = self.root.maximizer(f32::MIN, f32::MAX);
         for child in &mut self.root.children {
             if child.utility.unwrap() == best_utility {
                 return Some(child.last_played_card);

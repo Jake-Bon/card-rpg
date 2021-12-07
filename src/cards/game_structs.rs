@@ -346,6 +346,14 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         }
     }
 
+    pub fn get_random_discard(&self)->Option<u32>{
+        if self.discard.len()>0{
+            Some(**&self.discard.choose(&mut rand::thread_rng()).unwrap())
+        }else{
+            None
+        }
+    }
+
     // add cards to be drawn
     // self.draw_num is decremented in draw card
     pub fn add_draw_num(&mut self, change: u32){

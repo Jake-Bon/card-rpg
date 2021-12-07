@@ -24,6 +24,7 @@ use crate::scenes::Scene;
 use crate::scenes::GameEvent;
 use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
+use crate::video::text::FontManager;
 use crate::video::gfx::CAM_W;
 use crate::video::gfx::CAM_H;
 use crate::video::gfx::TILE_SIZE;
@@ -35,6 +36,7 @@ const TileW: u32 = FullW/TILE_SIZE;
 const TileH: u32 = FullH/TILE_SIZE;
 const SpriteTILE_SIZE: u32 = 40;
 const enemyNum: f32 = 20.0;
+const perMap:i32 = 1;
 
 const SPEED_LIMIT: f32 = 6.0;
 const ACCEL_RATE: f32 = 0.3;
@@ -84,10 +86,12 @@ fn map_reader() -> Result<Vec<Vec<u8>>,String>{
 
 pub struct Overworld<'a> {
 	wincan: Rc<RefCell<WindowCanvas>>,
+	texture_manager: Rc<RefCell<TextureManager<'a>>>,
+	font_manager: Rc<RefCell<FontManager<'a>>>,
 	event_system: Rc<RefCell<EventSystem>>,
 	tile_set: Rc<Texture<'a>>,
 	player: Player<'a>,
-	jsonEnemyLs: jsonNPC,
+	jsonEnemyLs: Vec<npcData>,
 	enemy: Vec<Enemy<'a>>,
 	anim_water: u32,
 	frames: u32,
@@ -100,10 +104,11 @@ pub struct Overworld<'a> {
 	is_paused: bool,
 	gameMode: Modes<'a>,
 	currMap: u32,
+	win_or_loss: u32,
 }
 
 impl<'a> Overworld<'a> {
-	pub fn init(texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>)  -> Result<Self, String> {
+	pub fn init( texture_manager: Rc<RefCell<TextureManager<'a>>>, wincan: Rc<RefCell<WindowCanvas>>, event_system: Rc<RefCell<EventSystem>>,font_manager: Rc<RefCell<FontManager<'a>>>)  -> Result<Self, String> {
 		//let tile_map = [0; 144];
 		//let tile_set = texture_manager.borrow_mut().load("assets/download.png")?;
 		let tile_set = texture_manager.borrow_mut().load("assets/tile_sheet4x.png")?;
@@ -139,25 +144,7 @@ impl<'a> Overworld<'a> {
 		let mut s = String::new();
 		let file = File::open(path).unwrap().read_to_string(&mut s).unwrap();
     	//let reader = BufReader::new(file);
-		let tempnpc: Vec<npcData> = serde_json::from_str(&s).unwrap();
-		let mut tempsize: Vec<usize> = Vec::new();
-		let mut i = 0;
-		loop {
-			if (i >= tempnpc.len() as i32)
-			{
-				break;
-			}
-			else
-			{
-				tempsize.push(i as usize);
-			}
-			i+=1;
-		}
-
-		let jsonEnemyLs = jsonNPC {
-			npcs: tempnpc,
-			inlist: tempsize,
-		};
+		let jsonEnemyLs: Vec<npcData> = serde_json::from_str(&s).unwrap();
 		//-----------------------------------------------------------------------------
 
 		while (i as f32) < enemyNum
@@ -173,6 +160,7 @@ impl<'a> Overworld<'a> {
 			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
 
+				let mut person: i32 = rng.gen_range(0..2 as i32);
 
 				//ensure enemy is generated in a safe area
 				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
@@ -202,7 +190,8 @@ impl<'a> Overworld<'a> {
 								last_safe_y: random_y,
 								is_flipped: false,
 								on_map: (chosen_map+1) as u32,
-								npc_id: rng.gen_range(1..6),//eventually get range from NPC
+								npc_id: i as u32,//eventually get range from NPC
+								npcDia:person// this will be random later but for now it just 0 and each map will get 1 character
 							});
 							break 'inner;
 						}
@@ -232,21 +221,39 @@ impl<'a> Overworld<'a> {
 		let options = texture_manager.borrow_mut().load("assets/rustIsAwful/options1.png")?;
 		let quit = texture_manager.borrow_mut().load("assets/rustIsAwful/quit1.png")?;
 		let haze = texture_manager.borrow_mut().load("assets/rustIsAwful/haze1.png")?;
+		let waste1 = texture_manager.borrow_mut().load("assets/rustIsAwful/haze1.png")?;
+		let waste2 = texture_manager.borrow_mut().load("assets/rustIsAwful/haze1.png")?;
+		let waste3 = texture_manager.borrow_mut().load("assets/rustIsAwful/haze1.png")?;
+		let boxen = texture_manager.borrow_mut().load("assets/rustIsAwful/Dialogue_box_.png")?;
+		let por = texture_manager.borrow_mut().load("assets/rustIsAwful/icon_backdrop.png")?;
 
+		let tempdia = DialogRunner {
+			line: 0, // this tells us the current line
+			inText: 0, //this helps with the sub string
+			numVectorVal: 0, //this tells what npc to use
+			player: waste1, //store player pic
+			background: waste2, //store player pic
+			npc: waste3, //store
+			diabox: boxen,
+			portraitbox: por,
+		};
 		let gameMode = Modes {
 			State: 1,
 		    midSentence: true,
 			key: false,
-			track: 0 as usize,
 			options_button: options,
 			quit_button: quit,
 			haze_button: haze,
+			dialog: tempdia,
+			prepost: true,
 		};
 
 
 		Ok(Overworld{
 			wincan,
 			event_system,
+			texture_manager,
+			font_manager,
 			tile_set,
 			player,
 			jsonEnemyLs,
@@ -262,6 +269,7 @@ impl<'a> Overworld<'a> {
 			last_time,
 			gameMode,
 			currMap:1,
+			win_or_loss:1,
 		})
 	}
 
@@ -272,6 +280,13 @@ impl Scene for Overworld<'_> {
 	fn handle_input(&mut self, event: GameEvent) {
 		// Matching events, most importantly KeyPress(k)'s
 		match self.gameMode.State {
+			0=> match event {
+				GameEvent::WinOrLoss(stat) => {
+					self.win_or_loss = stat;
+					println!("The state: {}",self.win_or_loss);
+				},
+				_ => {println!(/*"No event"*/)},
+			}
 			1=>	match event {
 					GameEvent::KeyPress(k) => {
 						//println!("p:{}", k);
@@ -288,6 +303,9 @@ impl Scene for Overworld<'_> {
 						if k.eq(&Keycode::S) {self.player.keyPress[1]=false}
 						if k.eq(&Keycode::A) {self.player.keyPress[2]=false}
 						if k.eq(&Keycode::D) {self.player.keyPress[3]=false}
+					},
+					GameEvent::WinOrLoss(stat) => {
+						self.win_or_loss = stat;
 					},
 					_ => {println!(/*"No event"*/)},
 
@@ -309,18 +327,30 @@ impl Scene for Overworld<'_> {
 							println!("X {}, Y: {}", x_pos, y_pos);
 							self.event_system.borrow().change_scene(4).unwrap();
 						}
-					}//exit or options
+					},//exit or options
+					GameEvent::WinOrLoss(stat) => {
+						self.win_or_loss = stat;
+					},
 					_ => {println!(/*"No event"*/)},//pause menu
-			}
+			} //pause
 
 			3=>	match event {
 					GameEvent::KeyPress(k) => {
 						//println!("p:{}", k);
 						if k.eq(&Keycode::Space) {self.gameMode.key=true}
 					},
+					GameEvent::WinOrLoss(stat) => {
+						self.win_or_loss = stat;
+					},
 					_ => {println!(/*"No event"*/)},
 			}//talking
-			_ => {println!(/*"No event"*/)},//pause menu
+			_ => {match event{
+				GameEvent::WinOrLoss(stat) => {
+					self.win_or_loss = stat;
+				},
+				_ => println!(/*"No event"*/)
+			}
+		},//pause menu
 		}
 	}
 
@@ -362,8 +392,7 @@ impl Scene for Overworld<'_> {
 						self.player.y_vel=0.0;
 						self.player.delta_x=0.0;
 						self.player.delta_y=0.0;
-						let id = self.enemy[i].npc_id;
-						self.enemy.remove(i as usize);  // remove the enemy
+						let id = self.enemy[i].npcDia as u32;
 						self.player.keyPress[0]=false;
 						self.player.keyPress[1]=false;
 						self.player.keyPress[2]=false;
@@ -373,9 +402,16 @@ impl Scene for Overworld<'_> {
 
 						// set the enemy's deck here. could randomize/set it here or set it during enemy creation
 						// the number passed into the function corresponds to the deck with the same number in battler-library.txt
-						println!("ID: {}",id);
-						self.event_system.borrow().set_battler_npc_deck(id).unwrap();
+						self.gameMode.dialog.numVectorVal=self.enemy[i].npcDia as usize;
+						self.enemy.remove(i as usize);  // remove the enemy
+						self.event_system.borrow().set_battler_npc_deck(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].deckID as u32).unwrap(); //use NPC DECK ID
+						self.event_system.borrow().send_enemy_to_battle(id).unwrap(); //use NPC BATTLER ID
 						self.last_time = self.elapsed.elapsed().as_secs_f64()%203.0;//song length 3:23
+						self.gameMode.dialog.player = self.texture_manager.borrow_mut().load(&(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].sprites[0]))?;
+						self.gameMode.dialog.npc = self.texture_manager.borrow_mut().load(&(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].sprites[1]))?;
+						self.gameMode.dialog.line =0;
+						self.gameMode.dialog.inText=0;
+						self.gameMode.prepost=true;
 						//println!("about to change scene now...");
 						//self.event_system.borrow().change_scene(2).unwrap();
 						self.gameMode.State=3;
@@ -386,8 +422,6 @@ impl Scene for Overworld<'_> {
 			}
 
 		}
-
-		println!("{} {}",self.currMap,self.player.ABSy_pos);
 
 		if self.currMap==1&&self.player.ABSy_pos<=5.0{
 			self.currMap=2;
@@ -457,6 +491,9 @@ impl Scene for Overworld<'_> {
 		self.player.is_flipped = if self.player.x_vel>0.0{true}else if self.player.x_vel<0.0{false}else{self.player.is_flipped};
 		crate::video::gfx::draw_sprite_mirror(&mut wincan, &self.player.sprite, (self.player.x_pos as i32, self.player.y_pos as i32),self.player.is_flipped,false)?;
 
+
+
+
 		if (self.gameMode.State==2)//pause
 		{
 			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.gameMode.haze_button)?;
@@ -465,25 +502,106 @@ impl Scene for Overworld<'_> {
 		}
 		else if (self.gameMode.State==3)//talking
 		{
-			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.player.sprite)?;
-			self.gameMode.State=1;
-			self.event_system.borrow().change_scene(2).unwrap();
-			// if (self.gameMode.track==self.gameMode.pre)//into combat
-			// {
-			// 	self.event_system.borrow().change_scene(2).unwrap();
-			// }
-			// else if
-			// {
-			//
-			// }
-			// else if
-			// {
-			//
-			// }
-			// else
-			// {
-			//
-			// }
+			crate::video::gfx::draw_sprite_to_fit(&mut wincan,  &self.gameMode.haze_button)?;
+			crate::video::gfx::draw_sprite(&mut wincan, &self.gameMode.dialog.diabox, (50, 400))?;
+
+			crate::video::gfx::draw_sprite(&mut wincan, &self.gameMode.dialog.portraitbox, (CAM_W as i32-350, 50))?;//xy
+			crate::video::gfx::draw_sprite(&mut wincan, &self.gameMode.dialog.portraitbox, (50, 50))?;
+
+			if(self.gameMode.key==true)//press space
+			{
+				if(self.gameMode.prepost==true)//pre
+				{
+					if (self.gameMode.dialog.line as usize >= self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].predialog.len()-1)//into combat
+					{
+						//set all values for next loop
+						self.gameMode.prepost=false;
+						self.gameMode.dialog.line=0;
+						self.event_system.borrow().change_scene(2).unwrap();
+					}
+					else
+					{
+						self.gameMode.dialog.line=self.gameMode.dialog.line+1;
+					}
+
+				}
+				else//post
+				{
+					if self.win_or_loss == 2{//win
+						if (self.gameMode.dialog.line == (self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].postdialog.len()-1 )as i32)//into combat
+						{
+							//reset
+							self.gameMode.prepost=true;
+							self.gameMode.dialog.line=0;
+							self.gameMode.State=1;
+							self.win_or_loss = 1;
+						}
+						else
+						{
+							self.gameMode.dialog.line=self.gameMode.dialog.line+1;
+						}
+					}else{
+						if (self.gameMode.dialog.line == (self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].postdialoglose.len()-1 )as i32)//into combat
+						{
+							//reset
+							self.gameMode.prepost=true;
+							self.gameMode.dialog.line=0;
+							self.gameMode.State=1;
+							self.win_or_loss = 1;
+						}
+						else
+						{
+							self.gameMode.dialog.line=self.gameMode.dialog.line+1;
+						}
+					}
+
+				}
+				self.gameMode.key=false;
+			}
+			else// no input from player
+			{
+				if(self.gameMode.key==true)//pre
+				{
+
+					if(self.gameMode.midSentence==true)//we are mid sentence
+					{
+						self.gameMode.dialog.inText = self.gameMode.dialog.inText+1;
+					}
+				}
+				else//post
+				{
+
+					if(self.gameMode.midSentence==true)//we are mid sentence
+					{
+						self.gameMode.dialog.inText = self.gameMode.dialog.inText+1;
+					}
+				}
+			}
+			//handle screen here
+			if(self.gameMode.prepost==true)//pre
+			{
+				let A =  self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].portraitPlayerPre[self.gameMode.dialog.line as usize];
+				let B =  self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].portraitEnemyPre[self.gameMode.dialog.line as usize];
+				crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.gameMode.dialog.player,(500*A-500 as i32,0),(500 as u32,500 as u32),(260 as u32,260 as u32),(70,70),(1,1))?;
+				crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.gameMode.dialog.npc,(500*B-500 as i32,0),(500 as u32,500 as u32),(260 as u32,260 as u32),(950,70),(1,1))?;
+				self.font_manager.borrow_mut().draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 22, Color::RGB(0, 0, 0),&(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].predialog[self.gameMode.dialog.line as usize]),  (80, 450));
+			}
+			else
+			{
+				if self.win_or_loss==2{
+					let A =  self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].portraitPlayerPost[self.gameMode.dialog.line as usize];
+					let B =  self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].portraitEnemyPost[self.gameMode.dialog.line as usize];
+					crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.gameMode.dialog.player,(500*A-500 as i32,0),(500 as u32,500 as u32),(260 as u32,260 as u32),(70,70),(1,1))?;
+					crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.gameMode.dialog.npc,(500*B-500 as i32,0),(500 as u32,500 as u32),(260 as u32,260 as u32),(950,70),(1,1))?;
+					self.font_manager.borrow_mut().draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 22, Color::RGB(0, 0, 0),&(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].postdialog[self.gameMode.dialog.line as usize]),  (80, 450));
+				}else{
+					let A =  self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].portraitPlayerPostlose[self.gameMode.dialog.line as usize];
+					let B =  self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].portraitEnemyPostlose[self.gameMode.dialog.line as usize];
+					crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.gameMode.dialog.player,(500*A-500 as i32,0),(500 as u32,500 as u32),(260 as u32,260 as u32),(70,70),(1,1))?;
+					crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.gameMode.dialog.npc,(500*B-500 as i32,0),(500 as u32,500 as u32),(260 as u32,260 as u32),(950,70),(1,1))?;
+					self.font_manager.borrow_mut().draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 22, Color::RGB(0, 0, 0),&(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].postdialoglose[self.gameMode.dialog.line as usize]),  (80, 450));
+				}
+				}
 		}
 
 
@@ -701,6 +819,7 @@ struct Enemy<'a> {
 	is_flipped: bool,
 	on_map: u32,
 	npc_id: u32,
+	npcDia:i32
 }
 
 impl<'a> Enemy<'a> {
@@ -761,26 +880,39 @@ struct npcData
 {
 	npcName: String,
 	deckID: i32,
+	portraitPlayerPre: Vec<i32>,
+	portraitEnemyPre: Vec<i32>,
 	predialog: Vec<String>,
+	portraitPlayerPost: Vec<i32>,
+	portraitEnemyPost: Vec<i32>,
 	postdialog: Vec<String>,
+	portraitPlayerPostlose: Vec<i32>,
+	portraitEnemyPostlose: Vec<i32>,
+	postdialoglose: Vec<String>,
 	sprites: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct jsonNPC
-{
-    inlist: Vec<usize>,
-    npcs: Vec<npcData>,
 }
 
 struct Modes<'a>
 {
     State: i32,
-    midSentence: bool,
 	key: bool,
-	track: usize,
+	midSentence: bool,
 	options_button: Rc<Texture<'a>>,
     quit_button: Rc<Texture<'a>>,
 	haze_button: Rc<Texture<'a>>,
+	dialog: DialogRunner<'a>, // literally a dialog runner
+	prepost: bool, // true, pre combat ---- false, post combat
+}
+
+struct DialogRunner<'a>
+{
+	line: i32, // this tells us the current line
+	inText: i32, //this helps with the sub string
+	numVectorVal: usize, //this tells what npc to use
+	player: Rc<Texture<'a>>, //store player pic
+	npc: Rc<Texture<'a>>, //store
+	background: Rc<Texture<'a>>, //store player pic
+	diabox: Rc<Texture<'a>>,
+	portraitbox: Rc<Texture<'a>>,
 }
 //###########################
