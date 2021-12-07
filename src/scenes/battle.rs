@@ -375,8 +375,8 @@ impl<'a> Battle<'a> {
             println!("{}", player2.to_string());
 
 	        //self.turn = TurnPhase::PreTurnP1;
-	        
-	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");       
+
+	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");
 
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
 
@@ -531,7 +531,7 @@ impl<'a> Battle<'a> {
 
 
 	            }else if self.turn == TurnPhase::TurnP2 && self.is_online && self.enemy_delay_inst.elapsed().as_secs() as f32 >= 0.5{
-					
+
                     // poll for updates from online.rs
                     println!("waiting for remote player, pushing a poll_for_updates call to the event system");
 					self.event_system.borrow().poll_for_updates().unwrap();
@@ -555,7 +555,7 @@ impl<'a> Battle<'a> {
 					    //player.draw_card(false);  // p2 is player
 
                         if player.get_deck_size() > 0  && player.get_curr_hand_size() < 7 {
-                            
+
                             player.add_draw_num(1);
                             self.dummy_drawn_card.x_pos = 40.0;
                             self.dummy_drawn_card.y_pos = 20.0;
@@ -626,46 +626,44 @@ impl<'a> Battle<'a> {
                 self.turn = TurnPhase::NotInitialized;
 				self.is_stopped = true;
 				sdl2::mixer::Music::halt();
-				
-				if !self.is_online {
-			        self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
 
-			        // Resetting all statuses here. Could make this an effect/card later
-			        //UPDATING PLAYER UPON END BATTLE
-			        self.player_rollover.borrow_mut().set_volley_bonus(0);
-			        self.player_rollover.borrow_mut().clear_poison();
-			        self.player_rollover.borrow_mut().set_defense(0);
-			        self.player_rollover.borrow_mut().set_mult(1);
-			        self.player_rollover.borrow_mut().clear_health_regen();
-			        self.player_rollover.borrow_mut().clear_energy_regen();
-			        self.player_rollover.borrow_mut().set_ex_turn(0);
-
-				    self.player_rollover.borrow_mut().add_health(5); //Boost full health
-				    self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
-				    self.player_rollover.borrow_mut().add_card_to_deck(13);
-				    
-				    self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
-			        let card_list = self.player_rollover.borrow_mut().get_duped();
-			        for card in card_list{
-				        self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
-			        }
-			        
-			        // return to the overworld
-			        self.event_system.borrow().change_scene(1).unwrap();
-				
-				}
-				else {
-				    
-				    // sever server connection
+				if self.is_online{
+					// sever server connection
 				    self.event_system.borrow().push_card_to_battle(999);
 				    self.is_online = false;
 				    self.turn = TurnPhase::NotInitialized;
-				    // return to main menu
-				    self.event_system.borrow().change_scene(0).unwrap();
+					self.event_system.borrow().change_scene(0).unwrap();
+	                return Ok(());
 				}
-				
-				//self.player_rollover.borrow_mut().add_card_to_deck(13);
-                //self.event_system.borrow().change_scene(1).unwrap();
+
+				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+
+				// Resetting all statuses here. Could make this an effect/card later
+				//UPDATING PLAYER UPON END BATTLE
+				self.player_rollover.borrow_mut().set_volley_bonus(0);
+				self.player_rollover.borrow_mut().clear_poison();
+				self.player_rollover.borrow_mut().set_defense(0);
+				self.player_rollover.borrow_mut().set_mult(1);
+				self.player_rollover.borrow_mut().clear_health_regen();
+				self.player_rollover.borrow_mut().clear_energy_regen();
+				self.player_rollover.borrow_mut().set_ex_turn(0);
+				let card_list = self.player_rollover.borrow_mut().get_duped();
+				for card in card_list{
+					self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
+				}
+
+				if self.outcome == BattleOutcome::VictoryP1{
+					self.player_rollover.borrow_mut().add_health(5); //Boost full health
+					self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
+					self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
+					self.player_rollover.borrow_mut().add_card_to_deck(13);
+					self.event_system.borrow().set_win_or_loss(2);
+				}else{
+					self.event_system.borrow().set_win_or_loss(0);
+				}
+
+
+                self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
 	        }
 	    }
@@ -709,6 +707,9 @@ impl<'a> Battle<'a> {
 		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 
 		let to_dupe = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(hand);
+		if self.is_online{
+			self.event_system.borrow().push_card_to_battle(25);
+		}
 
 		curr_card.set_values(19,to_dupe.unwrap() as i32);
 		crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
@@ -742,9 +743,11 @@ impl Scene for Battle<'_> {
 						self.net_card = 404;
 					}else{
 						if self.net_card==505{
+							self.tmp_enemy_played_card = 0 as usize;
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-1);
 						}else if self.net_card==25{
+							self.tmp_enemy_played_card = self.net_card as usize;
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
@@ -757,6 +760,7 @@ impl Scene for Battle<'_> {
 							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
 							// add card to discard pile after playing
+							println!("Why this not working");
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
@@ -789,7 +793,6 @@ impl Scene for Battle<'_> {
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 							// if the player has enough energy to cover the cost of playing the card:
 							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-
 						}
 					}
 					}
@@ -972,7 +975,7 @@ impl Scene for Battle<'_> {
 				    }
 
 				    else if (self.enemy_card.get_elarger() == true){
-					    if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
+					    if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460))){
 							    self.enemy_card.set_elarger(false);
 						    }
 				    }
@@ -1401,7 +1404,11 @@ impl Scene for Battle<'_> {
 
 		//see the enemy's card
 		if(self.enemy_card.get_elarger() == true){
-			let curr_card = player2.get_discard_card().unwrap();
+			let curr_card = if self.is_online{
+				self.tmp_enemy_played_card
+			}else{
+				player2.get_discard_card().unwrap() as usize
+			};
 
 			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_card as usize).unwrap()),(400,592), (450,50))?;
