@@ -50,4 +50,4 @@
 38::Broadside::Unleash your fury! Deal 7 damage at the expense of energy regen.::3::0,6::7,-2::assets/cards/broadside.png
 39::Jar of Dirt::What's inside? The anticipation is killing them!::1::0::3::assets/cards/jar_of_dirt.png
 40::Time Walk::Gain 1 extra turn.::5::23::1::assets/cards/time_walk.png
-41::Beach Boy::Heal for 4.::1::2::4::assets/cards/beach_boy.png
+41::Beach Boy::Add a random card you've played to hand.::1::25::1::assets/cards/beach_boy.png
