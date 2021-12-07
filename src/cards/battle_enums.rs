@@ -8,6 +8,7 @@ pub enum TurnPhase {
     PreMullOnlineP2,
     MullOnlineP1,
     MullOnlineP2,
+    ConnectionLost,
     MulliganPhase,
     PreTurnP1,
     TurnP1,

@@ -49,8 +49,10 @@ impl Scene for Online<'_> {
                     if self.connected {
                         if (x_pos > 10 && x_pos < 410) && (y_pos > 580 && y_pos < 700) {
                             //send_str = "Quit".to_string();
+                            println!("left online screen!");
                             self.tcp_connection.as_ref().unwrap().shutdown(Shutdown::Both);
                             self.tcp_connection = None;
+                            self.connected = false;
                             self.event_system.borrow().change_scene(0).unwrap();
                             return;
                         }
@@ -73,9 +75,13 @@ impl Scene for Online<'_> {
 						
 						}
 						else {
-						    println!("Connection lost or closed due to battle finishing!");
+						    println!("Connection lost or closed due to battle finishing! In online.rs PushCard game event handler");
                             self.connected = false;
-                            self.tcp_connection = None;
+                            self.tcp_connection.as_ref().unwrap().shutdown(Shutdown::Both);
+                            self.started = false;
+                            //self.tcp_connection = None;
+                            self.event_system.borrow().change_scene(0).unwrap();
+                            return;
 						}
                     }
                 },
@@ -102,6 +108,7 @@ impl Scene for Online<'_> {
 				                        println!("Connection lost or closed!");
 				                        self.connected = false;
 				                        self.tcp_connection = None;
+				                        self.started = false;
 				                        // force end the battle
 				                    }
 				                },
@@ -110,7 +117,7 @@ impl Scene for Online<'_> {
 				            }
 
 				        },
-				        None => { println!("no connection yet, trying again..."); self.tcp_connection = attempt_connection(); },
+				        None => { println!("no connection yet, or it was closed...");}, // don't retry connection, would reset battle anyway self.tcp_connection = attempt_connection(); },
 				    }
 				    self.poll_instant = Instant::now();
 				//let mut server_data = poll_server(&mut buffer);

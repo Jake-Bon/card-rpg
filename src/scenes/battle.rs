@@ -252,6 +252,12 @@ impl<'a> Battle<'a> {
 
         //let mut battle_stat = self.battle_handler.borrow_mut();
 
+        // workaround to avoid triggering an NPC battle upon disconnect
+        if self.turn == TurnPhase::ConnectionLost {
+            self.turn = TurnPhase::NotInitialized;
+            return Ok(());
+        }
+
 	    // initialize things at the start of battle
 	    if self.turn == TurnPhase::NotInitialized {
 
@@ -787,14 +793,17 @@ impl Scene for Battle<'_> {
 						}
 						else if self.net_card == 999 {
 						    // sever server connection
-						    println!("lost connection to client during battle!");
+						    println!("lost remote connection to client during battle!");
 			                self.event_system.borrow().push_card_to_battle(999);
 			                self.is_online = false;
-			                self.turn = TurnPhase::NotInitialized;
+			                self.turn = TurnPhase::ConnectionLost;
+			                println!("{:?}", self.turn);
 			                self.remote_ready = false;
 				            self.client_ready = false;
+				            self.event_system.borrow().change_scene(0).unwrap();
+				            return;
 			                // return to main menu
-			                self.event_system.borrow().change_scene(0).unwrap();
+			                //self.event_system.borrow().change_scene(0).unwrap();
 						    
 						}
 						// mulligan things
