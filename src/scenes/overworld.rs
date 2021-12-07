@@ -557,7 +557,7 @@ impl Scene for Overworld<'_> {
 				crate::video::gfx::tile_sprite_from_sheet_resize(&mut wincan, &self.gameMode.dialog.npc,(500*B as i32,0),(500 as u32,500 as u32),(280 as u32,280 as u32),(700,200),(1,1))?;
 
 			}
-			self.font_manager.borrow_mut().draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 24, Color::RGB(0, 0, 0),&(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].predialog[self.gameMode.dialog.line as usize].chars().skip(7).take(5).collect();),  (80, 450));
+			self.font_manager.borrow_mut().draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 22, Color::RGB(0, 0, 0),&(self.jsonEnemyLs[self.gameMode.dialog.numVectorVal].predialog[self.gameMode.dialog.line as usize]),  (80, 450));
 		}
 
 
