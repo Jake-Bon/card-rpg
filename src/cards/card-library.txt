@@ -48,3 +48,6 @@
 34::Fool's Gold::Gold... laced with poison!? For 3 turns, Enemy's mana regen increases by 2. Deal 4 poison damage.::4::4,7::4,2::assets/cards/fools_gold.png
 35::Blackbeard::Summon the spirit of Blackbeard. Next attacks do 5 more damage.::7::3::5::assets/cards/blackbeard.png
 36::Tower of Fear::Fear the monkes! Defend for 4 and deal 4 damage.::5::1,0::4,4::assets/cards/towerOfFear.png
+37::Bail!::To the buckets lads! Heal for 3::2::2::3::assets/cards/bail.png
+38::Broadside::Unleash your fury! Deal 7 damage at the expense of energy regen.::3::0,6::7,-2::assets/cards/broadside.png
+39::Jar of Dirt::What's inside? The anticipation is killing them!::1::0::3::assets/cards/jar_of_dirt.png
