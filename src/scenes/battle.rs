@@ -343,6 +343,9 @@ impl<'a> Battle<'a> {
 
             // free up the borrow_mut slot by using a local variable
             let mut battle_stat = self.battle_handler.borrow_mut();
+			if self.active_player==2{
+				battle_stat.turner();
+			}
 
             let mut _player1 = battle_stat.get_p1();
             let mut player1 = _player1.borrow_mut();
@@ -537,48 +540,6 @@ impl<'a> Battle<'a> {
                     // poll for updates from online.rs
                     println!("waiting for remote player, pushing a poll_for_updates call to the event system");
 					self.event_system.borrow().poll_for_updates().unwrap();
-					
-					
-					if self.net_card==505{
-						self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
-						self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-1);
-					}else if self.net_card==25{
-						let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
-						self.net_card = 404;
-						print!("{}\n",curr_card.to_string());
-						let curr_card_cost = curr_card.get_cost() as i32;
-						println!("card cost is {}", curr_card_cost);
-						let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
-						println!("current energy is {}", curr_energy);
-						// only play if player has enough energy
-						if curr_energy >= curr_card_cost{
-						//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
-
-						// add card to discard pile after playing
-						self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
-						self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
-						self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-						}
-					}else if self.net_card!=404{
-						let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
-						self.net_card = 404;
-						print!("{}\n",curr_card.to_string());
-						let curr_card_cost = curr_card.get_cost() as i32;
-						println!("card cost is {}", curr_card_cost);
-						let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
-						println!("current energy is {}", curr_energy);
-						// only play if player has enough energy
-						if curr_energy >= curr_card_cost{
-						//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
-
-						// add card to discard pile after playing
-						self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
-						self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-						// if the player has enough energy to cover the cost of playing the card:
-						crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-
-					}
-				}
 				self.enemy_delay_inst = Instant::now();
 				}
 	            else if self.turn == TurnPhase::PreTurnP2 {
@@ -764,11 +725,49 @@ impl Scene for Battle<'_> {
 					if self.net_card==1337{//end turn
 						println!("End P2 Turn");
 						self.turn = TurnPhase::PostTurnP2;
+						self.active_player = 2;
 						self.net_card = 404;
 					}else{
-						println!("ok so now it should be this client's turn");
-						self.active_player = 1;
-						self.turn = TurnPhase::PreTurnP1;
+						if self.net_card==505{
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-1);
+						}else if self.net_card==25{
+							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
+							self.net_card = 404;
+							print!("{}\n",curr_card.to_string());
+							let curr_card_cost = curr_card.get_cost() as i32;
+							println!("card cost is {}", curr_card_cost);
+							let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
+							println!("current energy is {}", curr_energy);
+							// only play if player has enough energy
+							if curr_energy >= curr_card_cost{
+							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+							// add card to discard pile after playing
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+							}
+						}else if self.net_card!=404{
+							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
+							self.net_card = 404;
+							print!("{}\n",curr_card.to_string());
+							let curr_card_cost = curr_card.get_cost() as i32;
+							println!("card cost is {}", curr_card_cost);
+							let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
+							println!("current energy is {}", curr_energy);
+							// only play if player has enough energy
+							if curr_energy >= curr_card_cost{
+							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+							// add card to discard pile after playing
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+							// if the player has enough energy to cover the cost of playing the card:
+							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+
+						}
+					}
 					}
 				}
 				GameEvent::KeyPress(k) => {
