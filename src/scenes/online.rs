@@ -58,14 +58,25 @@ impl Scene for Online<'_> {
                 },
 				GameEvent::PushCard(chosen) => {
                     if self.connected {
-                        let mut send_str = TurnData{turn_id: 0, card_ids: chosen as u16};
+                        
+                        // 999 is the online battle over code
+                        if chosen != 999 {
+                        
+                            let mut send_str = TurnData{turn_id: 0, card_ids: chosen as u16};
 
-                        let mut tcp_con = self.tcp_connection.as_ref().unwrap();
-						println!("Attempting to send out {} to remote player", chosen);
-                        tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
-                        // tcp_con.flush();
-                        println!("switching back to battle now");
-						self.event_system.borrow().change_scene(2).unwrap();
+                            let mut tcp_con = self.tcp_connection.as_ref().unwrap();
+						    println!("Attempting to send out {} to remote player", chosen);
+                            tcp_con.write_all(serde_json::to_string(&send_str).unwrap().as_bytes());
+                            // tcp_con.flush();
+                            println!("switching back to battle now");
+						    self.event_system.borrow().change_scene(2).unwrap();
+						
+						}
+						else {
+						    println!("Connection lost or closed due to battle finishing!");
+                            self.connected = false;
+                            self.tcp_connection = None;
+						}
                     }
                 },
 				GameEvent::PollFromBattle() => {
@@ -91,6 +102,7 @@ impl Scene for Online<'_> {
 				                        println!("Connection lost or closed!");
 				                        self.connected = false;
 				                        self.tcp_connection = None;
+				                        // force end the battle
 				                    }
 				                },
 				                Err(ref e) => { /*println!("No data to receive! Would have blocked!");*/ },
