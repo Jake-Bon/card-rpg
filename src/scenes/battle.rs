@@ -67,6 +67,8 @@ pub struct Battle<'a> {
 	battler_npc_photo_id: u32,
 
     // Mulligan
+    remote_ready: bool,
+    client_ready: bool,
 
 	//enlarge
 	enlarged_card: card_size,
@@ -213,6 +215,8 @@ impl<'a> Battle<'a> {
 			battle_handler,
 			enemy_delay_inst: Instant::now(),
 			battler_npc_deck_id: 1,
+			remote_ready: false,
+			client_ready: false,
 			battler_npc_photo_id: 0,
 			enlarged_card,
 			enemy_card,
@@ -249,6 +253,12 @@ impl<'a> Battle<'a> {
 		}
 
         //let mut battle_stat = self.battle_handler.borrow_mut();
+
+        // workaround to avoid triggering an NPC battle upon disconnect
+        if self.turn == TurnPhase::ConnectionLost {
+            self.turn = TurnPhase::NotInitialized;
+            return Ok(());
+        }
 
 	    // initialize things at the start of battle
 	    if self.turn == TurnPhase::NotInitialized {
@@ -323,10 +333,12 @@ impl<'a> Battle<'a> {
 			self.is_online = true;
 			if self.turn == TurnPhase::NotInitOnlineP1{
 				self.active_player = 1;
-				self.turn = TurnPhase::PreTurnP1;
+				//self.turn = TurnPhase::PreTurnP1;
+				self.turn = TurnPhase::PreMullOnlineP1;
 			}else if self.turn == TurnPhase::NotInitOnlineP2{
 				self.active_player = 2;
-				self.turn = TurnPhase::PreTurnP2;
+				//self.turn = TurnPhase::PreTurnP2;
+				self.turn = TurnPhase::PreMullOnlineP2;
 			}
 			else {
 			    println!("oh dear");
@@ -358,6 +370,9 @@ impl<'a> Battle<'a> {
             let mut player2 = _player2.borrow_mut();
             player2.shuffle_deck();
 
+            self.dummy_drawn_card.x_pos = 1140.0;
+            self.dummy_drawn_card.y_pos = 560.0;
+
             //println!("The player has {} cards in the deck", player1.get_deck_size());
             //println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
 
@@ -379,6 +394,7 @@ impl<'a> Battle<'a> {
 	        //self.turn = TurnPhase::PreTurnP1;
 
 	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");
+	        println!("this player's self.turn is {:?}", self.turn);
 
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
 
@@ -472,6 +488,13 @@ impl<'a> Battle<'a> {
 	                // similar to TurnP1, just wait in here until mulligan phase is done
 
 	            }
+	            else if self.turn == TurnPhase::MullOnlineP1 {
+	                // poll for updates from online.rs
+	                // need a dedicated call in here when active_player == 1
+                    println!("waiting for remote player, pushing a poll_for_updates call to the event system {:?}", self.turn);
+					self.event_system.borrow().poll_for_updates().unwrap();
+				    self.enemy_delay_inst = Instant::now();
+	            }
 
 	        }
 
@@ -532,10 +555,10 @@ impl<'a> Battle<'a> {
 	                self.turn = TurnPhase::PostTurnP2;
 
 
-	            }else if self.turn == TurnPhase::TurnP2 && self.is_online && self.enemy_delay_inst.elapsed().as_secs() as f32 >= 0.5{
+	            }else if (self.turn == TurnPhase::TurnP2 || self.turn == TurnPhase::MullOnlineP1 || self.turn == TurnPhase::MullOnlineP2) && self.is_online && self.enemy_delay_inst.elapsed().as_secs() as f32 >= 0.5{
 
                     // poll for updates from online.rs
-                    println!("waiting for remote player, pushing a poll_for_updates call to the event system");
+                    println!("waiting for remote player, pushing a poll_for_updates call to the event system {:?}", self.turn);
 					self.event_system.borrow().poll_for_updates().unwrap();
 				    self.enemy_delay_inst = Instant::now();
 				}
@@ -588,7 +611,7 @@ impl<'a> Battle<'a> {
 
 	            }
 	            // self.enemy_delay_inst is updated again in the TurnP2 phase. After 1 second, the code below runs
-	            else if self.turn == TurnPhase::PostTurnP2  && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
+	            else if self.turn == TurnPhase::PostTurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 	                // Resolve things that need to be resolved after the Opponent's turn in here
 	                // Intended to check for Statuses that need to be removed at the end of the turn
 					let mut battle_stat = self.battle_handler.borrow_mut();
@@ -634,6 +657,8 @@ impl<'a> Battle<'a> {
 				    self.event_system.borrow().push_card_to_battle(999);
 				    self.is_online = false;
 				    self.turn = TurnPhase::NotInitialized;
+				    self.remote_ready = false;
+				    self.client_ready = false;
 					self.event_system.borrow().change_scene(0).unwrap();
 	                return Ok(());
 				}
@@ -774,12 +799,62 @@ impl Scene for Battle<'_> {
 						}
 						else if self.net_card == 999 {
 						    // sever server connection
-						    println!("lost connection to client during battle!");
+						    println!("lost remote connection to client during battle!");
 			                self.event_system.borrow().push_card_to_battle(999);
 			                self.is_online = false;
-			                self.turn = TurnPhase::NotInitialized;
+			                self.turn = TurnPhase::ConnectionLost;
+			                println!("{:?}", self.turn);
+			                self.remote_ready = false;
+				            self.client_ready = false;
+				            self.event_system.borrow().change_scene(0).unwrap();
+				            return;
 			                // return to main menu
-			                self.event_system.borrow().change_scene(0).unwrap();
+			                //self.event_system.borrow().change_scene(0).unwrap();
+						    
+						}
+						// mulligan things
+						else if self.net_card == 600 || self.net_card == 601 || self.net_card == 602 || self.net_card == 603 {
+						    println!("got the remote player's mulligan result, {:?}, is_online: {}", self.turn, self.is_online);
+						    let remote_to_draw = self.net_card - 600; // mulligan a maximum of 3 cards
+						    if self.turn == TurnPhase::MullOnlineP1 {
+						        // doesn't matter what cards are discarded/drawn, will be hidden to the client
+						        for i in 0..remote_to_draw {
+						            self.battle_handler.borrow_mut().get_inactive_player().borrow_mut().hand_del_card(0);
+						            self.battle_handler.borrow_mut().get_inactive_player().borrow_mut().add_card_to_deck(0);
+						        }
+						        self.battle_handler.borrow_mut().get_inactive_player().borrow_mut().set_draw_num(remote_to_draw);
+						        self.remote_ready = true;
+						        
+						        // if both players are finished with the mulligan phase, start the game
+						        if self.remote_ready && self.client_ready {
+						            self.turn = TurnPhase::PreTurnP1;
+						            println!("mulligan phase over!");
+						        }
+						        else {
+						            println!("still waiting on client");
+						        }
+						        
+						    }
+						    else if self.turn == TurnPhase::MullOnlineP2 {
+						        // if player is assigned player 2 by the server, player 1 is already set as the active player
+						        // doesn't matter what cards are discarded/drawn, will be hidden to the client. Need to keep deck size consistent, though
+						        for i in 0..remote_to_draw {
+						            self.battle_handler.borrow_mut().get_active_player().borrow_mut().hand_del_card(0);
+						            self.battle_handler.borrow_mut().get_active_player().borrow_mut().add_card_to_deck(0);
+						        }
+						        self.battle_handler.borrow_mut().get_active_player().borrow_mut().set_draw_num(remote_to_draw);
+						        self.remote_ready = true;
+						        
+						        // if both players are finished with the mulligan phase, start the game
+						        if self.remote_ready && self.client_ready {
+						            self.turn = TurnPhase::PreTurnP2;
+						            println!("mulligan phase over!");
+						        }
+						        else {
+						            println!("still waiting on client");
+						        }
+						        
+						    }
 						    
 						}
 						else if self.net_card!=404{
@@ -828,11 +903,36 @@ impl Scene for Battle<'_> {
 					    self.turn = TurnPhase::PostTurnP1;
 					}
 
-					// Player clicks End Turn button when self.turn == TurnPhase::MulliganPhase
-					else if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::MulliganPhase) {
-					    println!("End Turn button was pressed, Mulligan phase over");
+					// Player clicks End Turn button when self.turn == TurnPhase::MulliganPhase (or an online equivalent)
+					else if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && (self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::MullOnlineP1 || self.turn == TurnPhase::MullOnlineP2) && !self.client_ready) {
+					    println!("End Turn button was pressed, Mulligan phase over {:?}", self.turn);
 					    self.battle_handler.borrow_mut().get_p1().borrow_mut().shuffle_deck();
-					    self.turn = TurnPhase::PreTurnP1;
+					    if !self.is_online {
+					        self.turn = TurnPhase::PreTurnP1;
+					        println!("not an online battle, no need to wait!");
+					    }
+					    else {
+					        println!("sending client player's mulligan result {:?}, {}", self.turn, self.is_online);
+					        self.event_system.borrow().push_card_to_battle(600 + self.battle_handler.borrow_mut().get_p1().borrow().get_draw_num());
+					        if self.turn == TurnPhase::MullOnlineP1 {
+					            self.client_ready = true;
+				                // if both players are finished with the mulligan phase, start the game
+				                if self.remote_ready && self.client_ready {
+				                    self.turn = TurnPhase::PreTurnP1;
+				                    println!("mulligan phase over!");
+				                }
+					        }
+					        else {
+					            self.client_ready = true;
+					            // if both players are finished with the mulligan phase, start the game
+					            if self.remote_ready && self.client_ready {
+					                self.turn = TurnPhase::PreTurnP2;
+					                println!("mulligan phase over!");
+					            }
+					        }
+					        println!("finished sending client player mulligan result, now waiting for remote player {:?}", self.turn);
+					        
+					    }
 					}
 					// If the enlarged card menu UI is already on screen
 					else if self.enlarged_card.get_larger() == true{
@@ -848,7 +948,7 @@ impl Scene for Battle<'_> {
 						let curr_energy = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_energy();
 						if (!card_rslt.is_none()){
 
-                            if self.turn != TurnPhase::MulliganPhase {
+                            if (self.turn != TurnPhase::MulliganPhase && self.turn != TurnPhase::MullOnlineP1 && self.turn != TurnPhase::MullOnlineP2) {
                                 // if the card is not Glitch
 						        if !curr_card.get_actions().contains(&19){
 						            // return button
@@ -993,14 +1093,15 @@ impl Scene for Battle<'_> {
 				            let mut p1_hand_size = self.battle_handler.borrow_mut().get_p1().borrow().get_curr_hand_size();//battle_stat.get_p1().borrow().get_curr_hand_size();
 				            //let curr_turn = self.battle_handler.borrow_mut().get_turn();
 
-						    if (self.battle_handler.borrow_mut().get_turn()==0&&self.enlarged_card.get_larger()==false&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
+                            let cur_turn = self.battle_handler.borrow_mut().get_turn();
+						    if ((cur_turn==0 || cur_turn==1 && self.turn==TurnPhase::MullOnlineP2) &&self.enlarged_card.get_larger()==false&&(x_pos > (260 as i32) && x_pos < (360 + (p1_hand_size * 120) as i32)) && (y_pos > 560 && y_pos < 708)){
 							    let i = ((x_pos-260)/120) as usize;
 							    //println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
 							    //println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 
 							    //println!("game thinks that the player is clicking on card {}", i);
 
-                                if (self.turn == TurnPhase::TurnP1 || self.turn == TurnPhase::MulliganPhase) && self.outcome == BattleOutcome::Undetermined {
+                                if (self.turn == TurnPhase::TurnP1 || self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::MullOnlineP1 || self.turn == TurnPhase::MullOnlineP2) && self.outcome == BattleOutcome::Undetermined {
 
 							        // select the card
 							        let card_rslt = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i);
@@ -1052,7 +1153,7 @@ impl Scene for Battle<'_> {
 		}
 
         // Card Draw Animation P1
-        if player1.get_draw_num() > 0 && self.turn != TurnPhase::MulliganPhase {
+        if player1.get_draw_num() > 0 && (self.turn != TurnPhase::MulliganPhase && self.turn != TurnPhase::MullOnlineP1 && self.turn != TurnPhase::MullOnlineP2){
 
             if player1.get_deck_size() == 0 {
                 //println!("but there's no more cards in the deck! setting draw_num to 0");
@@ -1089,6 +1190,14 @@ impl Scene for Battle<'_> {
                         if self.turn == TurnPhase::PreMulliganPhase && player1.get_draw_num() == 0 {
                             self.turn = TurnPhase::MulliganPhase;
                         }
+                        else if self.turn == TurnPhase::PreMullOnlineP1 && player1.get_draw_num() == 0 {
+                            self.turn = TurnPhase::MullOnlineP1;
+                            println!("Player 1 now has self.turn set to TurnPhase::MullOnlineP1");
+                        }
+                        else if self.turn == TurnPhase::PreMullOnlineP2 && player1.get_draw_num() == 0 {
+                            self.turn = TurnPhase::MullOnlineP2;
+                            println!("Player 2 now has self.turn set to TurnPhase::MullOnlineP2");
+                        }
 
                     }
                 }
@@ -1120,8 +1229,14 @@ impl Scene for Battle<'_> {
 		let mut fontm = self.font_manager.borrow_mut();
 
         // mulligan screen text
-        if self.turn == TurnPhase::MulliganPhase {
-            fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0), "Choose Your Hand...", (50, 330));
+        if self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::MullOnlineP1 || self.turn == TurnPhase::MullOnlineP2 {
+            // if this player is waiting for their opponent to finish
+            if self.client_ready && !self.remote_ready {
+                fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0), "Waiting for Opponent...", (50, 330));
+            }
+            else if !self.client_ready {
+                fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0), "Choose Your Hand...", (50, 330));
+            }
             // give the player feedback when they discard a card
             if player1.get_draw_num() > 0 {
                 fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0), "Replacing:", (50, 390));
@@ -1319,22 +1434,25 @@ impl Scene for Battle<'_> {
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_i,(150,150), (60,560))?; //player icon
 		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play2_i,(150,150), (1070,20))?; //enemy icon
 
-        if self.turn == TurnPhase::TurnP1 || self.turn == TurnPhase::MulliganPhase {
-		// End Turn button "sprite"
-		crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
-		// End Turn button text
-		//let mut fontm = self.font_manager.borrow_mut();
+        // End Turn / Confirm button
+        if self.turn == TurnPhase::TurnP1 || (self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::MullOnlineP1 || self.turn == TurnPhase::MullOnlineP2) {
 
-		if self.turn == TurnPhase::TurnP1 {
-		    fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
-		}
-		else {
-		    fontm.draw_text(&mut wincan, "Confirm", (1120, 480));
-		}
+		    if self.turn == TurnPhase::TurnP1 {
+		        // End Turn button "sprite"
+		        crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
+		        // End Turn button text
+		        fontm.draw_text(&mut wincan, "End Turn", (1120, 480));
+		    }
+		    else if !self.client_ready {
+		        // End Turn button "sprite"
+		        crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.drop, (160, 60), (1110, 470))?;
+		        // End Turn button text
+		        fontm.draw_text(&mut wincan, "Confirm", (1120, 480));
+		    }
 
 		}
 
-		if(self.enlarged_card.get_larger() == true && self.turn != TurnPhase::MulliganPhase){
+		if(self.enlarged_card.get_larger() == true && (self.turn != TurnPhase::MulliganPhase && self.turn != TurnPhase::MullOnlineP1 && self.turn != TurnPhase::MullOnlineP2)){
 			let curr_selection = player1.select_hand(self.enlarged_card.get_cardpos() as usize);
 			if !curr_selection.is_none(){
 			let curr_sel = curr_selection.unwrap();
@@ -1388,7 +1506,7 @@ impl Scene for Battle<'_> {
 		}
 		}
 		// else if it's during the mulligan phase, don't need to account for Glitch
-		else if (self.enlarged_card.get_larger() == true && self.turn == TurnPhase::MulliganPhase){
+		else if (self.enlarged_card.get_larger() == true && (self.turn == TurnPhase::MulliganPhase || self.turn == TurnPhase::MullOnlineP1 || self.turn == TurnPhase::MullOnlineP2 )){
 		    let curr_selection = player1.select_hand(self.enlarged_card.get_cardpos() as usize);
 			if !curr_selection.is_none(){
 			    let curr_sel = curr_selection.unwrap();
