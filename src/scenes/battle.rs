@@ -82,6 +82,7 @@ pub struct Battle<'a> {
 
 	//NETWORK
 	is_online: bool,
+	net_card: u32,
 
 	//CHEAT
 	keyPress: [bool; 3],
@@ -136,11 +137,11 @@ impl<'a> Battle<'a> {
 
 		let enlarged_card = card_size{
 		    	card_pos: 0,
-			x_size: 400,
-			y_size: 592,
-			x_pos: 450,
-			y_pos: 50,
-			larger: false,
+			    x_size: 400,
+			    y_size: 592,
+			    x_pos: 450,
+			    y_pos: 50,
+			    larger: false,
 		    };
 
 		let enemy_card = e_card_size{
@@ -221,6 +222,7 @@ impl<'a> Battle<'a> {
 			is_paused,
 			is_stopped,
 			is_online: false,
+			net_card: 404,
 			keyPress: [false;3]
 		})
 	}
@@ -308,30 +310,43 @@ impl<'a> Battle<'a> {
 
 	    }
 
+        // online implementation
 		if self.turn == TurnPhase::NotInitOnlineP1||self.turn == TurnPhase::NotInitOnlineP2 {
 
 
 	        // player structs and decks will be initialized here
 
             println!("Start of Battle...");
+			println!("According to the server, this client had its turn set to {:?}",self.turn);
 			self.is_online = true;
-			self.active_player = 1;
-			if self.turn == TurnPhase::NotInitOnlineP2{
+			if self.turn == TurnPhase::NotInitOnlineP1{
+				self.active_player = 1;
+				self.turn = TurnPhase::PreTurnP1;
+			}else if self.turn == TurnPhase::NotInitOnlineP2{
 				self.active_player = 2;
 				self.turn = TurnPhase::PreTurnP2;
 			}
+			else {
+			    println!("oh dear");
+			}
+
+			println!("active player: {} | self.turn: {:?}",self.active_player,self.turn);
 
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
 			let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone()));
             // change the number in self.battler_map.get(&X) to change battler ID
             //      Now done through the set_battler_npc_deck event
             let _p2 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone()));
-            println!("set opponent's deck to the deck with deck_id: {}", self.battler_npc_deck_id);
+            //println!("set opponent's deck to the deck with deck_id: {}", self.battler_npc_deck_id);
 
 		    self.battle_handler = Rc::new(RefCell::new(BattleStatus::new(Rc::clone(&_p1),Rc::clone(&_p2))));
 
             // free up the borrow_mut slot by using a local variable
             let mut battle_stat = self.battle_handler.borrow_mut();
+			if self.active_player==2{
+			    // update active player
+				battle_stat.turner();
+			}
 
             let mut _player1 = battle_stat.get_p1();
             let mut player1 = _player1.borrow_mut();
@@ -341,8 +356,8 @@ impl<'a> Battle<'a> {
             let mut player2 = _player2.borrow_mut();
             player2.shuffle_deck();
 
-            println!("The player has {} cards in the deck", player1.get_deck_size());
-            println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
+            //println!("The player has {} cards in the deck", player1.get_deck_size());
+            //println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
 
             // draw 3 cards for both players to start the battle (they will draw a 4th on their turn)
             //for i in 0..4{
@@ -350,20 +365,18 @@ impl<'a> Battle<'a> {
                 player2.add_draw_num(3);//player2.draw_card(false);  // p2 is opponent
             //}
 
-            println!("The player has {} cards in the deck", player1.get_deck_size());
-            println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
+            //println!("The player has {} cards in the deck", player1.get_deck_size());
+            //println!("The opponent has {} cards in the deck\n", player2.get_deck_size());
 
-            println!("The player has {} cards in their hand", player1.get_curr_hand_size());
-            println!("The opponent has {} cards in the hand\n", player2.get_curr_hand_size());
+            //println!("The player has {} cards in their hand", player1.get_curr_hand_size());
+            //println!("The opponent has {} cards in the hand\n", player2.get_curr_hand_size());
 
             println!("{}", player1.to_string());
             println!("{}", player2.to_string());
 
 	        //self.turn = TurnPhase::PreTurnP1;
-
-	        // use PreMulliganPhase so that the cards can be drawn before mulligan phase
-	        self.turn = TurnPhase::PreMulliganPhase;
-	        self.outcome = BattleOutcome::Undetermined;
+	        
+	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");       
 
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
 
@@ -413,6 +426,7 @@ impl<'a> Battle<'a> {
 
 			            // delaying card draw until after animation finishes
                         if player.get_deck_size() > 0  && player.get_curr_hand_size() < 7 {
+                            println!("start of client player turn, drawing a card...");
                             player.add_draw_num(1);
                             self.dummy_drawn_card.x_pos = 1140.0;
                             self.dummy_drawn_card.y_pos = 560.0;
@@ -465,11 +479,7 @@ impl<'a> Battle<'a> {
 	            self.outcome = self.battle_handler.borrow_mut().check_victory();
 
                 // self.enemy_delay_inst is updated in the PreTurnP2 phase. After 1 second, the code below runs
-	            if self.turn == TurnPhase::TurnP2 && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
-
-					if self.is_online{
-
-					}else{
+	            if self.turn == TurnPhase::TurnP2 && !self.is_online && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 	                // Enemy AI should be called from here
 	                println!("about to construct the game tree for the turn");
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
@@ -510,7 +520,7 @@ impl<'a> Battle<'a> {
 						//println!("{}", self.battle_handler.borrow_mut().get_p1().borrow_mut().to_string());
 						//println!("{}", self.battle_handler.borrow_mut().get_p2().borrow_mut().to_string());
 					}
-				}
+
 
                     // delay the turn phase by 1 second NEED THIS FOR CARD DRAW ANIM
                     println!("waiting another second...");
@@ -520,7 +530,13 @@ impl<'a> Battle<'a> {
 	                self.turn = TurnPhase::PostTurnP2;
 
 
-	            }
+	            }else if self.turn == TurnPhase::TurnP2 && self.is_online && self.enemy_delay_inst.elapsed().as_secs() as f32 >= 0.5{
+					
+                    // poll for updates from online.rs
+                    println!("waiting for remote player, pushing a poll_for_updates call to the event system");
+					self.event_system.borrow().poll_for_updates().unwrap();
+				    self.enemy_delay_inst = Instant::now();
+				}
 	            else if self.turn == TurnPhase::PreTurnP2 {
 	                // Resolve things that need to be resolved prior to the Opponent's turn in here
 	                // Intended to check for Statuses that need to be removed at the beginning of the turn
@@ -539,6 +555,7 @@ impl<'a> Battle<'a> {
 					    //player.draw_card(false);  // p2 is player
 
                         if player.get_deck_size() > 0  && player.get_curr_hand_size() < 7 {
+                            
                             player.add_draw_num(1);
                             self.dummy_drawn_card.x_pos = 40.0;
                             self.dummy_drawn_card.y_pos = 20.0;
@@ -685,7 +702,6 @@ impl<'a> Battle<'a> {
 impl Scene for Battle<'_> {
 
 	fn handle_input(&mut self, event: GameEvent) {
-
 		// Some input should be restricted if it isn't the player's turn
 
 		    match event {
@@ -694,7 +710,60 @@ impl Scene for Battle<'_> {
 			        //println!("IN BATTLE: self.battler_npc_deck_id is {}, should be {}", self.battler_npc_deck_id, deck_id);
 			    },
 				GameEvent::SetClientTurn(v) => {
+					println!("Received SetClientTurn game event, with v={:?}", v);
 					self.turn = v;
+				}
+				GameEvent::OnlinePlay(c) => {
+					// set the client's turn as player1 or player2
+					self.net_card = c;
+					println!("From the OnlinePlay system, got: {}", c);
+					if self.net_card==1337{//end turn
+						println!("End P2 Turn");
+						self.turn = TurnPhase::PostTurnP2;
+						self.active_player = 2;
+						self.net_card = 404;
+					}else{
+						if self.net_card==505{
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-1);
+						}else if self.net_card==25{
+							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
+							self.net_card = 404;
+							print!("{}\n",curr_card.to_string());
+							let curr_card_cost = curr_card.get_cost() as i32;
+							println!("card cost is {}", curr_card_cost);
+							let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
+							println!("current energy is {}", curr_energy);
+							// only play if player has enough energy
+							if curr_energy >= curr_card_cost{
+							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+							// add card to discard pile after playing
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+							}
+						}else if self.net_card!=404{
+							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
+							self.net_card = 404;
+							print!("{}\n",curr_card.to_string());
+							let curr_card_cost = curr_card.get_cost() as i32;
+							println!("card cost is {}", curr_card_cost);
+							let curr_energy = self.battle_handler.borrow_mut().get_p2().borrow().get_curr_energy();
+							println!("current energy is {}", curr_energy);
+							// only play if player has enough energy
+							if curr_energy >= curr_card_cost{
+							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+
+							// add card to discard pile after playing
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
+							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+							// if the player has enough energy to cover the cost of playing the card:
+							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+
+						}
+					}
+					}
 				}
 				GameEvent::KeyPress(k) => {
 					//println!("p:{}", k);
@@ -715,6 +784,9 @@ impl Scene for Battle<'_> {
 					// Player clicks End Turn button when self.turn == TurnPhase::TurnP1
 			        if (self.enlarged_card.get_larger() == false && self.enemy_card.get_elarger() == false && x_pos > 1110 && x_pos < 1270) && (y_pos > 470 && y_pos < 530 && self.turn == TurnPhase::TurnP1) {
 					    println!("End Turn button was pressed");
+						if self.is_online{
+							self.event_system.borrow().push_card_to_battle(1337);
+						}
 					    self.turn = TurnPhase::PostTurnP1;
 					}
 
@@ -753,6 +825,9 @@ impl Scene for Battle<'_> {
 								        if (curr_energy >= curr_card_cost){
 
 					            		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
+										if self.is_online{
+											self.event_system.borrow().push_card_to_battle(card_ID);
+										}
 
 								        // add card to discard pile
 					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
@@ -778,6 +853,9 @@ impl Scene for Battle<'_> {
 
 					            		//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
+										if self.is_online{
+											self.event_system.borrow().push_card_to_battle(505);
+										}
 								        // add card to discard pile
 					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
 					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-1);

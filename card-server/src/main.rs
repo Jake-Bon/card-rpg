@@ -8,7 +8,8 @@ fn main() -> Result<()>{
     
     loop {
     
-        let (mut player_1_stream, mut player_2_stream) = accept_clients("172.31.21.15:7878").unwrap(); // localhost
+        let (mut player_1_stream, mut player_2_stream) = accept_clients("172.31.21.15:7878").unwrap();
+        //let (mut player_1_stream, mut player_2_stream) = accept_clients("127.0.0.1:7878").unwrap(); // localhost
         //let (mut player_1_stream, mut player_2_stream) = accept_clients("34.227.148.203:54345").unwrap();
         
         player_1_stream.set_nonblocking(true);
@@ -24,7 +25,6 @@ fn main() -> Result<()>{
         //let mut player_1_stream = player_1_stream.unwrap();
         //let mut player_2_stream = player_2_stream.unwrap();
         //accept("127.0.0.1:7878")?;
-    
     
         
         loop {
@@ -72,8 +72,6 @@ fn main() -> Result<()>{
                     Ok(T) => {
                         if T > 0 {
                             println!("Received '{}' from player 2", String::from_utf8_lossy(&p2_buffer));
-                            println!("String::from_utf8_lossy(&p1_buffer) != 'Quit': {}", String::from_utf8_lossy(&p2_buffer) != "Quit");
-                            println!("'{}' VS '{}'", String::from_utf8_lossy(&p2_buffer), "Quit");
                             player_1_stream.write_all(&p2_buffer);
                             player_1_stream.flush()?;
                             // clear the buffer
@@ -147,7 +145,7 @@ fn accept_clients(server_addr: &str) -> Result<(TcpStream, TcpStream)> {
             println!("both clients connected!");
             // stop accepting new clients
             connection_1.as_ref().unwrap().write(r#"{"turn_id":0,"card_ids":0}"#.as_bytes());
-            connection_2.as_ref().unwrap().write(r#"{"turn_id":0,"card_ids":0}"#.as_bytes());
+            connection_2.as_ref().unwrap().write(r#"{"turn_id":0,"card_ids":1}"#.as_bytes());
             break;
         }
         
