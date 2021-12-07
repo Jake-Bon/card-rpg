@@ -57,7 +57,7 @@ impl<'a> GameManager<'a> {
 		for event in game_events {
 			match event {
 				Some(GameEvent::WindowClose) => self.game_state = GameState::Quit,
-				Some(GameEvent::SetBattlerNPCDeck(deck_id)) => { 
+				Some(GameEvent::SetBattlerNPCDeck(deck_id)) => {
 				    //println!("sending the SetBattlerNPCDeck event to battle, deck_id was {}", deck_id as u32);
 				    self.battle.handle_input(GameEvent::SetBattlerNPCDeck(deck_id)); // only scene that should care about the battler deck id is battle.rs
 				},
@@ -110,7 +110,7 @@ impl<'a> GameManager<'a> {
 
 		let menu = Box::new(Menu::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let battle = Box::new(Battle::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
-		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
+		let overworld = Box::new(Overworld::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
 		let online = Box::new(Online::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager)));
 		let credits = Box::new(Credits::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system))?);
 		let options = Box::new(Options::init(Rc::clone(&texture_manager), Rc::clone(&wincan), Rc::clone(&event_system), Rc::clone(&font_manager))?);
