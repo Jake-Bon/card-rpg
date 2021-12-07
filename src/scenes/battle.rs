@@ -626,27 +626,46 @@ impl<'a> Battle<'a> {
                 self.turn = TurnPhase::NotInitialized;
 				self.is_stopped = true;
 				sdl2::mixer::Music::halt();
-				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+				
+				if !self.is_online {
+			        self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
 
-				// Resetting all statuses here. Could make this an effect/card later
-				//UPDATING PLAYER UPON END BATTLE
-				self.player_rollover.borrow_mut().set_volley_bonus(0);
-				self.player_rollover.borrow_mut().clear_poison();
-				self.player_rollover.borrow_mut().set_defense(0);
-				self.player_rollover.borrow_mut().set_mult(1);
-				self.player_rollover.borrow_mut().clear_health_regen();
-				self.player_rollover.borrow_mut().clear_energy_regen();
-				self.player_rollover.borrow_mut().set_ex_turn(0);
+			        // Resetting all statuses here. Could make this an effect/card later
+			        //UPDATING PLAYER UPON END BATTLE
+			        self.player_rollover.borrow_mut().set_volley_bonus(0);
+			        self.player_rollover.borrow_mut().clear_poison();
+			        self.player_rollover.borrow_mut().set_defense(0);
+			        self.player_rollover.borrow_mut().set_mult(1);
+			        self.player_rollover.borrow_mut().clear_health_regen();
+			        self.player_rollover.borrow_mut().clear_energy_regen();
+			        self.player_rollover.borrow_mut().set_ex_turn(0);
 
-				self.player_rollover.borrow_mut().add_health(5); //Boost full health
-				self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
-				self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
-				let card_list = self.player_rollover.borrow_mut().get_duped();
-				for card in card_list{
-					self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
+				    self.player_rollover.borrow_mut().add_health(5); //Boost full health
+				    self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
+				    self.player_rollover.borrow_mut().add_card_to_deck(13);
+				    
+				    self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
+			        let card_list = self.player_rollover.borrow_mut().get_duped();
+			        for card in card_list{
+				        self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
+			        }
+			        
+			        // return to the overworld
+			        self.event_system.borrow().change_scene(1).unwrap();
+				
 				}
-				self.player_rollover.borrow_mut().add_card_to_deck(13);
-                self.event_system.borrow().change_scene(1).unwrap();
+				else {
+				    
+				    // sever server connection
+				    self.event_system.borrow().push_card_to_battle(999);
+				    self.is_online = false;
+				    self.turn = TurnPhase::NotInitialized;
+				    // return to main menu
+				    self.event_system.borrow().change_scene(0).unwrap();
+				}
+				
+				//self.player_rollover.borrow_mut().add_card_to_deck(13);
+                //self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
 	        }
 	    }
@@ -714,7 +733,6 @@ impl Scene for Battle<'_> {
 					self.turn = v;
 				}
 				GameEvent::OnlinePlay(c) => {
-					// set the client's turn as player1 or player2
 					self.net_card = c;
 					println!("From the OnlinePlay system, got: {}", c);
 					if self.net_card==1337{//end turn
@@ -743,7 +761,18 @@ impl Scene for Battle<'_> {
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 							}
-						}else if self.net_card!=404{
+						}
+						else if self.net_card == 999 {
+						    // sever server connection
+						    println!("lost connection to client during battle!");
+			                self.event_system.borrow().push_card_to_battle(999);
+			                self.is_online = false;
+			                self.turn = TurnPhase::NotInitialized;
+			                // return to main menu
+			                self.event_system.borrow().change_scene(0).unwrap();
+						    
+						}
+						else if self.net_card!=404{
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
@@ -837,7 +866,7 @@ impl Scene for Battle<'_> {
 
 								        self.enlarged_card.set_larger(false);
 								        }
-								        // otherwise, don'
+								        // otherwise, don't
                             			else {
 									        self.not_enough_mana = true;
                                 			println!("Not enough energy!");
