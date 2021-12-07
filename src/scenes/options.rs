@@ -51,7 +51,15 @@ impl Scene for Options<'_> {
 			GameEvent::MouseClick(x_pos,y_pos) => {
 
 				if (x_pos > 490 && x_pos < 490+300) && (y_pos > 530 && y_pos < 530+90) {
-					self.event_system.borrow().change_scene(0).unwrap();
+					//"previous scene" flag
+					//volume is a multiple of 10 as per options controls, so if volume mod 10 == 1, this flag was tripped
+					//...which means that options menu would return to the overworld and not the title screen
+					if (sdl2::mixer::Music::get_volume() % 10 == 1) {
+						self.event_system.borrow().change_scene(1).unwrap();
+					}
+					else {
+						self.event_system.borrow().change_scene(0).unwrap();
+					}
                 }
 
 				//decrease volume button

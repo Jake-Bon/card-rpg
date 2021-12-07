@@ -58,6 +58,11 @@ impl Scene for Menu<'_> {
 
 	fn handle_input(&mut self, event: GameEvent) {
 
+		//so players don't blow off their eardrums when playing w/o going to options
+		if (sdl2::mixer::Music::get_volume() > 50) {
+			sdl2::mixer::Music::set_volume(50);
+		}
+
 		match event {
 			GameEvent::MouseClick(x_pos,y_pos) => {
 
