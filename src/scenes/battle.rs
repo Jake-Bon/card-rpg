@@ -16,6 +16,8 @@ use crate::events::event_subsystem::EventSystem;
 use crate::game_manager::TextureManager;
 use crate::video::text::FontManager;
 
+use rand::{thread_rng,Rng};
+
 use crate::ai::ai_structs::*;
 
 use crate::cards::game_structs::*;
@@ -55,7 +57,7 @@ pub struct Battle<'a> {
 	dummy_drawn_card: DrawnCard,
 	dummy_drawn_card_enemy: DrawnCard,
 	frames_elapsed: u32,
-	
+
 	wait: Rc<Texture<'a>>,
 
 
@@ -127,7 +129,7 @@ impl<'a> Battle<'a> {
 		let dummy_drawn_card = DrawnCard::new(1140.0, 560.0).unwrap();
 		let dummy_drawn_card_enemy = DrawnCard::new(40.0, 20.0).unwrap();
 		let dummy = Rc::new(RefCell::new(Battler::new(("").to_string(),0,0,0,0)));  //REQUIRED TO AVOID USE
-		
+
 		let wait = texture_manager.borrow_mut().load("assets/Oppo_Wait.png")?;
 																		//of Option<T>. DO NOT REMOVE
 		let battler_map = crate::cards::battle_system::populate_battler_map();
@@ -662,6 +664,22 @@ impl<'a> Battle<'a> {
 	    // Else if battle is over (self.outcome != BattleOutcome::Undetermined)
 	    // Show the result for 5 seconds, then go back to the overworld
 	    else {
+			if !self.is_online{
+			let mut stolen_card1: i32 = -1;
+			let mut stolen_card2: i32 = -1;
+			let mut rng = thread_rng();
+			let mut battle_stat = self.battle_handler.borrow_mut();
+			let mut _p2 = battle_stat.get_p2();
+			let mut p2 = _p2.borrow_mut();
+			p2.reset_cards();
+			if self.outcome == BattleOutcome::VictoryP1{
+				stolen_card1 = rng.gen_range(0..p2.get_deck_size()) as i32;
+				stolen_card2 = rng.gen_range(0..p2.get_deck_size()) as i32;
+			}else if self.outcome == BattleOutcome::Tie{
+
+			}
+			}
+
 	        if self.enemy_delay_inst.elapsed().as_secs() >= 5 {
 	            println!("Moving away from the battle scene");
                 self.turn = TurnPhase::NotInitialized;
@@ -1549,7 +1567,7 @@ impl Scene for Battle<'_> {
 				"Not enough mana!", (500, 10));
 		}
 
-		//see the enemy's previously played card 
+		//see the enemy's previously played card
 		if(self.enemy_card.get_elarger() == true){
 			let curr_card = if self.is_online{
 				self.tmp_enemy_played_card
