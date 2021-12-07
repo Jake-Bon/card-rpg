@@ -50,10 +50,14 @@ fn main() -> Result<()>{
                             println!("A client broke their connection to the server!");
                             println!("closing other connections...");
                     
-                            player_1_stream.write_all(b"closing connection...");
+                            //player_1_stream.write_all(b"closing connection...");
+                            //player_1_stream.flush();
+                            player_1_stream.write_all(r#"{"turn_id":0,"card_ids":999}"#.as_bytes());
                             player_1_stream.flush();
                             player_1_stream.shutdown(Shutdown::Both);
-                            player_2_stream.write_all(b"closing connection...");
+                            //player_2_stream.write_all(b"closing connection...");
+                            //player_2_stream.flush();
+                            player_2_stream.write_all(r#"{"turn_id":0,"card_ids":999}"#.as_bytes());
                             player_2_stream.flush();
                             player_2_stream.shutdown(Shutdown::Both);
                             break;
@@ -82,10 +86,14 @@ fn main() -> Result<()>{
                             println!("A client broke their connection to the server!");
                             println!("closing other connections...");
                     
-                            player_1_stream.write_all(b"closing connection...");
+                            //player_1_stream.write_all(b"closing connection...");
+                            //player_1_stream.flush();
+                            player_1_stream.write_all(r#"{"turn_id":0,"card_ids":999}"#.as_bytes());
                             player_1_stream.flush();
                             player_1_stream.shutdown(Shutdown::Both);
-                            player_2_stream.write_all(b"closing connection...");
+                            //player_2_stream.write_all(b"closing connection...");
+                            //player_2_stream.flush();
+                            player_2_stream.write_all(r#"{"turn_id":0,"card_ids":999}"#.as_bytes());
                             player_2_stream.flush();
                             player_2_stream.shutdown(Shutdown::Both);
                             break;

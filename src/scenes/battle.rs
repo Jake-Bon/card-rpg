@@ -626,7 +626,12 @@ impl<'a> Battle<'a> {
                 self.turn = TurnPhase::NotInitialized;
 				self.is_stopped = true;
 				sdl2::mixer::Music::halt();
+
 				if self.is_online{
+					// sever server connection
+				    self.event_system.borrow().push_card_to_battle(999);
+				    self.is_online = false;
+				    self.turn = TurnPhase::NotInitialized;
 					self.event_system.borrow().change_scene(0).unwrap();
 	                return Ok(());
 				}
@@ -729,7 +734,6 @@ impl Scene for Battle<'_> {
 					self.turn = v;
 				}
 				GameEvent::OnlinePlay(c) => {
-					// set the client's turn as player1 or player2
 					self.net_card = c;
 					println!("From the OnlinePlay system, got: {}", c);
 					if self.net_card==1337{//end turn
@@ -761,8 +765,18 @@ impl Scene for Battle<'_> {
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 							}
-						}else if self.net_card!=404{
-							self.tmp_enemy_played_card = self.net_card as usize;
+						}
+						else if self.net_card == 999 {
+						    // sever server connection
+						    println!("lost connection to client during battle!");
+			                self.event_system.borrow().push_card_to_battle(999);
+			                self.is_online = false;
+			                self.turn = TurnPhase::NotInitialized;
+			                // return to main menu
+			                self.event_system.borrow().change_scene(0).unwrap();
+						    
+						}
+						else if self.net_card!=404{
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
@@ -855,7 +869,7 @@ impl Scene for Battle<'_> {
 
 								        self.enlarged_card.set_larger(false);
 								        }
-								        // otherwise, don'
+								        // otherwise, don't
                             			else {
 									        self.not_enough_mana = true;
                                 			println!("Not enough energy!");
