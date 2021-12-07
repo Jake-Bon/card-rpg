@@ -197,7 +197,7 @@ impl Scene for Online<'_> {
 
             let mut fontm = self.font_manager.borrow_mut();
             fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
-					"Client->Server->Client Demo", (550, 10));
+					"Online Multiplayer", (550, 10));
             let bufStr = std::str::from_utf8(&self.buffer);
             //println!("");
             if self.connected  {
@@ -207,6 +207,10 @@ impl Scene for Online<'_> {
 					    "Waiting for second player...", (10, 160));
 				//fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
 				//	    "Then, see terminals for more!", (10, 220));
+		    }
+		    else {
+		        fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0, 0, 0),
+					    "Trying to connect to server...", (10, 100));
 		    }
 
 
@@ -245,8 +249,8 @@ impl <'a> Online<'a> {
 
 fn attempt_connection() -> Option<TcpStream> {
 
-    match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(18, 212, 232, 174)), 7878), Duration::from_secs(5)) { // localhost
-    //match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 7878), Duration::from_secs(5)) {
+    //match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(18, 212, 232, 174)), 7878), Duration::from_secs(5)) { // localhost
+    match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 7878), Duration::from_secs(5)) {
     //match TcpStream::connect_timeout(&socketAddr::from(([34, 227, 148, 203], 76567)), Duration::from_secs(5)) {
         Ok(T) => { T.set_nonblocking(true).expect("couldn't set stream T as nonblocking"); println!("there's a connection"); return Some(T); }, // setting the stream as nonblocking means calls to read() won't block, allowing us to check however often we want without multithreading
         Err(E) => { println!("Failed to connect! Error: {}", E); return None; },
