@@ -16,6 +16,7 @@ pub struct EventSystem {
 	set_card_to_play: u32,
 	push_card_to_battle: u32,
 	poll_updates: u32,
+	win_or_loss: u32,
 }
 
 impl EventSystem {
@@ -47,6 +48,7 @@ impl EventSystem {
 						    204 => { game_events.push(Some(GameEvent::OnlinePlay(data1 as u32)));},
 							205 => { game_events.push(Some(GameEvent::PushCard(data1 as u32)));},
 							206 => { game_events.push(Some(GameEvent::PollFromBattle()));},
+							207 => { game_events.push(Some(GameEvent::WinOrLoss(data1 as u32)));}
 				          _ => {},
 				        }
 				},
@@ -69,6 +71,7 @@ impl EventSystem {
 		let set_card_to_play = unsafe { event_subsystem.register_event().unwrap() };
 		let push_card_to_battle = unsafe { event_subsystem.register_event().unwrap() };
 		let poll_updates = unsafe { event_subsystem.register_event().unwrap() };
+		let win_or_loss = unsafe { event_subsystem.register_event().unwrap() };
 
 		Ok(EventSystem {
 			event_pump,
@@ -80,6 +83,7 @@ impl EventSystem {
 			set_card_to_play,
 			push_card_to_battle,
 			poll_updates,
+			win_or_loss,
 		})
 	}
 
@@ -200,6 +204,22 @@ impl EventSystem {
 	    Ok(())
 
 	}
+
+	pub fn set_win_or_loss(&self, stat: u32) -> Result<(), String> { //0=L,1=Neutral,2=W
+
+	    let winOrLoss = sdl2::event::Event::User {
+	        timestamp: 0,
+	        window_id: 0,
+	        type_: self.win_or_loss,
+	        code: 207,
+	        data1: stat as *mut c_void,
+	        data2: 0x5678 as *mut c_void, // could use this field to set the player's deck as well? To do both at once.
+	    };
+
+	    self.event_subsystem.push_event(winOrLoss)?;
+	    Ok(())
+
+	}
 }
 
 #[derive(Debug,PartialEq,Eq)]
@@ -214,6 +234,7 @@ pub enum GameEvent {
 	SetClientTurn(TurnPhase),
 	PushCard(u32),
 	PollFromBattle(),
+	WinOrLoss(u32),
 	KeyPress(Keycode),
 	KeyRelease(Keycode),
 }

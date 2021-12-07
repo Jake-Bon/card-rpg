@@ -100,6 +100,7 @@ pub struct Overworld<'a> {
 	is_paused: bool,
 	gameMode: Modes<'a>,
 	currMap: u32,
+	win_or_loss: u32,
 }
 
 impl<'a> Overworld<'a> {
@@ -262,6 +263,7 @@ impl<'a> Overworld<'a> {
 			last_time,
 			gameMode,
 			currMap:1,
+			win_or_loss:1,
 		})
 	}
 
@@ -288,6 +290,10 @@ impl Scene for Overworld<'_> {
 						if k.eq(&Keycode::S) {self.player.keyPress[1]=false}
 						if k.eq(&Keycode::A) {self.player.keyPress[2]=false}
 						if k.eq(&Keycode::D) {self.player.keyPress[3]=false}
+					},
+					GameEvent::WinOrLoss(stat) => {
+						self.win_or_loss = stat;
+						println!("The state: {}",self.win_or_loss);
 					},
 					_ => {println!(/*"No event"*/)},
 

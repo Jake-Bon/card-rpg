@@ -72,8 +72,10 @@ impl<'a> GameManager<'a> {
 					self.online.handle_input(GameEvent::PollFromBattle());
 				},
 				Some(GameEvent::OnlinePlay(card)) => {
-					println!("To the battle scene");
 					self.battle.handle_input(GameEvent::OnlinePlay(card));
+				},
+				Some(GameEvent::WinOrLoss(card)) => {
+					self.overworld.handle_input(GameEvent::WinOrLoss(card));
 				},
 				Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
 				Some(e) => self.handle_input(e),
