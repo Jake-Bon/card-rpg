@@ -99,7 +99,7 @@
 			"Your ocean?",
 			"Tony - These here be cat waters - I am a cat",
 			"I can see that...",
-			"Also... your name's Tony? Really?"
+			"Also... your name's Tony? Really?",
 			"Tony - Hold yer tongue! I have no use for your humorous quips.",
 			"You think I'm humorous?",
 			"Tony - That's it. I can't tolerate this landlubberin' foolery. Cats, ATTACK!"
@@ -153,7 +153,7 @@
 			"assets/battlers/Player_Sprites.png",
 			"assets/battlers/Tiger_Sprites.png"
 		]
-	}
+	},
  	
  	{
 		"npcName": "God",
@@ -178,8 +178,8 @@
 			"God - ...",
 			"...",
 			"God - ...",
-			"...Hello?"
-			"God - ...WAAAAAAAAAAAAAAAAAAAAAAA!!!"
+			"...Hello?",
+			"God - ...WAAAAAAAAAAAAAAAAAAAAAAA!!!",
 			"Are you R2D*?"
 		],
 		"portraitPlayerPost": [
@@ -202,8 +202,8 @@
 			"God - ...",
 			"...",
 			"God - ......",
-			"Are you going to say anything!?!"
-			"God - ...Die"
+			"Are you going to say anything!?!",
+			"God - ...Die",
 			"???"
 		],
 		"portraitPlayerPostlose": [
@@ -235,7 +235,7 @@
 			"God - WAHAHAHAHAHAHAHAHAHAHAHAHAHA",
 			"...",
 			"God - HAHAHAHAHAHAHAHAHAHHAHA",
-			"......"
+			"......",
 			"God - HAHAHAHHAHAHAHAHA",
 			"CAN YOU SHUT UP ALREADY?!",
 			"God - ...Git gud, shortie.",
@@ -244,9 +244,9 @@
 		],
 		"sprites": [
 			"assets/battlers/Player_Sprites.png",
-			"assets/battlers/God_Sprites.png",
+			"assets/battlers/God_Sprites.png"
 		]
-	}
+	},
 	
 	{
 		"npcName": "Hiroki",
@@ -264,10 +264,10 @@
 			3,
 			3,
 			3,
-			5,
-			5,
-			5,
-			5
+			4,
+			4,
+			4,
+			4
 		],
 		"predialog": [
 			"Hiroki - Tch...how freaking annoying...who's the squirt?",
@@ -288,7 +288,7 @@
 			4,
 			4,
 			4,
-			4,
+			4
 		],
 		"postdialog": [
 			"Hiroki - Impossible...!",
@@ -311,16 +311,16 @@
 
 		],
 		"postdialoglose": [
-			"Oh shit.."
-			"Hiroki - Ready to see your blood splatter, little one?"
-			"No way, jose! i'm ditching, bye!"
+			"Oh shit..",
+			"Hiroki - Ready to see your blood splatter, little one?",
+			"No way, jose! i'm ditching, bye!",
 			"Hiroki - !!! Don't let them escape!"
 		],
 		"sprites": [
 			"assets/battlers/Player_Sprites.png",
-			"assets/battlers/Demon_Sprites.png",
+			"assets/battlers/Demon_Sprites.png"
 		]
-	}
+	},
 	
 	{
 		"npcName": "Uiha",
@@ -345,7 +345,7 @@
 			
 		],
 		"predialog": [
-			"Ohmygod, is that the popular kawaii idol girl, Ui-chan!?!"
+			"Ohmygod, is that the popular kawaii idol girl, Ui-chan!?!",
 			"Uiha - ...",
 			"Huh?",
 			"Parakeet - She is! she is!",
@@ -400,9 +400,9 @@
 		],
 		"sprites": [
 			"assets/battlers/Player_Sprites.png",
-			"assets/battlers/Idol_Sprites.png",
+			"assets/battlers/Idol_Sprites.png"
 		]
-	}
+	},
 
 	{
 		"npcName": "Boris",
@@ -415,7 +415,7 @@
 			
 		],
 		"predialog": [
-			"Boris - I'm Boris.",
+			"Boris - I'm Boris."
 		],
 		"portraitPlayerPost": [
 			3
@@ -452,7 +452,7 @@
 		],
 		"sprites": [
 			"assets/battlers/Player_Sprites.png",
-			"assets/battlers/Boris_Sprites.png",
+			"assets/battlers/Boris_Sprites.png"
 		]
 	}
 ]
