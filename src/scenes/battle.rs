@@ -626,6 +626,11 @@ impl<'a> Battle<'a> {
                 self.turn = TurnPhase::NotInitialized;
 				self.is_stopped = true;
 				sdl2::mixer::Music::halt();
+				if self.is_online{
+					self.event_system.borrow().change_scene(0).unwrap();
+	                return Ok(());
+				}
+
 				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
 
 				// Resetting all statuses here. Could make this an effect/card later
@@ -690,6 +695,9 @@ impl<'a> Battle<'a> {
 		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 
 		let to_dupe = self.battle_handler.borrow_mut().get_p1().borrow().select_hand(hand);
+		if self.is_online{
+			self.event_system.borrow().push_card_to_battle(25);
+		}
 
 		curr_card.set_values(19,to_dupe.unwrap() as i32);
 		crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
@@ -724,9 +732,11 @@ impl Scene for Battle<'_> {
 						self.net_card = 404;
 					}else{
 						if self.net_card==505{
+							self.tmp_enemy_played_card = 0 as usize;
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-1);
 						}else if self.net_card==25{
+							self.tmp_enemy_played_card = self.net_card as usize;
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
@@ -739,11 +749,13 @@ impl Scene for Battle<'_> {
 							//println!("Trying to play card with ID {}\n{}", card_ID, curr_card.to_string());
 
 							// add card to discard pile after playing
+							println!("Why this not working");
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 							}
 						}else if self.net_card!=404{
+							self.tmp_enemy_played_card = self.net_card as usize;
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
@@ -760,7 +772,6 @@ impl Scene for Battle<'_> {
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
 							// if the player has enough energy to cover the cost of playing the card:
 							crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
-
 						}
 					}
 					}
@@ -943,7 +954,7 @@ impl Scene for Battle<'_> {
 				    }
 
 				    else if (self.enemy_card.get_elarger() == true){
-					    if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460) && self.turn == TurnPhase::TurnP1)){
+					    if(((x_pos > 900 && x_pos < 1100) && (y_pos > 400 && y_pos < 460))){
 							    self.enemy_card.set_elarger(false);
 						    }
 				    }
@@ -1372,7 +1383,11 @@ impl Scene for Battle<'_> {
 
 		//see the enemy's card
 		if(self.enemy_card.get_elarger() == true){
-			let curr_card = player2.get_discard_card().unwrap();
+			let curr_card = if self.is_online{
+				self.tmp_enemy_played_card
+			}else{
+				player2.get_discard_card().unwrap() as usize
+			};
 
 			crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.backDrop)?;
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_card as usize).unwrap()),(400,592), (450,50))?;
