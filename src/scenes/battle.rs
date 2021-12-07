@@ -834,6 +834,7 @@ impl Scene for Battle<'_> {
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+							
 							}
 						}
 						else if self.net_card == 999 {
@@ -898,6 +899,7 @@ impl Scene for Battle<'_> {
 						}
 						else if self.net_card!=404{
 							let curr_card = self.battle_handler.borrow_mut().get_card(self.net_card);
+							self.tmp_enemy_played_card = self.net_card as usize;
 							self.net_card = 404;
 							print!("{}\n",curr_card.to_string());
 							let curr_card_cost = curr_card.get_cost() as i32;

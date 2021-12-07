@@ -533,6 +533,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
         self.deck.push(id);
         self.copied_cards.push(id);
     }
+    
+    // for beach boy effect
+    pub fn dup_card_no_deck_add(&mut self, id:u32){
+        self.copied_cards.push(id);
+    }
 
     pub fn get_duped(&mut self)->Vec<u32>{
         let tmp = self.copied_cards.clone();

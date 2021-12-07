@@ -211,7 +211,7 @@ fn extra_turn(target: Rc<RefCell<Battler>>, n_turns: i32){
 fn add_discard(target: Rc<RefCell<Battler>>) {
     let mut target = target.borrow_mut();
     match target.get_random_discard() {
-        Some(card) => target.add_card_to_hand(card),
+        Some(card) => { target.add_card_to_hand(card); target.dup_card_no_deck_add(card);},
         None => println!("No cards discarded"),
     }
 }
