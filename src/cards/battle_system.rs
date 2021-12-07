@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use rand::prelude::SliceRandom;
 use rand::{thread_rng,Rng};
 
 pub fn populate_battler_map ()->HashMap<u32,Battler>{
@@ -43,8 +44,8 @@ pub fn play_card(stat: Rc<RefCell<BattleStatus>>,card:Card){
     }
 }
 
-pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
-    let mut stat = stat.borrow_mut();
+pub fn parse_card (id: i32, val: i32, status: Rc<RefCell<BattleStatus>>){
+    let mut stat = status.borrow_mut();
 
 
 
@@ -76,6 +77,7 @@ pub fn parse_card (id: i32, val: i32, stat: Rc<RefCell<BattleStatus>>){
         22 => r_volley_effect(stat.get_inactive_player(), stat.get_active_player()),
         23 => extra_turn(stat.get_active_player(), val), //Extra turn for: SELF
         24 => extra_turn(stat.get_inactive_player(), val), //              ENEMY
+        25 => add_discard(stat.get_active_player()),
         _ => unreachable_action(),
     }
 }
@@ -204,6 +206,14 @@ fn r_volley_effect(target: Rc<RefCell<Battler>>, attacker: Rc<RefCell<Battler>>)
 fn extra_turn(target: Rc<RefCell<Battler>>, n_turns: i32){
     let mut target = target.borrow_mut();
     target.add_ex_turn(n_turns as u32);
+}
+
+fn add_discard(target: Rc<RefCell<Battler>>) {
+    let mut target = target.borrow_mut();
+    match target.get_random_discard() {
+        Some(card) => target.add_card_to_hand(card),
+        None => println!("No cards discarded"),
+    }
 }
 
 fn unreachable_action(){
