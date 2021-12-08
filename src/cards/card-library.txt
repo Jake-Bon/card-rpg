@@ -55,3 +55,4 @@
 43::God::How dare you oppose me! Defend for 4.::1::1::4::assets/cards/god_defend.png
 44::God::I'm invisible. Heal for 5.::1::2::5::assets/cards/god_heal.png
 45::God::Perish. Deal 2 poison.::1::4::2::assets/cards/god_poison.png
+46::HE WAS #1::Smitty WerbenJagerManJensen::2::0::3::assets/cards/Attack_Number_1.png
