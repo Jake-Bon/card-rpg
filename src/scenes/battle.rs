@@ -1396,7 +1396,7 @@ impl Scene for Battle<'_> {
 		// --------------
 
 		// draw ai's hand
-		let debug_flag = true;
+		let debug_flag = false;
 		if debug_flag == true //debug for ai testing
 		{
 			for i in 0..p2_hand_size {
