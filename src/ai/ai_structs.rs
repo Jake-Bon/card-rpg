@@ -163,7 +163,7 @@ impl Node {
 
     pub fn last_card_was_special(&mut self) -> bool {
         let last = self.last_played_card;
-        if last == 16 || last == 17 || last == 20 || last == 25 || last == 26 {
+        if last == 16 || last == 17 || last == 20 || last == 25 || last == 26 || last == 40 {
             return true;
         }
         return false;
