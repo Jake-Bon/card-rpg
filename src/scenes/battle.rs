@@ -103,6 +103,9 @@ pub struct Battle<'a> {
 	draw:  Rc<Texture<'a>>,
 	loser: Rc<Texture<'a>>,
 	reward: Rc<Texture<'a>>,
+	
+	//make it look nice
+	por: Rc<Texture<'a>>,
 
 	//CHEAT
 	keyPress: [bool; 3],
@@ -216,6 +219,8 @@ impl<'a> Battle<'a> {
 		let draw = texture_manager.borrow_mut().load("assets/endBattle/draw.png")?;
 		let loser = texture_manager.borrow_mut().load("assets/endBattle/loser.png")?;
 		let reward = texture_manager.borrow_mut().load("assets/endBattle/rewards.png")?;
+		
+		let por = texture_manager.borrow_mut().load("assets/rustIsAwful/icon_backdrop.png")?;
 
 		Ok(Battle {
 			wincan,
@@ -280,6 +285,7 @@ impl<'a> Battle<'a> {
 			draw,
 			loser,
 			reward,
+			por,
 			keyPress: [false;3]
 		})
 	}
@@ -1561,9 +1567,13 @@ impl Scene for Battle<'_> {
 
 
 		if self.is_online{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.por,(170,170), (50,550))?; //player icon
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.por,(170,170), (1060,10))?; //enemy icon
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_online,(150,150), (60,560))?; //player icon
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play2_i,(150,150), (1070,20))?; //enemy icon
 		}else{
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.por,(170,170), (50,550))?; //player icon
+			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.por,(170,170), (1060,10))?; //enemy icon
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.play1_story,(150,150), (60,560))?; //player icon
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.battler_photos[(self.battler_npc_photo_id) as usize],(150,150), (1070,20))?; //enemy icon
 		}
