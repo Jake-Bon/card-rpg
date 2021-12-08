@@ -35,7 +35,7 @@ const FullH: u32 = 1800;
 const TileW: u32 = FullW/TILE_SIZE;
 const TileH: u32 = FullH/TILE_SIZE;
 const SpriteTILE_SIZE: u32 = 40;
-const enemyNum: f32 = 20.0;
+const enemyNum: f32 = 12.0;
 const perMap:i32 = 1;
 
 const SPEED_LIMIT: f32 = 6.0;
@@ -147,6 +147,8 @@ impl<'a> Overworld<'a> {
 		let jsonEnemyLs: Vec<npcData> = serde_json::from_str(&s).unwrap();
 		//-----------------------------------------------------------------------------
 
+		let persons = vec![0,0,0,0,5,5,5,5,1,2,3,4];
+		let personsmap = vec![0,0,0,0,1,1,1,1,0,1,1,0];
 		while (i as f32) < enemyNum
 		{
 
@@ -160,12 +162,12 @@ impl<'a> Overworld<'a> {
 			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
 
-				let mut person: i32 = rng.gen_range(0..6 as i32);
+				//let mut person: i32 = rng.gen_range(0..6 as i32);
 
 				//ensure enemy is generated in a safe area
 				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
 				{
-					let chosen_map = rng.gen_range(0..2);
+					let chosen_map = personsmap[i as usize];
 					let map_x = (random_x/TILE_SIZE as f32) as usize;
 					let map_y = (random_y/TILE_SIZE as f32) as usize;
 					let map_x_right = if map_x>=(TileW-1) as usize{map_x}else{map_x+1};
@@ -189,9 +191,9 @@ impl<'a> Overworld<'a> {
 								last_safe_x: random_x,
 								last_safe_y: random_y,
 								is_flipped: false,
-								on_map: (chosen_map+1) as u32,
+								on_map:(chosen_map+1) as u32,
 								npc_id: i as u32,//eventually get range from NPC
-								npcDia:person// this will be random later but for now it just 0 and each map will get 1 character
+								npcDia:persons[i as usize]//person// this will be random later but for now it just 0 and each map will get 1 character
 							});
 							break 'inner;
 						}
