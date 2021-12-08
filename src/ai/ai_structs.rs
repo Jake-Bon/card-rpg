@@ -163,7 +163,7 @@ impl Node {
 
     pub fn last_card_was_special(&mut self) -> bool {
         let last = self.last_played_card;
-        if last == 16 || last == 17 || last == 20 || last == 25 || last == 26 {
+        if last == 16 || last == 17 || last == 20 || last == 25 || last == 26 || last == 40 {
             return true;
         }
         return false;
@@ -372,7 +372,7 @@ impl GameTree {
     pub fn minimax(&mut self) -> Option<u32> {
         let best_utility = self.root.maximizer(f32::MIN, f32::MAX);
         for child in &mut self.root.children {
-            if child.utility.unwrap() == best_utility {
+            if child.utility.unwrap() == best_utility && child.last_played_card != u32::MAX {
                 return Some(child.last_played_card);
             }
         }
