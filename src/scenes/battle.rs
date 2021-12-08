@@ -777,7 +777,7 @@ impl<'a> Battle<'a> {
 				if self.health_or_energy==1{
 					self.player_rollover.borrow_mut().add_health(3);
 				}else if self.health_or_energy==2{
-					self.player_rollover.borrow_mut().add_health(2);
+					self.player_rollover.borrow_mut().add_energy(2);
 				}
 			}else if self.outcome == BattleOutcome::Tie{
 				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
@@ -1671,13 +1671,33 @@ impl Scene for Battle<'_> {
                 		
                 		if self.outcome == BattleOutcome::VictoryP1 {
                 			
+  					//let curr_sel = player2.get_deck_card_i(self.stolen_card1);
+                			
+                			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(250,370),(120,330))?;
+                			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(120,330))?;
+                			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana_boost,(100,100),(580,470))?;
+                			
+                			//if self.health_or_energy==1{
+						//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.healing,(100,100),(580,470))?;
+					//}else if self.health_or_energy==2{
+						//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana_boost,(100,100),(580,470))?;
+					//}
+                			
+                			//let curr_sel2 = player2.get_deck_card_i(self.stolen_card2);
+                			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(250,370),(910,330))?;
+                			
+                			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(910,330))?;
+                			
                 			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.stolen_card1 as usize).unwrap()),(100,148), (50,500))?;
                 		}
                 		else if self.outcome == BattleOutcome::VictoryP2 {
                 			crate::video::gfx::draw_sprite(&mut wincan, &self.loser, (150, 410));
                 		}
                 		else if self.outcome == BattleOutcome::Tie {
+                			//let curr_sel = player2.get_deck_card_i(self.stolen_card1);
                 			
+                			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(250,370),(520,330))?;
+                			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(520,330))?;
                 		}
                 	}
                      	
