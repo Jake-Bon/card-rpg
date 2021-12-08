@@ -553,8 +553,8 @@ impl<'a> Battle<'a> {
 	                println!("about to construct the game tree for the turn");
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
 			    
-			    		//if a generates game tree has ties for it's highest utility state, lower the foright range
-			    		//avoids janky behavior where ai gives up and kills itself
+			    		//if a generated gametree has ties for its highest utility state, look less rounds into the future
+			    		//avoids janky behavior where ai gives up and kills itself in end game
 					gametree.populate(3);
 					gametree.calculate_utilities();
 					if (gametree.has_ties()) {
