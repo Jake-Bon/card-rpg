@@ -221,7 +221,7 @@ impl Node {
         
         let utility = -632.5/(ai_health+1.0) // avoids states w/ ai low health
                 + 3.1*ai_deck
-                + 1.0*ai_defense
+                + 4.0*ai_defense
                 - 2.8*ai_poison
                 + 2.4*ai_energy
                 + 3.5*ai_health_regen
@@ -373,6 +373,20 @@ impl GameTree {
             }
         }
         return None;
+    }
+
+    pub fn has_ties(&mut self) -> bool {
+        let best_utility = self.root.maximizer(f32::MIN, f32::MAX);
+        let mut tie_flag = 0;
+        for child in &mut self.root.children {
+            if child.utility.unwrap() == best_utility {
+                tie_flag = tie_flag + 1;
+            }
+        }
+        if (tie_flag > 1) {
+            return true;
+        }
+        return false;
     }
 
     pub fn print(&mut self) {
