@@ -79,11 +79,13 @@
 			2,
 			1,
 			4,
+			4,
 			5,
 			4,
 			5
 		],
 		"portraitEnemyPre": [
+			1,
 			1,
 			1,
 			1,
@@ -97,6 +99,7 @@
 			"Your ocean?",
 			"Tony - These here be cat waters - I am a cat",
 			"I can see that...",
+			"Also... your name's Tony? Really?",
 			"Tony - Hold yer tongue! I have no use for your humorous quips.",
 			"You think I'm humorous?",
 			"Tony - That's it. I can't tolerate this landlubberin' foolery. Cats, ATTACK!"
@@ -149,6 +152,307 @@
 		"sprites": [
 			"assets/battlers/Player_Sprites.png",
 			"assets/battlers/Tiger_Sprites.png"
+		]
+	},
+ 	
+ 	{
+		"npcName": "God",
+		"deckID": 3,
+		"portraitPlayerPre": [
+			1,
+			1,
+			1,
+			2,
+			2,
+			5
+		],
+		"portraitEnemyPre": [
+			1,
+			1,
+			1,
+			1,
+			2,
+			2
+		],
+		"predialog": [
+			"God - ...",
+			"...",
+			"God - ...",
+			"...Hello?",
+			"God - ...WAAAAAAAAAAAAAAAAAAAAAAA!!!",
+			"Are you R2D*?"
+		],
+		"portraitPlayerPost": [
+			1,
+			1,
+			5,
+			5,
+			5,
+			5
+		],
+		"portraitEnemyPost": [
+			1,
+			1,
+			1,
+			1,
+			1,
+			1
+		],
+		"postdialog": [
+			"God - ...",
+			"...",
+			"God - ......",
+			"Are you going to say anything!?!",
+			"God - ...Die",
+			"???"
+		],
+		"portraitPlayerPostlose": [
+			2,
+			2,
+			2,
+			5,
+			5,
+			5,
+			5,
+			5,
+			5,
+			5
+
+		],
+		"portraitEnemyPostlose": [
+			2,
+			2,
+			2,
+			2,
+			2,
+			2,
+			1,
+			1,
+			1
+
+		],
+		"postdialoglose": [
+			"God - WAHAHAHAHAHAHAHAHAHAHAHAHAHA",
+			"...",
+			"God - HAHAHAHAHAHAHAHAHAHHAHA",
+			"......",
+			"God - HAHAHAHHAHAHAHAHA",
+			"CAN YOU SHUT UP ALREADY?!",
+			"God - ...Git gud, shortie.",
+			"WHY DOES EVERYONE CALL ME SHORT???",
+			"God - Because you are."
+		],
+		"sprites": [
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/God_Sprites.png"
+		]
+	},
+	
+	{
+		"npcName": "Hiroki",
+		"deckID": 4,
+		"portraitPlayerPre": [
+			1,
+			4,
+			4,
+			4,
+			4,
+			4,
+			4
+		],
+		"portraitEnemyPre": [
+			3,
+			3,
+			3,
+			4,
+			4,
+			4,
+			4
+		],
+		"predialog": [
+			"Hiroki - Tch...how freaking annoying...who's the squirt?",
+			"Logically speaking, I'm not a squirt and I'm not short.",
+			"Hypothetically speaking for the sake of argument...",
+			"Hiroki - Shut up! Don't piss me off!",
+			"Hiroki - I can kick yer ass into another dimension!",
+			"I'd like to see you theoretically try.",
+			"Hiroki - Prepare to die then."
+		],
+		"portraitPlayerPost": [
+			3,
+			1,
+			2,
+			2
+		],
+		"portraitEnemyPost": [
+			4,
+			4,
+			4,
+			4
+		],
+		"postdialog": [
+			"Hiroki - Impossible...!",
+			"Ugh, don't make this another dramatic anime villain scene.",
+			"Hiroki - I'll destroy you next time in cold blood, I swear to god...!",
+			"I-I think it's time to run away...!"
+		],
+		"portraitPlayerPostlose": [
+			2,
+			2,
+			5,
+			5
+
+		],
+		"portraitEnemyPostlose": [
+			2,
+			2,
+			2,
+			4
+
+		],
+		"postdialoglose": [
+			"Oh shit..",
+			"Hiroki - Ready to see your blood splatter, little one?",
+			"No way, jose! i'm ditching, bye!",
+			"Hiroki - !!! Don't let them escape!"
+		],
+		"sprites": [
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/Demon_Sprites.png"
+		]
+	},
+	
+	{
+		"npcName": "Uiha",
+		"deckID": 5,
+		"portraitPlayerPre": [
+			3,
+			3,
+			2,
+			2,
+			2,
+			5,
+			5
+		],
+		"portraitEnemyPre": [
+			1,
+			2,
+			2,
+			3,
+			3,
+			3,
+			3
+			
+		],
+		"predialog": [
+			"Ohmygod, is that the popular kawaii idol girl, Ui-chan!?!",
+			"Uiha - ...",
+			"Huh?",
+			"Parakeet - She is! she is!",
+			"The parakeet talks???",
+			"Parakeet - Let's fight, let's fight!",
+			"Wait! let me have your autograph first!"
+		],
+		"portraitPlayerPost": [
+			3,
+			3,
+			2,
+			2,
+			2,
+			3
+		],
+		"portraitEnemyPost": [
+			4,
+			4,
+			4,
+			5,
+			1,
+			3
+		],
+		"postdialog": [
+			"I can't believe I just beat my sugoi idol???",
+			"Uiha - ...",
+			"Oh no, did I make her sad???",
+			"Uiha - ...",
+			"Uiha - ... //writes something down",
+			"GASP thank you so much! I'll treasure your signature forever!!!"
+			
+		],
+		"portraitPlayerPostlose": [
+			2,
+			3,
+			3,
+			3
+			
+		],
+		"portraitEnemyPostlose": [
+			3,
+			3,
+			1,
+			1
+
+		],
+		"postdialoglose": [
+			"Uiha - ...That was...fun.",
+			"Really??? I'm honored! Can I please get your autograph though?! I simp hard!",
+			"Uiha - ...Sure.",
+			"!!! You're the best, ui-chan! Let's meet again!"
+		],
+		"sprites": [
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/Idol_Sprites.png"
+		]
+	},
+
+	{
+		"npcName": "Boris",
+		"deckID": 6,
+		"portraitPlayerPre": [
+			1
+		],
+		"portraitEnemyPre": [
+			1
+			
+		],
+		"predialog": [
+			"Boris - I'm Boris."
+		],
+		"portraitPlayerPost": [
+			3
+		],
+		"portraitEnemyPost": [
+			2
+		],
+		"postdialog": [
+			"Boris- I'm Boris."
+			
+		],
+		"portraitPlayerPostlose": [
+			1,
+			1,
+			1,
+			5,
+			5
+			
+		],
+		"portraitEnemyPostlose": [
+			2,
+			2,
+			4,
+			4,
+			3
+
+		],
+		"postdialoglose": [
+			"Boris - I'm Boris?!",
+			"Yeah, you're Boris.",
+			"Boris - I'm Boris!",
+			"I'm not short!",
+			"Boris - I'M BORIS!!"
+		],
+		"sprites": [
+			"assets/battlers/Player_Sprites.png",
+			"assets/battlers/Boris_Sprites.png"
 		]
 	}
 ]

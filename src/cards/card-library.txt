@@ -51,3 +51,7 @@
 39::Jar of Dirt::What's inside? The anticipation is killing them!::1::0::3::assets/cards/jar_of_dirt.png
 40::Time Walk::Gain 1 extra turn.::5::23::1::assets/cards/time_walk.png
 41::Beach Boy::Add a random card you've played to hand.::1::25::1::assets/cards/beach_boy.png
+42::God::You have opposed God. Deal 4 damage.::1::0::4::assets/cards/god_attack.png
+43::God::How dare you oppose me! Defend for 4.::1::1::4::assets/cards/god_defend.png
+44::God::I'm invisible. Heal for 5.::1::2::5::assets/cards/god_heal.png
+45::God::Perish. Deal 2 poison.::1::4::2::assets/cards/god_poison.png

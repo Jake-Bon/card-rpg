@@ -279,6 +279,10 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
     pub fn get_deck(&self)->Vec<u32>{//use for ai purposes only
         self.deck.clone()
     }
+    
+    pub fn get_deck_card_i(&self, i:u32)->u32{
+        self.deck[i as usize]
+    }
 
     pub fn get_hand(&self)->Vec<u32> {// use for ai purposes only
         self.hand.clone()
@@ -531,6 +535,11 @@ impl Battler{ //HAND and DECK created as INTRINSIC VALUES
 
     pub fn dup_card(&mut self, id:u32){
         self.deck.push(id);
+        self.copied_cards.push(id);
+    }
+    
+    // for beach boy effect
+    pub fn dup_card_no_deck_add(&mut self, id:u32){
         self.copied_cards.push(id);
     }
 

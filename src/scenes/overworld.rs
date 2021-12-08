@@ -160,7 +160,7 @@ impl<'a> Overworld<'a> {
 			 	let mut random_y: f32 = rng.gen_range(0.0..(FullH-TILE_SIZE) as f32);
 				random_y -= random_y%TILE_SIZE as f32;
 
-				let mut person: i32 = rng.gen_range(0..2 as i32);
+				let mut person: i32 = rng.gen_range(0..6 as i32);
 
 				//ensure enemy is generated in a safe area
 				if !(random_x<(player.Box_x_pos+CAM_W as f32))||!(random_y<(player.Box_y_pos+CAM_H as f32))||!(random_x>(player.Box_x_pos as f32))||!(random_y>(player.Box_y_pos as f32))
@@ -356,7 +356,6 @@ impl Scene for Overworld<'_> {
 
 
 	fn render(&mut self) -> Result<(), String> {
-
 		if(self.is_stopped){
 			self.is_stopped = false;
 			self.music = Music::from_file("assets/music/MAP.ogg")?;
@@ -399,6 +398,7 @@ impl Scene for Overworld<'_> {
 						self.player.keyPress[3]=false;
 						self.is_stopped = true;
 						sdl2::mixer::Music::halt();
+						println!("========is stopped {}",self.is_stopped);
 
 						// set the enemy's deck here. could randomize/set it here or set it during enemy creation
 						// the number passed into the function corresponds to the deck with the same number in battler-library.txt
