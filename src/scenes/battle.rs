@@ -558,28 +558,37 @@ impl<'a> Battle<'a> {
 	            if self.turn == TurnPhase::TurnP2 && !self.is_online && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 	                // Enemy AI should be called from here
 	                println!("about to construct the game tree for the turn");
-					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
 			    
-			    		//if a generated gametree has ties for its highest utility state, look less rounds into the future
-			    		//avoids janky behavior where ai gives up and kills itself in end game
+			    	//if a generated gametree has ties for its highest utility state, look less rounds into the future
+			    	//avoids janky behavior where ai gives up and kills itself in end game
+					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
 					gametree.populate(3);
 					gametree.calculate_utilities();
+					gametree.minimax();
+					gametree.print();
+
 					if (gametree.has_ties()) {
-						gametree.print();
 						println!("\ngametree 3 has ties, trying again...\n");
+						gametree = GameTree::new(self.battle_handler.borrow().clone());
 						gametree.populate(2);
 						gametree.calculate_utilities();
+						gametree.minimax();
+						gametree.print();
+
 						if (gametree.has_ties()) {
-							gametree.print();
 							println!("\ngametree 2 has ties, trying again...\n");
+							gametree = GameTree::new(self.battle_handler.borrow().clone());
 							gametree.populate(1);
 							gametree.calculate_utilities();
+							gametree.minimax();
+							gametree.print();
+
 							if (gametree.has_ties()) {
-								gametree.print();
-								println!("\ngametree 1 has ties, wtf!!\n");
+								println!("gametree 1 has ties, wtf!!");
 							}
 						}
 					}
+					
 					println!("finished making the game tree");
 					let card_rslt = gametree.minimax(); //let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
