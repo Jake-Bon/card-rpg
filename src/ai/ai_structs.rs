@@ -379,7 +379,7 @@ impl GameTree {
         let best_utility = self.root.maximizer(f32::MIN, f32::MAX);
         let mut tie_flag = 0;
         for child in &mut self.root.children {
-            if child.utility.unwrap() == best_utility {
+            if child.utility.is_some() && child.utility.unwrap() == best_utility {
                 tie_flag = tie_flag + 1;
             }
         }
