@@ -421,6 +421,8 @@ impl<'a> Battle<'a> {
 	        println!("Ok now both players should have drawn 3 cards on both ends, player 2 should not draw another card yet");
 	        println!("this player's self.turn is {:?}", self.turn);
 
+            self.outcome = BattleOutcome::Undetermined;
+
 	        self.tmp_enemy_played_card = 100;   // Any number greater than 99 displays the deck card
 
 
@@ -700,6 +702,7 @@ impl<'a> Battle<'a> {
 				    self.remote_ready = false;
 				    self.client_ready = false;
 					self.event_system.borrow().change_scene(0).unwrap();
+					self.event_system.borrow().set_win_or_loss(0);
 	                return Ok(());
 				}
 
