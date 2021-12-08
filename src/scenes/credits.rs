@@ -83,7 +83,7 @@ impl Scene for Credits<'_> {
         sdl2::mixer::Music::fade_out(1000);
 				self.is_playing = false;
 				self.event_system.borrow().change_scene(0).unwrap();
-				process::exit(1);
+				process::exit(0);
 				println!("QUIT");
 				0
 			}

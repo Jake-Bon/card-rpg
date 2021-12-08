@@ -2,6 +2,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::time::{Instant, Duration};
+use std::process;
+
 
 use sdl2::Sdl;
 use sdl2::image::LoadTexture;
@@ -121,6 +123,7 @@ impl<'a> GameManager<'a> {
 				};
 			}
 		}
+		process::exit(0);
 	}
 
 	pub fn init(sdl_context: &Sdl, wincan: Rc<RefCell<WindowCanvas>>, texture_manager: Rc<RefCell<TextureManager<'a>>>, font_manager: Rc<RefCell<FontManager<'a>>>) -> Result<Self, String> {
