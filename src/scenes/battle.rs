@@ -552,9 +552,27 @@ impl<'a> Battle<'a> {
 	                // Enemy AI should be called from here
 	                println!("about to construct the game tree for the turn");
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
+			    
+			    		//if a generates game tree has ties for it's highest utility state, lower the foright range
+			    		//avoids janky behavior where ai gives up and kills itself
 					gametree.populate(3);
 					gametree.calculate_utilities();
-					gametree.print();
+					if (gametree.has_ties()) {
+						gametree.print();
+						println!("\ngametree 3 has ties, trying again...\n");
+						gametree.populate(2);
+						gametree.calculate_utilities();
+						if (gametree.has_ties()) {
+							gametree.print();
+							println!("\ngametree 2 has ties, trying again...\n");
+							gametree.populate(1);
+							gametree.calculate_utilities();
+							if (gametree.has_ties()) {
+								gametree.print();
+								println!("\ngametree 1 has ties, wtf!!\n");
+							}
+						}
+					}
 					println!("finished making the game tree");
 					let card_rslt = gametree.minimax(); //let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
