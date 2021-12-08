@@ -95,7 +95,7 @@ pub struct Battle<'a> {
 	//NETWORK
 	is_online: bool,
 	net_card: u32,
-	
+
 	//end battle scene
 	endBattleDrop: Rc<Texture<'a>>,
 	victory: Rc<Texture<'a>>,
@@ -106,7 +106,7 @@ pub struct Battle<'a> {
 
 	//CHEAT
 	keyPress: [bool; 3],
-	
+
 }
 
 impl<'a> Battle<'a> {
@@ -190,7 +190,7 @@ impl<'a> Battle<'a> {
 		let disabled_playCard = texture_manager.borrow_mut().load("assets/gray_play_card.png")?;
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
-		
+
 
 		/*let frequency = 44100;
     	let format = AUDIO_S16LSB;
@@ -209,7 +209,7 @@ impl<'a> Battle<'a> {
 		let music = Music::from_file("assets/music/BATTLE.ogg")?;
 		let is_paused = false;
 		let is_stopped = true;
-		
+
 		let endBattleDrop = texture_manager.borrow_mut().load("assets/endBattle/endOfBattle.png")?;
 		let victory = texture_manager.borrow_mut().load("assets/endBattle/victory.png")?;
 		let defeat = texture_manager.borrow_mut().load("assets/endBattle/defeat.png")?;
@@ -558,7 +558,7 @@ impl<'a> Battle<'a> {
 	            if self.turn == TurnPhase::TurnP2 && !self.is_online && self.enemy_delay_inst.elapsed().as_secs() >= 1 {
 	                // Enemy AI should be called from here
 	                println!("about to construct the game tree for the turn");
-			    
+
 			    	//if a generated gametree has ties for its highest utility state, look less rounds into the future
 			    	//avoids janky behavior where ai gives up and kills itself in end game
 					let mut gametree = GameTree::new(self.battle_handler.borrow().clone());
@@ -588,7 +588,7 @@ impl<'a> Battle<'a> {
 							}
 						}
 					}
-					
+
 					println!("finished making the game tree");
 					let card_rslt = gametree.minimax(); //let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
@@ -724,6 +724,41 @@ impl<'a> Battle<'a> {
 	    // Show the result for 5 seconds, then go back to the overworld
 	    else {
 
+			if !self.is_online && self.stolen_card1==404{
+			self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+			self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
+			let mut rng = thread_rng();
+			let mut battle_stat = self.battle_handler.borrow_mut();
+			let mut _p2 = battle_stat.get_p2();
+			let mut p2 = _p2.borrow_mut();
+			p2.reset_cards();
+		if self.outcome == BattleOutcome::VictoryP1{
+			println!("{}",p2.get_deck_size());
+			self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+			self.stolen_card2 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+			self.health_or_energy = rng.gen_range(1..3) as u32;
+
+			self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
+			self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card2);
+
+			if self.health_or_energy==1{
+				self.player_rollover.borrow_mut().add_health(3);
+			}else if self.health_or_energy==2{
+				self.player_rollover.borrow_mut().add_energy(2);
+			}
+		}else if self.outcome == BattleOutcome::Tie{
+			self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+			self.stolen_card2 = 404;
+			self.health_or_energy = 404;
+
+			self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
+		}else{
+			self.stolen_card1 = 404;
+			self.stolen_card2 = 404;
+			self.health_or_energy = 404;
+		}
+		}
+
 
 	        if self.enemy_delay_inst.elapsed().as_secs() >= 5 {
 	            println!("Moving away from the battle scene");
@@ -757,42 +792,7 @@ impl<'a> Battle<'a> {
 				for card in card_list{
 					self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
 				}
-				
-				if !self.is_online{
-				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
-				self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
-				let mut rng = thread_rng();
-				let mut battle_stat = self.battle_handler.borrow_mut();
-				let mut _p2 = battle_stat.get_p2();
-				let mut p2 = _p2.borrow_mut();
-				p2.reset_cards();
-			if self.outcome == BattleOutcome::VictoryP1{
-				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
-				self.stolen_card2 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
-				self.health_or_energy = rng.gen_range(1..3) as u32;
 
-				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
-				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card2);
-
-				if self.health_or_energy==1{
-					self.player_rollover.borrow_mut().add_health(3);
-				}else if self.health_or_energy==2{
-					self.player_rollover.borrow_mut().add_energy(2);
-				}
-			}else if self.outcome == BattleOutcome::Tie{
-				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
-				self.stolen_card2 = 404;
-				self.health_or_energy = 404;
-
-				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
-			}else{
-				self.stolen_card1 = 404;
-				self.stolen_card2 = 404;
-				self.health_or_energy = 404;
-			}
-			}
-				
-				
 
 				if self.outcome == BattleOutcome::VictoryP1{
 					self.event_system.borrow().set_win_or_loss(2);
@@ -803,7 +803,7 @@ impl<'a> Battle<'a> {
 				self.stolen_card1 = 404;
 				self.stolen_card2 = 404;
 				self.health_or_energy = 404;
-			
+
                 self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
 	        }
@@ -911,7 +911,7 @@ impl Scene for Battle<'_> {
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-							
+
 							}
 						}
 						else if self.net_card == 999 {
@@ -1465,7 +1465,6 @@ impl Scene for Battle<'_> {
 
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(150, 0, 0),
 			"Enemy Played:", (550,250-40));
-			println!("Enemy played: {}",self.tmp_enemy_played_card);
 		if self.tmp_enemy_played_card<100{
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.tmp_enemy_played_card)).unwrap(),(200,296),(550,230))?;
 		}else{
@@ -1663,31 +1662,30 @@ impl Scene for Battle<'_> {
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_card as usize).unwrap()),(400,592), (450,50))?;
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
 		}
-		
-		
+
+
 		if self.outcome != BattleOutcome::Undetermined {
                 		crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.endBattleDrop);
                 		crate::video::gfx::draw_sprite(&mut wincan, &self.reward, (350, 210));
-                		
+
                 		if self.outcome == BattleOutcome::VictoryP1 {
-                			
-  					//let curr_sel = player2.get_deck_card_i(self.stolen_card1);
-                			
-                			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(250,370),(120,330))?;
-                			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(120,330))?;
+
+					if(self.stolen_card1==404){
+						crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(120,330))?;
+					}else{
+						crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.stolen_card1 as usize).unwrap()),(250,370),(120,330))?;
+					}
                 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana_boost,(100,100),(580,470))?;
-                			
-                			//if self.health_or_energy==1{
-						//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.healing,(100,100),(580,470))?;
-					//}else if self.health_or_energy==2{
-						//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.mana_boost,(100,100),(580,470))?;
-					//}
-                			
+
+							if(self.stolen_card1==404){
+								crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.deck),(250,370),(910,330))?;
+							}else{
+								crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.stolen_card2 as usize).unwrap()),(250,370),(910,330))?;
+							}
                 			//let curr_sel2 = player2.get_deck_card_i(self.stolen_card2);
-                			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(250,370),(910,330))?;
-                			
-                			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(910,330))?;
-                			
+
+                			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(910,330))?;
+
                 			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.stolen_card1 as usize).unwrap()),(100,148), (50,500))?;
                 		}
                 		else if self.outcome == BattleOutcome::VictoryP2 {
@@ -1695,15 +1693,19 @@ impl Scene for Battle<'_> {
                 		}
                 		else if self.outcome == BattleOutcome::Tie {
                 			//let curr_sel = player2.get_deck_card_i(self.stolen_card1);
-                			
+							if(self.stolen_card1==404){
+								crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(520,330))?;
+							}else{
+								crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.card_textures.get(self.stolen_card1 as usize).unwrap(),(250,370),(520,330))?;
+							}
                 			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_sel as usize).unwrap()),(250,370),(520,330))?;
-                			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.deck,(250,370),(520,330))?;
+
                 		}
                 	}
-                     	
+
                 	//if stolen card 1 != 404, render it
 		match self.outcome {
-			
+
 		//crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.endBattleDrop),
 		    BattleOutcome::VictoryP1 => crate::video::gfx::draw_sprite(&mut wincan, &self.victory, (400, 0)),
 		    BattleOutcome::VictoryP2 => crate::video::gfx::draw_sprite(&mut wincan, &self.defeat, (410, 0)),
@@ -1719,7 +1721,7 @@ impl Scene for Battle<'_> {
 		        	crate::video::gfx::draw_sprite(&mut wincan, &self.wait, (0, 280));
                     //fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "Opponent's Turn...", (50, 330));
                 }
-             
+
                 Ok(())
 
 		    },
