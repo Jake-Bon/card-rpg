@@ -157,7 +157,7 @@
  	
  	{
 		"npcName": "God",
-		"deckID": 1,
+		"deckID": 3,
 		"portraitPlayerPre": [
 			1,
 			1,
@@ -250,7 +250,7 @@
 	
 	{
 		"npcName": "Hiroki",
-		"deckID": 1,
+		"deckID": 4,
 		"portraitPlayerPre": [
 			1,
 			4,
@@ -324,7 +324,7 @@
 	
 	{
 		"npcName": "Uiha",
-		"deckID": 1,
+		"deckID": 5,
 		"portraitPlayerPre": [
 			3,
 			3,
@@ -406,7 +406,7 @@
 
 	{
 		"npcName": "Boris",
-		"deckID": 1,
+		"deckID": 6,
 		"portraitPlayerPre": [
 			1
 		],

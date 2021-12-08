@@ -101,6 +101,8 @@ pub struct Battle<'a> {
 	victory: Rc<Texture<'a>>,
 	defeat: Rc<Texture<'a>>,
 	draw:  Rc<Texture<'a>>,
+	loser: Rc<Texture<'a>>,
+	reward: Rc<Texture<'a>>,
 
 	//CHEAT
 	keyPress: [bool; 3],
@@ -188,6 +190,7 @@ impl<'a> Battle<'a> {
 		let disabled_playCard = texture_manager.borrow_mut().load("assets/gray_play_card.png")?;
 		let retCard = texture_manager.borrow_mut().load("assets/return.png")?;
 		let backDrop = texture_manager.borrow_mut().load("assets/backdrop.png")?;
+		
 
 		/*let frequency = 44100;
     	let format = AUDIO_S16LSB;
@@ -211,6 +214,8 @@ impl<'a> Battle<'a> {
 		let victory = texture_manager.borrow_mut().load("assets/endBattle/victory.png")?;
 		let defeat = texture_manager.borrow_mut().load("assets/endBattle/defeat.png")?;
 		let draw = texture_manager.borrow_mut().load("assets/endBattle/draw.png")?;
+		let loser = texture_manager.borrow_mut().load("assets/endBattle/loser.png")?;
+		let reward = texture_manager.borrow_mut().load("assets/endBattle/rewards.png")?;
 
 		Ok(Battle {
 			wincan,
@@ -273,6 +278,8 @@ impl<'a> Battle<'a> {
 			victory,
 			defeat,
 			draw,
+			loser,
+			reward,
 			keyPress: [false;3]
 		})
 	}
@@ -689,39 +696,7 @@ impl<'a> Battle<'a> {
 	    // Else if battle is over (self.outcome != BattleOutcome::Undetermined)
 	    // Show the result for 5 seconds, then go back to the overworld
 	    else {
-			if !self.is_online{
-			self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
-			self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
-			let mut rng = thread_rng();
-			let mut battle_stat = self.battle_handler.borrow_mut();
-			let mut _p2 = battle_stat.get_p2();
-			let mut p2 = _p2.borrow_mut();
-			p2.reset_cards();
-			if self.outcome == BattleOutcome::VictoryP1{
-				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
-				self.stolen_card2 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
-				self.health_or_energy = rng.gen_range(1..3) as u32;
 
-				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
-				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card2);
-
-				if self.health_or_energy==1{
-					self.player_rollover.borrow_mut().add_health(3);
-				}else if self.health_or_energy==2{
-					self.player_rollover.borrow_mut().add_health(2);
-				}
-			}else if self.outcome == BattleOutcome::Tie{
-				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
-				self.stolen_card2 = 404;
-				self.health_or_energy = 404;
-
-				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
-			}else{
-				self.stolen_card1 = 404;
-				self.stolen_card2 = 404;
-				self.health_or_energy = 404;
-			}
-			}
 
 	        if self.enemy_delay_inst.elapsed().as_secs() >= 5 {
 	            println!("Moving away from the battle scene");
@@ -755,6 +730,42 @@ impl<'a> Battle<'a> {
 				for card in card_list{
 					self.player_rollover.borrow_mut().remove_sel_card(card); //Remove Duped Cards
 				}
+				
+				if !self.is_online{
+				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+				self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
+				let mut rng = thread_rng();
+				let mut battle_stat = self.battle_handler.borrow_mut();
+				let mut _p2 = battle_stat.get_p2();
+				let mut p2 = _p2.borrow_mut();
+				p2.reset_cards();
+			if self.outcome == BattleOutcome::VictoryP1{
+				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+				self.stolen_card2 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+				self.health_or_energy = rng.gen_range(1..3) as u32;
+
+				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
+				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card2);
+
+				if self.health_or_energy==1{
+					self.player_rollover.borrow_mut().add_health(3);
+				}else if self.health_or_energy==2{
+					self.player_rollover.borrow_mut().add_health(2);
+				}
+			}else if self.outcome == BattleOutcome::Tie{
+				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+				self.stolen_card2 = 404;
+				self.health_or_energy = 404;
+
+				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
+			}else{
+				self.stolen_card1 = 404;
+				self.stolen_card2 = 404;
+				self.health_or_energy = 404;
+			}
+			}
+				
+				
 
 				if self.outcome == BattleOutcome::VictoryP1{
 					self.event_system.borrow().set_win_or_loss(2);
@@ -970,6 +981,7 @@ impl Scene for Battle<'_> {
 					if k.eq(&Keycode::O) {self.keyPress[1]=false}
 					if k.eq(&Keycode::R) {self.keyPress[2]=false}
 				},
+
 			    GameEvent::MouseClick(x_pos,y_pos) => {
 			    	println!("{},{}", x_pos,y_pos);
 					self.not_enough_mana = false;
@@ -1628,6 +1640,18 @@ impl Scene for Battle<'_> {
 		
 		if self.outcome != BattleOutcome::Undetermined {
                 		crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.endBattleDrop);
+                		crate::video::gfx::draw_sprite(&mut wincan, &self.reward, (350, 210));
+                		
+                		if self.outcome == BattleOutcome::VictoryP1 {
+                			
+                			//crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.stolen_card1 as usize).unwrap()),(100,148), (50,500))?;
+                		}
+                		else if self.outcome == BattleOutcome::VictoryP2 {
+                			crate::video::gfx::draw_sprite(&mut wincan, &self.loser, (150, 410));
+                		}
+                		else if self.outcome == BattleOutcome::Tie {
+                			
+                		}
                 	}
                      	
                 	//if stolen card 1 != 404, render it
