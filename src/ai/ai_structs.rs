@@ -57,10 +57,10 @@ impl Node {
 
     // Recursive function to populate each game tree node with children
     pub fn populate(&mut self, ai_turn: bool, height: i32) {
-        if height == 0 || self.stateIsTerminating() {
+        if height == 0 || self.stateIsTerminating() || self.last_card_was_special()  {
             return;
         }
-        let ai_deck = self.status.get_p2().borrow().get_hand();
+        let ai_hand = self.status.get_p2().borrow().get_hand();
         let player_hand = self.status.get_p1().borrow().get_hand();
         let player_deck = self.status.get_p1().borrow().get_deck();
         let mut already_played_cards: HashSet<u32> = HashSet::new();
@@ -70,13 +70,12 @@ impl Node {
         if ai_turn {
             // Pick a card from the ai's hand to play, attempting to play one card from the
             // hand at a time and perseving the others.
-
-            for i in 0..ai_deck.len() {
+            for i in 0..ai_hand.len() {
                 // The BattleStatus that we will modify to pass on to the next node
                 let mut next_status = reset_ref(self.status.clone());
                 // Get card ID and related card struct
-                let card_id = ai_deck[i];
-                let curr_card = next_status.get_card((card_id as u32));
+                let card_id = ai_hand[i];
+                let curr_card = next_status.get_card(card_id as u32);
                 // If we've already simulated this round with this card, skip
                 if already_played_cards.contains(&card_id) {
                     continue;
@@ -97,6 +96,13 @@ impl Node {
                 // card_to_play is played
                 self.children.push(Node::new(next_status, card_id));
             }
+            // Nothing was played, probably low mana
+            if ai_hand.len() > 0 && self.children.len() == 0 {
+                let mut next_status = reset_ref(self.status.clone());
+                next_status.get_p2().borrow_mut().update_effects();
+                next_status.turner();
+                self.children.push(Node::new(next_status, u32::MAX));
+            }
         }
         // Player's turn (p1)
         // TODO: Simulation for playing more than one card per turn
@@ -105,20 +111,10 @@ impl Node {
             for i in 0..player_hand.len() { //+player_deck.len() Removed for performance concerns
                 // The BattleStatus that we will modify to pass on to the next node
                 let mut next_status = reset_ref(self.status.clone());
-                // Removed for performance concerns
-                /*
-                let card_id = {
-                    if i < player_hand.len() {
-                        player_hand[i]
-                    }
-                    else {
-                        player_deck[i-player_hand.len()]
-                    }
-                };
-                */
+
                 // Get card ID and card struct
                 let card_id = player_hand[i];
-                let curr_card = next_status.get_card((card_id as u32));
+                let curr_card = next_status.get_card(card_id as u32);
                 // If we've already played the card for this turn, skip
                 if already_played_cards.contains(&card_id) {
                     continue;
@@ -131,14 +127,7 @@ impl Node {
                 // Delete card from hand
                 next_status.get_p1().borrow_mut().hand_del_card(i);
                 // Removed for performance concerns
-                /*
-                if i < player_hand.len() {
-                    next_status.get_p1().borrow_mut().hand_del_card(i);
-                }
-                else {
-                    next_status.get_p1().borrow_mut().deck_del_card_specific(i-player_hand.len());
-                }
-                */
+
                 // Play card
                 crate::cards::battle_system::play_card(Rc::new(RefCell::new(next_status.clone())), curr_card.clone());
                 // Update effects and turner
@@ -147,6 +136,13 @@ impl Node {
                 // Add new child node representing the game state after
                 // card_to_play is played
                 self.children.push(Node::new(next_status, card_id));
+            }
+            // Nothing was played, probably low mana
+            if player_hand.len() > 0 && self.children.len() == 0 {
+                let mut next_status = reset_ref(self.status.clone());
+                next_status.get_p1().borrow_mut().update_effects();
+                next_status.turner();
+                self.children.push(Node::new(next_status, u32::MAX));
             }
         }
         // Recursively populate each child
@@ -160,6 +156,14 @@ impl Node {
         let player = self.status.get_p1().borrow().clone();
         let ai = self.status.get_p2().borrow().clone();
         if 0 >= player.get_curr_health() || 0 >= ai.get_curr_health() {
+            return true;
+        }
+        return false;
+    }
+
+    pub fn last_card_was_special(&mut self) -> bool {
+        let last = self.last_played_card;
+        if last == 16 || last == 17 || last == 20 || last == 25 || last == 26 {
             return true;
         }
         return false;
@@ -408,3 +412,4 @@ pub fn reset_ref(mut incoming_status: BattleStatus) -> BattleStatus {
     }
     status
 }
+
