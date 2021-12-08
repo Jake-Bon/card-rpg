@@ -92,9 +92,16 @@ pub struct Battle<'a> {
 	//NETWORK
 	is_online: bool,
 	net_card: u32,
+	
+	//end battle scene
+	endBattleDrop: Rc<Texture<'a>>,
+	victory: Rc<Texture<'a>>,
+	defeat: Rc<Texture<'a>>,
+	draw:  Rc<Texture<'a>>,
 
 	//CHEAT
 	keyPress: [bool; 3],
+	
 }
 
 impl<'a> Battle<'a> {
@@ -196,6 +203,11 @@ impl<'a> Battle<'a> {
 		let music = Music::from_file("assets/music/BATTLE.ogg")?;
 		let is_paused = false;
 		let is_stopped = true;
+		
+		let endBattleDrop = texture_manager.borrow_mut().load("assets/endBattle/endOfBattle.png")?;
+		let victory = texture_manager.borrow_mut().load("assets/endBattle/victory.png")?;
+		let defeat = texture_manager.borrow_mut().load("assets/endBattle/defeat.png")?;
+		let draw = texture_manager.borrow_mut().load("assets/endBattle/draw.png")?;
 
 		Ok(Battle {
 			wincan,
@@ -251,6 +263,10 @@ impl<'a> Battle<'a> {
 			is_stopped,
 			is_online: false,
 			net_card: 404,
+			endBattleDrop,
+			victory,
+			defeat,
+			draw,
 			keyPress: [false;3]
 		})
 	}
@@ -1584,11 +1600,23 @@ impl Scene for Battle<'_> {
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(curr_card as usize).unwrap()),(400,592), (450,50))?;
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.retCard, (200,60),(900,400))?;
 		}
-
+		
+		
+		if self.outcome != BattleOutcome::Undetermined {
+                		crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.endBattleDrop);
+                	}
+                     	
+                	//if stolen card 1 != 404, render it
 		match self.outcome {
-		    BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (50, 330)),
-		    BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (50, 330)),
-		    BattleOutcome::Tie => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DRAW...", (50, 330)),
+			
+		//crate::video::gfx::draw_sprite_to_fit(&mut wincan, &self.endBattleDrop),
+		    BattleOutcome::VictoryP1 => crate::video::gfx::draw_sprite(&mut wincan, &self.victory, (400, 0)),
+		    BattleOutcome::VictoryP2 => crate::video::gfx::draw_sprite(&mut wincan, &self.defeat, (410, 0)),
+		    BattleOutcome::Tie => crate::video::gfx::draw_sprite(&mut wincan, &self.draw, (450, 0)),
+
+		    //BattleOutcome::VictoryP1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "VICTORY!", (50, 330)),
+		    //BattleOutcome::VictoryP2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DEFEAT", (50, 330)),
+		    //BattleOutcome::Tie => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "DRAW...", (50, 330)),
 		    _ => {
 
 		        // if the battle is ongoing and it's the enemy's turn, say so
@@ -1596,6 +1624,7 @@ impl Scene for Battle<'_> {
 		        	crate::video::gfx::draw_sprite(&mut wincan, &self.wait, (0, 280));
                     //fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 64, Color::RGB(0, 0, 0), "Opponent's Turn...", (50, 330));
                 }
+             
                 Ok(())
 
 		    },
