@@ -18,6 +18,7 @@ pub struct EventSystem {
 	poll_updates: u32,
 	win_or_loss: u32,
 	send_enemy: u32,
+	set_online_deck_id: u32,
 }
 
 impl EventSystem {
@@ -51,6 +52,7 @@ impl EventSystem {
 							206 => { game_events.push(Some(GameEvent::PollFromBattle()));},
 							207 => { game_events.push(Some(GameEvent::WinOrLoss(data1 as u32)));}
 							208 => { game_events.push(Some(GameEvent::SendEnemy(data1 as u32)));}
+							209 => { game_events.push(Some(GameEvent::OnlineSetDeck(data1 as u32))); println!("pushed OnlineSetDeck event");}
 				          _ => {},
 				        }
 				},
@@ -75,6 +77,7 @@ impl EventSystem {
 		let poll_updates = unsafe { event_subsystem.register_event().unwrap() };
 		let win_or_loss = unsafe { event_subsystem.register_event().unwrap() };
 		let send_enemy = unsafe { event_subsystem.register_event().unwrap() };
+		let set_online_deck_id = unsafe { event_subsystem.register_event().unwrap() };
 
 		Ok(EventSystem {
 			event_pump,
@@ -87,7 +90,8 @@ impl EventSystem {
 			push_card_to_battle,
 			poll_updates,
 			win_or_loss,
-			send_enemy
+			send_enemy,
+			set_online_deck_id,
 		})
 	}
 
@@ -240,6 +244,20 @@ impl EventSystem {
 	    Ok(())
 
 	}
+	
+	pub fn set_netplay_deck_id(&self, deck_id: u32) -> Result<(), String> {
+	    let set_netplay_deck_id = sdl2::event::Event::User {
+	        timestamp: 0,
+	        window_id: 0, 
+	        type_: self.set_online_deck_id,
+	        code: 209,
+	        data1: deck_id as *mut c_void,
+	        data2: 0x5678 as *mut c_void,
+	    };
+	    
+	    self.event_subsystem.push_event(set_netplay_deck_id)?;
+	    Ok(())
+	}
 }
 
 #[derive(Debug,PartialEq,Eq)]
@@ -251,6 +269,7 @@ pub enum GameEvent {
 	MouseHover(i32, i32),
 	OnlineTurn(u16, u16),
 	OnlinePlay(u32),
+	OnlineSetDeck(u32),
 	SetClientTurn(TurnPhase),
 	PushCard(u32),
 	PollFromBattle(),

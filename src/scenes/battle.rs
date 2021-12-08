@@ -69,6 +69,7 @@ pub struct Battle<'a> {
 	player_rollover: Rc<RefCell<Battler>>,
 	battle_handler: Rc<RefCell<BattleStatus>>,
 	enemy_delay_inst: Instant,
+	online_player_deck_id: u32,
 	battler_npc_deck_id: u32,
 	battler_npc_photo_id: u32,
 
@@ -236,6 +237,7 @@ impl<'a> Battle<'a> {
 			outcome: BattleOutcome::Undetermined,
 			battle_handler,
 			enemy_delay_inst: Instant::now(),
+			online_player_deck_id: 7,
 			battler_npc_deck_id: 1,
 			remote_ready: false,
 			client_ready: false,
@@ -369,7 +371,8 @@ impl<'a> Battle<'a> {
 			println!("active player: {} | self.turn: {:?}",self.active_player,self.turn);
 
             // initialize (or reinitialize) the player and opponent Battler structs within battle_handler
-			let _p1 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone()));
+			let _p1 = Rc::new(RefCell::new(self.battler_map.get(&self.online_player_deck_id).unwrap().clone()));
+			println!("set client player with deck id of {}", self.online_player_deck_id);
             // change the number in self.battler_map.get(&X) to change battler ID
             //      Now done through the set_battler_npc_deck event
             let _p2 = Rc::new(RefCell::new(self.battler_map.get(&0).unwrap().clone()));
@@ -803,7 +806,12 @@ impl Scene for Battle<'_> {
 				GameEvent::SetClientTurn(v) => {
 					println!("Received SetClientTurn game event, with v={:?}", v);
 					self.turn = v;
-				}
+				},
+				GameEvent::OnlineSetDeck(set_deck_id) => {
+				    let new_deck_id = set_deck_id;
+				    println!("player chose to use deck with id: {} | {}", set_deck_id+7, new_deck_id+7);
+				    self.online_player_deck_id = set_deck_id + 7;
+				},
 				GameEvent::OnlinePlay(c) => {
 					self.net_card = c;
 					println!("From the OnlinePlay system, got: {}", c);
@@ -918,7 +926,7 @@ impl Scene for Battle<'_> {
 						}
 					}
 					}
-				}
+				},
 				GameEvent::KeyPress(k) => {
 					//println!("p:{}", k);
 					if k.eq(&Keycode::X) {self.keyPress[0]=true}
@@ -1318,7 +1326,7 @@ impl Scene for Battle<'_> {
 		// --------------
 
 		// draw ai's hand
-		let debug_flag = true;
+		let debug_flag = false;
 		if debug_flag == true //debug for ai testing
 		{
 			for i in 0..p2_hand_size {
@@ -1387,7 +1395,7 @@ impl Scene for Battle<'_> {
 
 		fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 18, Color::RGB(150, 0, 0),
 			"Enemy Played:", (550,250-40));
-			println!("Enemy played: {}",self.tmp_enemy_played_card);
+			//println!("Enemy played: {}",self.tmp_enemy_played_card);
 		if self.tmp_enemy_played_card<100{
 			crate::video::gfx::draw_sprite_to_dims(&mut wincan, &(self.card_textures.get(self.tmp_enemy_played_card)).unwrap(),(200,296),(550,230))?;
 		}else{

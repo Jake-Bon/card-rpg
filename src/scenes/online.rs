@@ -42,7 +42,7 @@ pub struct Online<'a> {
 	connect_button_grayed: Rc<Texture<'a>>,
 	arrow_left: Rc<Texture<'a>>,
 	arrow_right: Rc<Texture<'a>>,
-	deck_id: u32,
+	deck_id: i32,
 	started: bool,
 	searching: bool,
 }
@@ -68,10 +68,32 @@ impl Scene for Online<'_> {
                         return;
                         
                     }
+                    // connect button
                     else if (x_pos > 10 && x_pos < 410) && (y_pos > 450 && y_pos < 570) && !self.searching {
                         self.searching = true;
                         println!("begin trying to connect to server...");
                     }
+                    // deck selector left arrow
+                    else if (x_pos > 600 && x_pos < 700) && (y_pos > 590 && y_pos < 690) {
+                        println!("trying to decrement deck_id");
+                        if self.deck_id - 1 < 0 {
+                            self.deck_id = 4;
+                        }
+                        else {
+                            self.deck_id = self.deck_id - 1;
+                        }
+                    }
+                    // deck selector right arrow
+                    else if (x_pos > 1050 && x_pos < 1150) && (y_pos > 590 && y_pos < 690) {
+                        println!("trying to increment deck_id");
+                        if self.deck_id + 1 > 4 {
+                            self.deck_id = 0;
+                        }
+                        else {
+                            self.deck_id = self.deck_id + 1;
+                        }
+                    }
+                    //println!("{} {}", x_pos, y_pos);
                 },
 				GameEvent::PushCard(chosen) => {
                     if self.connected {
@@ -151,6 +173,10 @@ impl Scene for Online<'_> {
 						self.event_system.borrow().change_scene(2).unwrap();
 					}else{
 						self.started = true;
+						// send the player's chosen deck
+						println!("about to send the OnlineSetDeck event to the battle scene, self.deck_id is currently {}", self.deck_id);
+						self.event_system.borrow().set_netplay_deck_id(self.deck_id as u32);
+						println!("sent!");
 						if(card_id==0){
 							// set as player 1
 							println!("setting this player as player 1");
@@ -246,8 +272,28 @@ impl Scene for Online<'_> {
 					    "Trying to connect to server...", (10, 100));
 		    }
 
+            // DECK SELECTOR
+            // can change the position of everything at once by changing these values
+            let mut deck_selector_x = 600;
+            let mut deck_selector_y = 590;
+            
+            // buttons
+            crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.arrow_left, (100, 100), (deck_selector_x, deck_selector_y));
+            crate::video::gfx::draw_sprite_to_dims(&mut wincan, &self.arrow_right, (100,100), (deck_selector_x + 450, deck_selector_y));
 
-
+            // text
+            fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0,0,0), "Deck Selector", (deck_selector_x + 128, deck_selector_y-60));
+            
+            // match statement
+            match self.deck_id {
+                0 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0,0,0), "Standard", (deck_selector_x + 128, deck_selector_y+23)),
+                1 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0,0,0), "Defensive", (deck_selector_x + 128, deck_selector_y+23)),
+                2 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0,0,0), "Healer", (deck_selector_x + 128, deck_selector_y+23)),
+                3 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0,0,0), "Status", (deck_selector_x + 128, deck_selector_y+23)),
+                4 => fontm.draw_text_ext(&mut wincan, "assets/fonts/Roboto-Regular.ttf", 48, Color::RGB(0,0,0), "Aggressive", (deck_selector_x + 128, deck_selector_y+23)),
+                _ => Ok(()),
+            };
+            
             wincan.present();
 
 			Ok(())
@@ -292,8 +338,8 @@ impl <'a> Online<'a> {
 
 fn attempt_connection() -> Option<TcpStream> {
 
-    match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(18, 212, 232, 174)), 7878), Duration::from_secs(5)) { // localhost
-    //match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 7878), Duration::from_secs(5)) {
+    //match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(18, 212, 232, 174)), 7878), Duration::from_secs(5)) { // localhost
+    match TcpStream::connect_timeout(&SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 7878), Duration::from_secs(5)) {
     //match TcpStream::connect_timeout(&socketAddr::from(([34, 227, 148, 203], 76567)), Duration::from_secs(5)) {
         Ok(T) => { T.set_nonblocking(true).expect("couldn't set stream T as nonblocking"); println!("there's a connection"); return Some(T); }, // setting the stream as nonblocking means calls to read() won't block, allowing us to check however often we want without multithreading
         Err(E) => { println!("Failed to connect! Error: {}", E); return None; },

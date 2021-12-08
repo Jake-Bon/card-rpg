@@ -80,6 +80,9 @@ impl<'a> GameManager<'a> {
 				Some(GameEvent::WinOrLoss(stat)) => {
 					self.overworld.handle_input(GameEvent::WinOrLoss(stat));
 				},
+				Some(GameEvent::OnlineSetDeck(deck_id)) => {
+				    self.battle.handle_input(GameEvent::OnlineSetDeck(deck_id));
+				},
 				Some(GameEvent::SceneChange(scene_id)) => self.curr_scene = scene_id,
 				Some(e) => self.handle_input(e),
 				None => {},
