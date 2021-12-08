@@ -71,6 +71,9 @@ pub struct Battle<'a> {
 	enemy_delay_inst: Instant,
 	battler_npc_deck_id: u32,
 	battler_npc_photo_id: u32,
+	stolen_card1: u32,
+	stolen_card2: u32,
+	health_or_energy: u32,
 
     // Mulligan
     remote_ready: bool,
@@ -106,10 +109,6 @@ impl<'a> Battle<'a> {
 		let mut battler_photos: Vec<Rc<Texture>> = Vec::new();
 		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Larry_and_Stumpy_Battler.png").unwrap());
 		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Tiger_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/God_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Demon_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Idol_Battler.png").unwrap());
-		battler_photos.push(texture_manager.borrow_mut().load("assets/battlers/Boris_Battler.png").unwrap());
 
 
 		let behind_health = texture_manager.borrow_mut().load("assets/behind_health.png")?;
@@ -229,6 +228,9 @@ impl<'a> Battle<'a> {
 			accepting_input,
 			not_enough_mana: false,
 			player_rollover: _p1,
+			stolen_card1: 404,
+			stolen_card2: 404,
+			health_or_energy: 404,
 			wait,
 			battler_map,
 			active_player: 1,
@@ -534,7 +536,8 @@ impl<'a> Battle<'a> {
 					gametree.calculate_utilities();
 					gametree.print();
 					println!("finished making the game tree");
-					let card_rslt = gametree.minimax(); //let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
+					let card_rslt = gametree.minimax();
+					// let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
 					//let card_cost = card_rslt.unwrap().get_cost();
 					if !card_rslt.is_none(){
 						let card_ID = card_rslt.unwrap();//self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();
@@ -668,18 +671,35 @@ impl<'a> Battle<'a> {
 	    // Show the result for 5 seconds, then go back to the overworld
 	    else {
 			if !self.is_online{
-			let mut stolen_card1: i32 = -1;
-			let mut stolen_card2: i32 = -1;
+			self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
 			let mut rng = thread_rng();
 			let mut battle_stat = self.battle_handler.borrow_mut();
 			let mut _p2 = battle_stat.get_p2();
 			let mut p2 = _p2.borrow_mut();
 			p2.reset_cards();
 			if self.outcome == BattleOutcome::VictoryP1{
-				stolen_card1 = rng.gen_range(0..p2.get_deck_size()) as i32;
-				stolen_card2 = rng.gen_range(0..p2.get_deck_size()) as i32;
-			}else if self.outcome == BattleOutcome::Tie{
+				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+				self.stolen_card2 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+				self.health_or_energy = rng.gen_range(1..3) as u32;
 
+				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
+				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card2);
+
+				if self.health_or_energy==1{
+					self.player_rollover.borrow_mut().add_health(3);
+				}else if self.health_or_energy==2{
+					self.player_rollover.borrow_mut().add_health(2);
+				}
+			}else if self.outcome == BattleOutcome::Tie{
+				self.stolen_card1 = p2.get_deck_card_i(rng.gen_range(0..p2.get_deck_size()) as u32);
+				self.stolen_card2 = 404;
+				self.health_or_energy = 404;
+
+				self.player_rollover.borrow_mut().add_card_to_deck(self.stolen_card1);
+			}else{
+				self.stolen_card1 = 404;
+				self.stolen_card2 = 404;
+				self.health_or_energy = 404;
 			}
 			}
 
@@ -700,7 +720,6 @@ impl<'a> Battle<'a> {
 	                return Ok(());
 				}
 
-				self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
 
 				// Resetting all statuses here. Could make this an effect/card later
 				//UPDATING PLAYER UPON END BATTLE
@@ -726,6 +745,9 @@ impl<'a> Battle<'a> {
 					self.event_system.borrow().set_win_or_loss(0);
 				}
 
+				self.stolen_card1 = 404;
+				self.stolen_card2 = 404;
+				self.health_or_energy = 404;
 
                 self.event_system.borrow().change_scene(1).unwrap();
                 return Ok(());
@@ -834,7 +856,6 @@ impl Scene for Battle<'_> {
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().hand_discard_card(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().add_card_to_deck(0);
 							self.battle_handler.borrow_mut().get_p2().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
-							
 							}
 						}
 						else if self.net_card == 999 {
