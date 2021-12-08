@@ -691,6 +691,7 @@ impl<'a> Battle<'a> {
 	    else {
 			if !self.is_online{
 			self.player_rollover = self.battle_handler.borrow_mut().get_p1().clone();
+			self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
 			let mut rng = thread_rng();
 			let mut battle_stat = self.battle_handler.borrow_mut();
 			let mut _p2 = battle_stat.get_p2();
@@ -756,10 +757,6 @@ impl<'a> Battle<'a> {
 				}
 
 				if self.outcome == BattleOutcome::VictoryP1{
-					self.player_rollover.borrow_mut().add_health(5); //Boost full health
-					self.player_rollover.borrow_mut().add_energy(5); //Boost full energy
-					self.player_rollover.borrow_mut().remove_all_sel_card(21); //Remove Rat Cards
-					self.player_rollover.borrow_mut().add_card_to_deck(13);
 					self.event_system.borrow().set_win_or_loss(2);
 				}else{
 					self.event_system.borrow().set_win_or_loss(0);
