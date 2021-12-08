@@ -372,7 +372,7 @@ impl GameTree {
     pub fn minimax(&mut self) -> Option<u32> {
         let best_utility = self.root.maximizer(f32::MIN, f32::MAX);
         for child in &mut self.root.children {
-            if child.utility.unwrap() == best_utility {
+            if child.utility.unwrap() == best_utility && child.last_played_card != u32::MAX {
                 return Some(child.last_played_card);
             }
         }
