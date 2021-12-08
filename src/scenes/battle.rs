@@ -1086,11 +1086,21 @@ impl Scene for Battle<'_> {
 											self.event_system.borrow().push_card_to_battle(card_ID);
 										}
 
-								        // add card to discard pile
-					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
-					            		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+										let is_beach = curr_card.get_actions().contains(&25);
+										// add card to discard pile
+										if !is_beach{
+											self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+						            		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+										}
+
 					            		// if the player has enough energy to cover the cost of playing the card:
 					            		crate::cards::battle_system::play_card(Rc::clone(&self.battle_handler), curr_card);
+
+										// add card to discard pile
+										if is_beach{
+											self.battle_handler.borrow_mut().get_p1().borrow_mut().hand_discard_card(self.enlarged_card.get_cardpos() );
+						            		self.battle_handler.borrow_mut().get_p1().borrow_mut().adjust_curr_energy(-(curr_card_cost as i32));
+										}
 
 								        self.enlarged_card.set_larger(false);
 								        }
