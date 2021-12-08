@@ -283,7 +283,6 @@ impl Scene for Overworld<'_> {
 			0=> match event {
 				GameEvent::WinOrLoss(stat) => {
 					self.win_or_loss = stat;
-					println!("The state: {}",self.win_or_loss);
 				},
 				_ => {println!(/*"No event"*/)},
 			}
@@ -517,6 +516,7 @@ impl Scene for Overworld<'_> {
 						//set all values for next loop
 						self.gameMode.prepost=false;
 						self.gameMode.dialog.line=0;
+						self.is_stopped=true;
 						self.event_system.borrow().change_scene(2).unwrap();
 					}
 					else
