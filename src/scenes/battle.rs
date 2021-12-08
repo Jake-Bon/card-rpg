@@ -591,8 +591,8 @@ impl<'a> Battle<'a> {
 					
 					println!("finished making the game tree");
 					let card_rslt = gametree.minimax(); //let card_rslt = self.battle_handler.borrow_mut().get_p2().borrow().select_hand(0);
-					//let card_cost = card_rslt.unwrap().get_cost();
-					if !card_rslt.is_none(){
+					println!("finished minimax");
+					if card_rslt.is_some(){
 						let card_ID = card_rslt.unwrap();//self.battle_handler.borrow_mut().get_p1().borrow().select_hand(i).unwrap();
 						let curr_card = self.battle_handler.borrow_mut().get_card(card_ID);
 						print!("{}\n",curr_card.to_string());
