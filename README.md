@@ -1,22 +1,22 @@
-# Card-RPG
+ # Card-RPG ![Ship_Img](assets/player4x.png)
 
-![Ship_Img](assets/player4x.png)
 
 _Card RPG_ is a turn based card battler. Explore the world of Card RPG and defeat your opponents on the high seas, building your deck as you go.
 
 ## Features
 - Two overworld maps to explore
 
-<img src="assets/screenshots/overworld_sc.png" alt="drawing" width="650"/>
+<img src="assets/screenshots/overworld_sc.png" alt="Overworld" width="50%"/>
 
 - Several unique opponents to discover, each with their own special decks
 - Dozens of unique cards
 
-<img src="assets/cards/broadside.png" alt="drawing" width="200"/>
-<img src="assets/cards/thePerfectStorm_Card.png" alt="drawing" width="200"/>
-<img src="assets/cards/Wild_Glitch.png" alt="drawing" width="200"/>
+<img src="assets/cards/broadside.png" alt="drawing" width="15%"/><img src="assets/cards/thePerfectStorm_Card.png" alt="drawing" width="15%"/><img src="assets/cards/Wild_Glitch.png" alt="drawing" width="15%"/><img src="assets/cards/fools_gold.png" alt="drawing" width="15%"/>
 
 - AI card-battling opponents based on the Minimax algorithim with Alpha-Beta pruning
+
+<img src="assets/screenshots/battle_sc.png" alt="drawing" width="50%"/>
+
 - LAN multiplayer to battle with your friends
 - Soundtrack
 - Progression mechanics, get better the more you fight
